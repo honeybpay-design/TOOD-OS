@@ -26,12 +26,16 @@ def ensure_roles(conn: psycopg.Connection) -> None:
         if not password:
             sys.exit(f"{env_key} is not set (see .env.example)")
         exists = conn.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", (role,)).fetchone()
-        verb = "ALTER" if exists else "CREATE"
-        conn.execute(
-            sql.SQL(f"{verb} ROLE {{}} LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE PASSWORD {{}}").format(
-                sql.Identifier(role), sql.Literal(password)
+        if exists:
+            # On Cloud SQL, postgres cannot alter SUPERUSER attributes on roles it did not own
+            # with superuser. Only set LOGIN and PASSWORD (idempotent and safe).
+            conn.execute(sql.SQL("ALTER ROLE {} LOGIN PASSWORD {}").format(sql.Identifier(role), sql.Literal(password)))
+        else:
+            conn.execute(
+                sql.SQL("CREATE ROLE {} LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE PASSWORD {}").format(
+                    sql.Identifier(role), sql.Literal(password)
+                )
             )
-        )
 
 
 def main() -> None:
