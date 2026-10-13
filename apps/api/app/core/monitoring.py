@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class CloudMonitor:
     """Sends metrics and logs to Google Cloud Monitoring. Degrades gracefully if SDK unavailable."""
 
-    def __init__(self, project_id: str = "tood-os"):
+    def __init__(self, project_id: str = ""):
         self.project_id = project_id
         self._client = None
         self._log_client = None
@@ -32,15 +32,21 @@ class CloudMonitor:
             return True
         if not self._sdk_present:
             return False
-        if self._client is not None:
-            return True
+        # Do NOT short-circuit on self._client here: a previous attempt may have
+        # assigned _client but failed before setting _monitoring_v3 or _available,
+        # leaving the object in a partial state.  Let the try block re-run so all
+        # three attributes are set atomically before _available becomes True.
         try:
             from google.cloud import logging as cloud_logging
             from google.cloud import monitoring_v3
 
-            self._monitoring_v3 = monitoring_v3
-            self._client = monitoring_v3.MetricServiceClient()
-            self._log_client = cloud_logging.Client(project=self.project_id)
+            monitoring_v3_mod = monitoring_v3
+            client = monitoring_v3.MetricServiceClient()
+            log_client = cloud_logging.Client(project=self.project_id)
+            # Assign atomically — only after all three succeed
+            self._monitoring_v3 = monitoring_v3_mod
+            self._client = client
+            self._log_client = log_client
             self._available = True
             return True
         except Exception as e:

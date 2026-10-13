@@ -6,9 +6,10 @@ Prints PASS or FAIL for each check. Exit code 0 = all passed, 1 = at least one f
 """
 
 from __future__ import annotations
+
 import os
-import sys
 import pathlib
+import sys
 
 # Ensure the API package is on sys.path
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -56,12 +57,20 @@ print("=" * 60)
 print("Model Admission Test — TOOD-OS")
 print("=" * 60)
 
+EU_REGIONS = {"europe-west2", "europe-west1", "europe-west4", "eu-west-1", "eu-west-2", "eu-central-1"}
+
 provider = get_provider()
 
 # Check 1: Region
+_is_local = getattr(provider, "is_local", False)
+_in_eu = provider.region in EU_REGIONS
+if _is_local and not _in_eu:
+    print(
+        f"  WARN  region check skipped for local provider — declared region {provider.region!r} is not in the EU-approved set"
+    )
 check(
     "region=europe-west2",
-    provider.region == "europe-west2" or getattr(provider, "is_local", False),
+    provider.region == "europe-west2" or _is_local,
     f"region={provider.region!r}",
 )
 
@@ -84,11 +93,14 @@ if segments:
 
     # Check 4: Evidence citation present
     import re
+
     ev_tags = re.findall(r"\[EV:[0-9a-fA-F-]{36}\]", full_text)
     check("evidence_citation_present", len(ev_tags) > 0, f"{len(ev_tags)} citation(s) found")
 
     # Check 5: Verbatim requirement check (verify_claims) still functional
-    evidence_by_id = {item["id"]: {"body": item["body"], "status": "approved", "title": "Sample"} for item in SAMPLE_TENDER_BLOCKS}
+    evidence_by_id = {
+        item["id"]: {"body": item["body"], "status": "approved", "title": "Sample"} for item in SAMPLE_TENDER_BLOCKS
+    }
     try:
         claims = verify_claims(full_text, evidence_by_id)
         # verify_claims runs without exception = function is intact

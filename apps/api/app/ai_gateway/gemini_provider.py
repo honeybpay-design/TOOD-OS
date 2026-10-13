@@ -26,7 +26,9 @@ class GeminiProvider:
             import vertexai
             from vertexai.generative_models import GenerationConfig, GenerativeModel
 
-            vertexai.init(project="tood-os", location=self.region)
+            from app.core.config import settings as _settings
+
+            vertexai.init(project=_settings.gcp_project, location=self.region)
             self._GenerativeModel = GenerativeModel
             self._GenerationConfig = GenerationConfig
             self._available = True
