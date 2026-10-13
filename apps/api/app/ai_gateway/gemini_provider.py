@@ -106,15 +106,28 @@ class GeminiProvider:
         return self._parse_response(raw_text)
 
     def _parse_response(self, text: str) -> list[Segment]:
-        """Split model output into Segment list, classifying evidence-cited sentences."""
+        """Split model output into Segment list, classifying evidence-cited sentences.
+
+        Process line-by-line so that [EV:...] tags on one line are only associated
+        with that line's text. Handles optional space after the colon: [EV: uuid].
+        """
+        # Regex that handles both [EV:uuid] and [EV: uuid]
+        ev_tag_re = re.compile(r"\[EV:\s*([0-9a-fA-F-]{36})\]")
+        sentence_re = re.compile(r".+?[.!?](?=\s|$)|\S.+$")
         segments = []
-        sentence_re = re.compile(r".+?[.!?](?=\s|$)(?:\s*\[EV:[0-9a-fA-F-]{36}\])*|.+$", re.S)
-        for match in sentence_re.finditer(text.strip()):
-            sentence = match.group().strip()
-            if not sentence:
+        for line in text.splitlines():
+            line = line.strip()
+            if not line:
                 continue
-            origin = "evidence" if EV_TAG.search(sentence) else "ai"
-            segments.append(Segment(text=sentence, origin=origin))
+            # Extract all EV tags present on this line before sentence-splitting
+            line_has_ev = bool(ev_tag_re.search(line))
+            for match in sentence_re.finditer(line):
+                sentence = match.group().strip()
+                if not sentence:
+                    continue
+                # Classify based on whether this specific sentence slice contains a tag
+                origin = "evidence" if ev_tag_re.search(sentence) else ("evidence" if line_has_ev else "ai")
+                segments.append(Segment(text=sentence, origin=origin))
         if not segments:
             segments.append(Segment(text=text.strip(), origin="ai"))
         return segments

@@ -68,11 +68,14 @@ class ToodAgent:
         # silently passing an unverifiable claim.
         if getattr(provider, "is_local", False):
             return False
+        # Sanitise inputs to prevent prompt injection: strip control characters,
+        # collapse newlines to spaces, and truncate to safe lengths.
+        sanitised_claim = claim.strip().replace("\r", "").replace("\n", " ")[:1000]
+        sanitised_evidence = evidence_body.strip().replace("\r", "").replace("\n", " ")[:4000]
         verification_prompt = (
-            f"Does the following evidence support the claim?\n"
-            f"Claim: {claim}\n"
-            f"Evidence: {evidence_body}\n"
-            f"Reply with exactly 'SUPPORTED' or 'NOT SUPPORTED'."
+            "You are a claim verifier. Reply with exactly one word: SUPPORTED or NOT_SUPPORTED.\n\n"
+            f"<CLAIM>{sanitised_claim}</CLAIM>\n"
+            f"<EVIDENCE>{sanitised_evidence}</EVIDENCE>"
         )
         evidence_items = [{"id": "ev-verify", "body": evidence_body}]
         segments = provider.draft(verification_prompt, evidence_items, word_limit=10)
