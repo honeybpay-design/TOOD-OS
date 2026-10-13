@@ -3,6 +3,16 @@
 Trusted, Orchestrated, Observable Document Operating System for UK public-sector procurement.
 Specification: **TOOD-OS Full Master Blueprint v1.1** (Honey-B2024 Ltd).
 
+## Documentation
+
+| Document | Audience | Link |
+|----------|----------|------|
+| System Overview | Public / Evaluators | [docs/SYSTEM_OVERVIEW.md](docs/SYSTEM_OVERVIEW.md) |
+| User Guide | Customers | [docs/USER_GUIDE.md](docs/USER_GUIDE.md) |
+| Technical Handover | Developers | [docs/TECHNICAL_HANDOVER.md](docs/TECHNICAL_HANDOVER.md) |
+
+*Version 0.2.0 — 2026-10-13*
+
 This repository installs and **runs**: a working application with sign-up, tender upload (PDF, Word, text),
 requirement extraction with verbatim checks, an evidence library, drafting with claim verification, provenance
 and a hash chain, named approval, a gated Word export, and an audit log. It sits on a database with forced
