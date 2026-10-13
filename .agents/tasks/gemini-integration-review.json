@@ -1,0 +1,27 @@
+{
+  "verdict": "CHANGES_REQUESTED",
+  "findings": [
+    {
+      "id": 1,
+      "severity": "blocking",
+      "label": "Prompt injection in verify_claim",
+      "detail": "claim and evidence_body are f-string interpolated verbatim into the Gemini verification prompt with no sanitisation (agent.py lines 72-76). A stored draft sentence containing a newline-delimited instruction can redirect the model to reply SUPPORTED for an unsupported claim, bypassing the hallucination guard. Fix: strip/escape newlines from both inputs before interpolation, or use XML-style delimiters to separate instructions from data.",
+      "confidence": "confirmed"
+    },
+    {
+      "id": 2,
+      "severity": "blocking",
+      "label": "_parse_response multi-tag sentence gap",
+      "detail": "The sentence regex in GeminiProvider._parse_response does not reliably handle multiple EV tags spread across lines. A tag on a new line after a sentence-terminated match may be absorbed into the next sentence's match, causing verify_claims() downstream to link evidence citations to the wrong sentence. Fix: test the regex against multi-tag, multi-line Gemini output and add a covering test case.",
+      "confidence": "likely"
+    },
+    {
+      "id": 3,
+      "severity": "non-blocking",
+      "label": "admit_model.py .env parser drops quoted values",
+      "detail": "The inline .env loader in scripts/admit_model.py does not strip surrounding quotes from values. A .env entry like AI_PROVIDER=\"gemini\" would be read as gemini\" (trailing quote), potentially silently running admission against the template provider in CI instead of Gemini. Fix: strip surrounding quotes or use python-dotenv.",
+      "confidence": "confirmed"
+    }
+  ],
+  "reviewDoc": "c:\\Users\\Donny\\Desktop\\tood.com\\.agents\\tasks\\gemini-integration-review.md"
+}

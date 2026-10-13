@@ -22,10 +22,10 @@ if env_file.exists():
         line = line.strip()
         if line and not line.startswith("#") and "=" in line:
             k, v = line.split("=", 1)
-            os.environ.setdefault(k.strip(), v.strip())
+            os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
 
-from app.ai_gateway.provider import get_provider  # noqa: E402
-from app.services.drafting import verify_claims, word_count  # noqa: E402
+from app.ai_gateway.provider import get_provider
+from app.services.drafting import verify_claims, word_count
 
 SAMPLE_TENDER_BLOCKS = [
     {
@@ -80,7 +80,7 @@ check(
 try:
     segments = provider.draft(SAMPLE_PROMPT, SAMPLE_TENDER_BLOCKS, WORD_LIMIT)
     draft_ok = len(segments) > 0
-except Exception as e:
+except Exception as e:  # noqa: BLE001
     segments = []
     draft_ok = False
     print(f"  ERROR drafting: {e}")
@@ -107,7 +107,7 @@ if segments:
         claims = verify_claims(full_text, evidence_by_id)
         # verify_claims runs without exception = function is intact
         check("verbatim_check_functional", True, f"{len(claims)} claim(s) checked")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         claims = []
         check("verbatim_check_functional", False, str(e))
 
@@ -142,7 +142,7 @@ try:
             _result is False,
             f"remote provider rejected hallucinated claim: {_result!r}",
         )
-except Exception as e:
+except Exception as e:  # noqa: BLE001
     check("verify_claim_rejects_hallucination", False, f"exception: {e}")
 
 print("=" * 60)
