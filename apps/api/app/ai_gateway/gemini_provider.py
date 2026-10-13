@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 import time
 from typing import TYPE_CHECKING
@@ -10,6 +11,8 @@ if TYPE_CHECKING:
     pass
 
 from app.ai_gateway.provider import Segment
+
+logger = logging.getLogger(__name__)
 
 EV_TAG = re.compile(r"\[EV:([0-9a-fA-F-]{36})\]")
 
@@ -65,7 +68,18 @@ class GeminiProvider:
             )
             response = model.generate_content(full_prompt)
             raw_text = response.text
-        except Exception:
+        except Exception as primary_exc:
+            logger.warning(
+                "GeminiProvider primary model %s failed, retrying with gemini-2.0-flash: %s",
+                self.model_id,
+                primary_exc,
+            )
+            try:
+                from app.core.monitoring import get_monitor
+
+                get_monitor().record_ai_call(self.model_id, 0.0, 0, False)
+            except Exception:
+                pass
             # Fallback to gemini-2.0-flash
             try:
                 model = self._GenerativeModel(
@@ -74,7 +88,17 @@ class GeminiProvider:
                 )
                 response = model.generate_content(full_prompt)
                 raw_text = response.text
-            except Exception:
+            except Exception as flash_exc:
+                logger.warning(
+                    "GeminiProvider fallback model gemini-2.0-flash also failed, using TemplateProvider: %s",
+                    flash_exc,
+                )
+                try:
+                    from app.core.monitoring import get_monitor
+
+                    get_monitor().record_ai_call("gemini-2.0-flash", 0.0, 0, False)
+                except Exception:
+                    pass
                 from app.ai_gateway.provider import TemplateProvider
 
                 return TemplateProvider().draft(prompt, evidence, word_limit)

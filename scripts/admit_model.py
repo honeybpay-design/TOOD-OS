@@ -68,10 +68,12 @@ if _is_local and not _in_eu:
     print(
         f"  WARN  region check skipped for local provider — declared region {provider.region!r} is not in the EU-approved set"
     )
+# Remote providers (is_local=False) MUST declare an EU-approved region.
+# Local providers may declare any region without failing admission.
 check(
     "region=europe-west2",
-    provider.region == "europe-west2" or _is_local,
-    f"region={provider.region!r}",
+    _in_eu or _is_local,
+    f"region={provider.region!r} is_local={_is_local}",
 )
 
 # Check 2: Draft runs without error

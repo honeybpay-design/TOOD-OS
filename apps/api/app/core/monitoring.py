@@ -20,11 +20,18 @@ class CloudMonitor:
         # Only check if the SDK is importable; defer client creation to first write
         try:
             import google.cloud.logging  # noqa: F401 — probe import only
+
+            _probe_mod = "google.cloud.logging"
             import google.cloud.monitoring_v3  # noqa: F401 — probe import only
 
+            _probe_mod = "google.cloud.monitoring_v3"
             self._sdk_present = True
-        except ImportError:
-            logger.warning("google-cloud-monitoring not installed; Cloud Monitoring disabled")
+        except ImportError as _ie:
+            logger.warning(
+                "Cloud Monitoring SDK probe failed on module '%s' (%s); Cloud Monitoring disabled",
+                _probe_mod if "_probe_mod" in dir() else "google.cloud.logging",
+                _ie,
+            )
 
     def _ensure_client(self) -> bool:
         """Lazily initialise the GCP clients. Returns True when ready."""
