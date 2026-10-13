@@ -2,11 +2,17 @@ import pathlib
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-ROOT = pathlib.Path(__file__).resolve().parents[4]
+# In the repo: apps/api/app/core/config.py → parents[4] = repo root
+# In Docker container: /app/app/core/config.py → parents[3] = /app (no repo root .env)
+_here = pathlib.Path(__file__).resolve()
+ROOT = _here.parents[4] if len(_here.parents) > 4 else _here.parents[3]
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=ROOT / ".env", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=ROOT / ".env" if (ROOT / ".env").exists() else None,
+        extra="ignore",
+    )
 
     database_url: str = "postgresql://app_user:tood_dev_app@localhost:5432/tood"
     database_admin_url: str = "postgresql://postgres:tood_dev_admin@localhost:5432/tood"
