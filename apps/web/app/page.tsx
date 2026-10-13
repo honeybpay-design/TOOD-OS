@@ -158,8 +158,8 @@ function StepContent({ step }: { step: number }) {
               <div
                 key={i}
                 className={`flex items-start gap-3 rounded-lg px-3 py-2.5 border text-sm ${c.ok
-                    ? "bg-[#F0FDF4] border-green-200 text-[#1C1917]"
-                    : "bg-red-50 border-red-200 text-[#1C1917]"
+                  ? "bg-[#F0FDF4] border-green-200 text-[#1C1917]"
+                  : "bg-red-50 border-red-200 text-[#1C1917]"
                   }`}
               >
                 <span
@@ -277,8 +277,8 @@ function WorkflowDemo() {
             key={s.id}
             onClick={() => setStep(s.id)}
             className={`flex-1 px-2 py-2.5 text-xs font-medium transition-colors ${step === s.id
-                ? "bg-white border-b-2 border-[#1B4FD8] text-[#1B4FD8]"
-                : "text-[#6B6560] hover:text-[#1C1917]"
+              ? "bg-white border-b-2 border-[#1B4FD8] text-[#1B4FD8]"
+              : "text-[#6B6560] hover:text-[#1C1917]"
               }`}
             aria-pressed={step === s.id}
           >
@@ -312,6 +312,82 @@ function WorkflowDemo() {
           />
         ))}
       </div>
+    </div>
+  );
+}
+
+// ── PPN Compliance ──────────────────────────────────────────────────────────
+function PPNCompliance() {
+  const items = [
+    {
+      ref: "Procurement Act 2023",
+      title: "New UK public contracts framework",
+      body: "Replaces PCR 2015. TOOD helps suppliers structure responses to meet the updated evaluation and transparency requirements.",
+    },
+    {
+      ref: "PPN 01/17 — Social Value",
+      title: "Evidence-backed social value responses",
+      body: "Policy note requiring social value to be weighted in procurement. TOOD's evidence library ensures claims are sourced and verifiable.",
+    },
+    {
+      ref: "PPN 02/24 — AI in Procurement",
+      title: "Human approval required, audit trail mandatory",
+      body: "Requires AI use to be transparent, human-supervised, and auditable. TOOD enforces named approval and hash-chained audit logs on every submission.",
+    },
+  ];
+  return (
+    <section className="py-20 px-4 bg-[#1C1917]" id="compliance">
+      <div className="max-w-7xl mx-auto">
+        <p className="text-[#00C2A8] text-[13px] font-semibold mb-4" style={{ fontFamily: "var(--font-inter)" }}>
+          Built to comply with
+        </p>
+        <h2 className="text-white mb-12" style={{ fontFamily: "var(--font-dm-serif)", fontSize: "40px" }}>
+          UK procurement regulations, by design.
+        </h2>
+        <div className="grid md:grid-cols-3 gap-8">
+          {items.map((item) => (
+            <div key={item.ref} className="border-t border-white/10 pt-6">
+              <p className="text-[#00C2A8] text-[12px] font-semibold mb-2" style={{ fontFamily: "var(--font-inter)" }}>
+                {item.ref}
+              </p>
+              <h3 className="text-white text-[17px] font-semibold mb-3" style={{ fontFamily: "var(--font-inter)" }}>
+                {item.title}
+              </h3>
+              <p className="text-white/60 text-[14px] leading-relaxed" style={{ fontFamily: "var(--font-inter)" }}>
+                {item.body}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Compliance Strip ─────────────────────────────────────────────────────────
+function ComplianceStrip() {
+  const items = [
+    { label: "AI Top-tier Agent", highlight: true },
+    { label: "Procurement Act 2023" },
+    { label: "PPN 01/17 Social Value" },
+    { label: "PPN 02/24 AI in Procurement" },
+    { label: "UK Public Sector" },
+  ];
+  return (
+    <div className="bg-[#1C1917] px-4 py-2 flex items-center gap-3 flex-wrap" role="banner" aria-label="Compliance certifications">
+      {items.map((item, i) => (
+        <span key={item.label} className="flex items-center gap-3">
+          {item.highlight ? (
+            <span className="inline-flex items-center gap-1.5 border border-[#00C2A8] text-[#00C2A8] rounded px-2 py-0.5 text-[11px] font-semibold" style={{ fontFamily: "var(--font-inter)" }}>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#00C2A8] animate-pulse" />
+              {item.label}
+            </span>
+          ) : (
+            <span className="text-[11px] text-white/60" style={{ fontFamily: "var(--font-inter)" }}>{item.label}</span>
+          )}
+          {i < items.length - 1 && <span className="text-white/20 text-[11px]">·</span>}
+        </span>
+      ))}
     </div>
   );
 }
@@ -434,7 +510,7 @@ function Hero() {
               className="text-[15px] text-[#6B6560] mb-4"
               style={{ fontFamily: 'var(--font-inter)' }}
             >
-              AI-assisted tender writing for UK public sector
+              Trusted Operations &amp; Organised Documents
             </p>
             <h1
               className="hero-headline text-[#1C1917] max-w-[580px] mb-6 leading-[1.1]"
@@ -443,14 +519,34 @@ function Hero() {
                 fontSize: '56px',
               }}
             >
-              Tender writing that holds up to scrutiny.
+              Tender writing built for the Procurement Act 2023.
             </h1>
             <p
-              className="text-[17px] text-[#6B6560] max-w-[520px] leading-relaxed mb-8"
+              className="text-[17px] text-[#6B6560] max-w-[520px] leading-relaxed mb-6"
               style={{ fontFamily: 'var(--font-inter)' }}
             >
-              Extract requirements verbatim, draft grounded answers, and export only when every response is approved.
+              Extract requirements verbatim, draft grounded answers, and export only when every response is approved — compliant with PPN 02/24 on AI use in procurement.
             </p>
+            {/* Compliance tags */}
+            <div className="flex flex-wrap gap-2 mb-8">
+              {[
+                { label: "Procurement Act 2023", active: true },
+                { label: "PPN 01/17 Social Value", active: true },
+                { label: "PPN 02/24 AI Transparency", active: true },
+                { label: "ISO 27001 aligned", active: false },
+              ].map((tag) => (
+                <span
+                  key={tag.label}
+                  className={`border rounded px-2.5 py-1 text-[11px] font-semibold ${tag.active
+                    ? "border-[#1B4FD8] text-[#1B4FD8] bg-[#1B4FD8]/5"
+                    : "border-[#D4CFC8] text-[#6B6560] bg-[#EFEDE8]"
+                    }`}
+                  style={{ fontFamily: "var(--font-inter)" }}
+                >
+                  {tag.label}
+                </span>
+              ))}
+            </div>
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
                 href="/api/billing/checkout?plan=professional"
@@ -893,10 +989,12 @@ function Footer() {
 export default function Home() {
   return (
     <>
+      <ComplianceStrip />
       <Navbar />
       <main>
         <Hero />
         <Features />
+        <PPNCompliance />
         <HowItWorks />
         <Pricing />
         <Testimonials />
