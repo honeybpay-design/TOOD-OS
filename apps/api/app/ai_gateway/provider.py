@@ -45,6 +45,12 @@ def get_provider():
         provider = TemplateProvider()
         check_provider(provider)
         return provider
+    if settings.ai_provider == "gemini":
+        from app.ai_gateway.gemini_provider import GeminiProvider
+
+        provider = GeminiProvider()
+        check_provider(provider)
+        return provider
     raise RuntimeError(
         f"AI provider '{settings.ai_provider}' is not available. Connect and admit a model through the AI Gateway first."
     )
