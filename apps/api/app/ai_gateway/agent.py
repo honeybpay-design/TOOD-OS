@@ -52,10 +52,22 @@ class ToodAgent:
         return provider.draft(prompt, evidence, word_limit)
 
     def verify_claim(self, claim: str, evidence_body: str) -> bool:
-        """Verify a claim is supported by the provided evidence body."""
+        """Verify a claim is supported by the provided evidence body.
+
+        Returns True only when the AI model explicitly replies "SUPPORTED".
+        Returns False when the provider is local/template (cannot classify),
+        when the model replies "NOT SUPPORTED", or when the reply is ambiguous.
+        Non-factual claims (no numbers, certifications, etc.) bypass AI and return True.
+        """
         if not CLAIM.search(EV_TAG.sub("", claim)):
             return True  # non-factual claim: no verification needed
         provider = get_provider()
+        # Local/template providers cannot perform binary classification; they always
+        # return drafting prose, never a clean SUPPORTED/NOT SUPPORTED verdict.
+        # Return False so the caller knows verification was inconclusive rather than
+        # silently passing an unverifiable claim.
+        if getattr(provider, "is_local", False):
+            return False
         verification_prompt = (
             f"Does the following evidence support the claim?\n"
             f"Claim: {claim}\n"
@@ -64,8 +76,11 @@ class ToodAgent:
         )
         evidence_items = [{"id": "ev-verify", "body": evidence_body}]
         segments = provider.draft(verification_prompt, evidence_items, word_limit=10)
-        answer = " ".join(s.text for s in segments).upper()
-        return "NOT SUPPORTED" not in answer and "SUPPORTED" in answer
+        # Require an exact "SUPPORTED" reply (after stripping whitespace) to avoid
+        # fail-open on hedged prose, quota errors, or any text that merely contains
+        # "SUPPORTED" as a substring (e.g. "NOT SUPPORTED" or "I believe SUPPORTED").
+        answer = " ".join(s.text for s in segments).strip().upper()
+        return answer == "SUPPORTED"
 
     def health_check(self) -> dict[str, Any]:
         """Check AI system health: latency, quota, region compliance."""

@@ -115,6 +115,36 @@ if segments:
     unsupported = [c for c in (claims if segments else []) if c["status"] == "unsupported"]
     check("no_hallucinated_figures", len(unsupported) == 0, f"{len(unsupported)} unsupported claim(s)")
 
+# Check 7: verify_claim rejects a fabricated figure absent from evidence
+# For local/template providers: verify_claim returns False for factual claims (correct — cannot classify).
+# For remote providers (Gemini): must return False when the claim's figure is not in the evidence.
+try:
+    from app.ai_gateway.agent import ToodAgent
+
+    _agent = ToodAgent()
+    _hallucinated_claim = "We have delivered 999 successful projects with a 75% cost saving."
+    _real_evidence = "We have delivered 42 successful procurement projects over 5 years, achieving an average cost saving of 18% for our clients."
+    _is_local = getattr(provider, "is_local", False)
+    if _is_local:
+        # Template provider: verify_claim always returns False for factual claims.
+        # This is the correct fail-safe behaviour — no AI classification available.
+        _result = _agent.verify_claim(_hallucinated_claim, _real_evidence)
+        check(
+            "verify_claim_rejects_hallucination",
+            _result is False,
+            f"local provider → False (fail-safe); got {_result!r}",
+        )
+    else:
+        # Remote provider: model must actively reject the fabricated figures.
+        _result = _agent.verify_claim(_hallucinated_claim, _real_evidence)
+        check(
+            "verify_claim_rejects_hallucination",
+            _result is False,
+            f"remote provider rejected hallucinated claim: {_result!r}",
+        )
+except Exception as e:
+    check("verify_claim_rejects_hallucination", False, f"exception: {e}")
+
 print("=" * 60)
 print(f"Result: {len(passed)} passed, {len(failed)} failed")
 if failed:
