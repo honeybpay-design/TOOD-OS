@@ -1,7 +1,320 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+// ── Workflow Demo Animation ───────────────────────────────────────────────────
+
+const DEMO_STEPS = [
+  {
+    id: 0,
+    tab: "Requirement",
+    icon: "📄",
+    title: "Requirement extracted verbatim",
+  },
+  {
+    id: 1,
+    tab: "AI Draft",
+    icon: "✍️",
+    title: "AI drafts from approved evidence only",
+  },
+  {
+    id: 2,
+    tab: "Verify",
+    icon: "🔍",
+    title: "Every claim verified against evidence",
+  },
+  {
+    id: 3,
+    tab: "Audit",
+    icon: "🔗",
+    title: "Audit trail — every change recorded",
+  },
+];
+
+const DURATIONS = [4500, 6000, 5000, 4500];
+
+function TypingText({ text, speed = 20 }: { text: string; speed?: number }) {
+  const prefersReduced =
+    typeof window !== "undefined"
+      ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      : false;
+  const [displayed, setDisplayed] = useState(prefersReduced ? text : "");
+
+  useEffect(() => {
+    if (prefersReduced) {
+      setDisplayed(text);
+      return;
+    }
+    setDisplayed("");
+    let i = 0;
+    const id = setInterval(() => {
+      i++;
+      setDisplayed(text.slice(0, i));
+      if (i >= text.length) clearInterval(id);
+    }, speed);
+    return () => clearInterval(id);
+  }, [text, speed, prefersReduced]);
+
+  return (
+    <span>
+      {displayed}
+      {displayed.length < text.length && (
+        <span className="animate-pulse inline-block w-0.5 h-4 bg-[#1B4FD8] align-middle ml-0.5" />
+      )}
+    </span>
+  );
+}
+
+function WindowChrome() {
+  return (
+    <div className="flex items-center gap-2 px-4 py-2.5 bg-[#EFEDE8] border-b border-[#D4CFC8] rounded-t-lg">
+      <span className="w-3 h-3 rounded-full bg-[#FF5F57]" />
+      <span className="w-3 h-3 rounded-full bg-[#FEBC2E]" />
+      <span className="w-3 h-3 rounded-full bg-[#28C840]" />
+      <div className="flex-1 mx-3 px-3 py-0.5 bg-white rounded text-xs text-[#6B6560] font-mono border border-[#D4CFC8] text-center">
+        tood.uk/dashboard
+      </div>
+    </div>
+  );
+}
+
+function StepContent({ step }: { step: number }) {
+  switch (step) {
+    case 0:
+      return (
+        <div key={0} className="p-5 space-y-4">
+          <div className="text-xs font-medium text-[#6B6560] uppercase tracking-wide">
+            Source document
+          </div>
+          <div className="bg-[#EFEDE8] rounded-lg p-4 text-sm text-[#1C1917] leading-relaxed border border-[#D4CFC8]">
+            <span>The supplier must </span>
+            <span className="bg-[#00C2A8]/20 text-[#1C1917] px-0.5 rounded highlight-pulse">
+              demonstrate a minimum of three years&rsquo; experience
+            </span>
+            <span>
+              {" "}
+              in delivering public sector contracts of similar scope and
+              complexity.
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs bg-[#F8F6F1] border border-[#D4CFC8] rounded px-2 py-1 text-[#6B6560]">
+              §3.2 · page 7 · 500 word limit
+            </span>
+          </div>
+          <div className="flex items-center gap-2 bg-[#00C2A8]/10 border border-[#00C2A8]/30 rounded-lg px-3 py-2">
+            <span className="text-[#00C2A8] text-sm font-medium">
+              ✓ Verbatim match confirmed
+            </span>
+            <span className="ml-auto text-xs text-[#6B6560]">
+              Extracted from §3.2, page 7
+            </span>
+          </div>
+        </div>
+      );
+
+    case 1: {
+      const draftText =
+        "Our organisation has delivered 14 public sector contracts [EV: case-study-1.pdf] across infrastructure and digital transformation, meeting all ISO 9001 quality standards [EV: iso-cert.pdf] renewed annually since 2019. References available from Lancashire CC on request.";
+      return (
+        <div key={1} className="p-5 space-y-4">
+          <div className="text-xs font-medium text-[#6B6560] uppercase tracking-wide">
+            Generating draft response
+          </div>
+          <div className="bg-[#F8F6F1] rounded-lg p-4 text-sm text-[#1C1917] leading-relaxed border border-[#D4CFC8] min-h-[80px]">
+            <TypingText text={draftText} speed={18} />
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs text-[#6B6560]">
+              <span className="w-2 h-2 rounded-full bg-[#00C2A8]"></span>
+              2 evidence items used
+            </div>
+            <span className="text-xs text-[#6B6560] italic">
+              No hallucinated facts
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    case 2: {
+      const claims = [
+        {
+          text: '"14 public sector contracts"',
+          source: "case-study-1.pdf",
+          ok: true,
+        },
+        { text: '"ISO 9001, renewed 2019"', source: "iso-cert.pdf", ok: true },
+        { text: '"£2M contract value"', source: null, ok: false },
+      ];
+      return (
+        <div key={2} className="p-5 space-y-3">
+          <div className="text-xs font-medium text-[#6B6560] uppercase tracking-wide">
+            Claim verification
+          </div>
+          <div className="space-y-2">
+            {claims.map((c, i) => (
+              <div
+                key={i}
+                className={`flex items-start gap-3 rounded-lg px-3 py-2.5 border text-sm ${c.ok
+                    ? "bg-[#F0FDF4] border-green-200 text-[#1C1917]"
+                    : "bg-red-50 border-red-200 text-[#1C1917]"
+                  }`}
+              >
+                <span
+                  className={c.ok ? "text-green-600 mt-0.5" : "text-red-500 mt-0.5"}
+                >
+                  {c.ok ? "✓" : "✗"}
+                </span>
+                <div className="flex-1">
+                  <span className="font-medium">{c.text}</span>
+                  {c.ok ? (
+                    <span className="text-[#6B6560] text-xs ml-2">
+                      → matched in {c.source}
+                    </span>
+                  ) : (
+                    <span className="text-red-500 text-xs ml-2">
+                      → NOT FOUND in evidence
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="text-xs bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-red-600">
+            ⚠ Action required: Acknowledge or remove this claim before export
+          </div>
+        </div>
+      );
+    }
+
+    case 3: {
+      const auditLog = [
+        {
+          time: "14:32",
+          user: "Sarah M.",
+          action: "Draft generated",
+          detail: "Gemini 2.5 Pro",
+        },
+        {
+          time: "14:45",
+          user: "James O.",
+          action: "Edited",
+          detail: "word count 312→287",
+        },
+        { time: "15:01", user: "James O.", action: "Approved", detail: "" },
+        {
+          time: "15:02",
+          user: "System",
+          action: "Hash recorded",
+          detail: "a3f9c2e1...",
+        },
+      ];
+      return (
+        <div key={3} className="p-5 space-y-3">
+          <div className="text-xs font-medium text-[#6B6560] uppercase tracking-wide">
+            Audit log · 2026-10-13
+          </div>
+          <div className="space-y-1 font-mono text-xs">
+            {auditLog.map((e, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 py-1.5 border-b border-[#D4CFC8] last:border-0"
+              >
+                <span className="text-[#6B6560] w-10">{e.time}</span>
+                <span className="text-[#1B4FD8] w-16 shrink-0">{e.user}</span>
+                <span className="text-[#1C1917] flex-1">
+                  {e.action}
+                  {e.detail ? ` — ${e.detail}` : ""}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 bg-[#EFEDE8] rounded-lg px-3 py-2">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#6B6560"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+            </svg>
+            <span className="text-xs text-[#6B6560]">
+              Tamper-evident — cannot be altered retroactively
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    default:
+      return null;
+  }
+}
+
+function WorkflowDemo() {
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    const t = setTimeout(() => setStep((s) => (s + 1) % 4), DURATIONS[step]);
+    return () => clearTimeout(t);
+  }, [step]);
+
+  return (
+    <div className="w-full border border-[#D4CFC8] rounded-lg shadow-sm overflow-hidden bg-white">
+      <WindowChrome />
+      {/* Step tabs */}
+      <div className="flex border-b border-[#D4CFC8] bg-[#F8F6F1]">
+        {DEMO_STEPS.map((s) => (
+          <button
+            key={s.id}
+            onClick={() => setStep(s.id)}
+            className={`flex-1 px-2 py-2.5 text-xs font-medium transition-colors ${step === s.id
+                ? "bg-white border-b-2 border-[#1B4FD8] text-[#1B4FD8]"
+                : "text-[#6B6560] hover:text-[#1C1917]"
+              }`}
+            aria-pressed={step === s.id}
+          >
+            <span className="mr-1">{s.icon}</span>
+            <span className="hidden sm:inline">{s.tab}</span>
+          </button>
+        ))}
+      </div>
+      {/* Step title */}
+      <div className="px-5 pt-4 pb-1">
+        <h3
+          className="text-sm font-semibold text-[#1C1917]"
+          style={{ fontFamily: "var(--font-dm-serif)" }}
+        >
+          {DEMO_STEPS[step].title}
+        </h3>
+      </div>
+      {/* Step content */}
+      <div aria-live="polite" aria-atomic="true">
+        <StepContent step={step} />
+      </div>
+      {/* Progress dots */}
+      <div className="flex justify-center gap-2 py-3 bg-[#F8F6F1] border-t border-[#D4CFC8]">
+        {DEMO_STEPS.map((s) => (
+          <button
+            key={s.id}
+            onClick={() => setStep(s.id)}
+            aria-label={`Go to step ${s.id + 1}: ${s.tab}`}
+            className={`w-2 h-2 rounded-full transition-colors ${step === s.id ? "bg-[#1B4FD8]" : "bg-[#D4CFC8]"
+              }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // ── Navbar ──────────────────────────────────────────────────────────────────
 function Navbar() {
@@ -158,58 +471,9 @@ function Hero() {
             </div>
           </div>
 
-          {/* Right column — 42% — Tender requirement card mockup */}
+          {/* Right column — 42% — Animated workflow demo */}
           <div className="lg:w-[42%] w-full">
-            <div
-              className="bg-white border border-[#D4CFC8] rounded-lg p-6 shadow-sm"
-              aria-label="Tender requirement card example"
-              aria-hidden="true"
-            >
-              <p
-                className="text-[13px] text-[#6B6560] mb-3"
-                style={{ fontFamily: 'var(--font-inter)' }}
-              >
-                Requirement 3.2
-              </p>
-
-              {/* Highlighted clause */}
-              <div className="bg-[#00C2A8]/15 border-l-2 border-[#00C2A8] px-3 py-2 rounded-r mb-3">
-                <p
-                  className="text-[14px] text-[#1C1917] leading-relaxed"
-                  style={{ fontFamily: 'var(--font-inter)' }}
-                >
-                  The supplier must demonstrate a minimum of three years&rsquo; experience delivering similar contracts to public sector bodies.
-                </p>
-              </div>
-
-              {/* Badge */}
-              <div className="flex items-center gap-3 mb-4">
-                <span
-                  className="inline-flex items-center text-[#00C2A8] bg-[#00C2A8]/10 rounded-full px-3 py-1 text-xs font-medium"
-                  style={{ fontFamily: 'var(--font-inter)' }}
-                >
-                  Requirement extracted
-                </span>
-              </div>
-
-              {/* Word count */}
-              <p
-                className="text-[13px] text-[#6B6560] mb-3"
-                style={{ fontFamily: 'var(--font-inter)' }}
-              >
-                Word count: 247 / 500
-              </p>
-
-              {/* Draft answer placeholder */}
-              <textarea
-                className="w-full border border-[#D4CFC8] rounded px-3 py-2 text-[13px] text-[#6B6560] bg-[#F8F6F1] resize-none focus:outline-none"
-                rows={3}
-                placeholder="Draft answer…"
-                readOnly
-                aria-label="Draft answer field"
-                style={{ fontFamily: 'var(--font-inter)' }}
-              />
-            </div>
+            <WorkflowDemo />
           </div>
         </div>
       </div>
@@ -448,8 +712,8 @@ function Pricing() {
             <div
               key={p.name}
               className={`flex flex-col p-8 ${p.highlighted
-                  ? "border-2 border-[#1B4FD8] bg-[#F8F6F1]"
-                  : "border border-[#D4CFC8] bg-[#F8F6F1]"
+                ? "border-2 border-[#1B4FD8] bg-[#F8F6F1]"
+                : "border border-[#D4CFC8] bg-[#F8F6F1]"
                 }`}
             >
               <div
@@ -492,8 +756,8 @@ function Pricing() {
               <a
                 href={p.href}
                 className={`block text-center font-semibold px-5 py-2.5 rounded text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4FD8] ${p.highlighted
-                    ? "bg-[#1B4FD8] hover:bg-[#1541B0] text-[#F8F6F1]"
-                    : "border border-[#1B4FD8] text-[#1B4FD8] hover:bg-[#1B4FD8] hover:text-[#F8F6F1]"
+                  ? "bg-[#1B4FD8] hover:bg-[#1541B0] text-[#F8F6F1]"
+                  : "border border-[#1B4FD8] text-[#1B4FD8] hover:bg-[#1B4FD8] hover:text-[#F8F6F1]"
                   }`}
                 style={{ fontFamily: 'var(--font-inter)' }}
               >
