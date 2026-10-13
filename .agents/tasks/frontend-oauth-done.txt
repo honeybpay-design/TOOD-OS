@@ -1,0 +1,50 @@
+Phase 4 — Next.js Google Login UI
+Completed: 2025
+
+Files created / updated
+────────────────────────
+1. apps/web/app/login/page.tsx  [CREATED]
+   - Client component; checks sessionStorage on mount, redirects to /dashboard if already signed in.
+   - "Sign in with Google" button fetches GET /api/auth/google (proxied to /v1/auth/google),
+     receives {auth_url}, then redirects the browser there.
+   - Shows a spinner while the fetch is in progress.
+   - Shows inline error message on failure.
+   - No secret/credential in any frontend code.
+   - Accessible: aria-label on button, role="alert" on error, visible focus ring, keyboard navigable.
+   - Mobile responsive via Tailwind (max-w-sm card, px-4).
+
+2. apps/web/app/dashboard/page.tsx  [UPDATED]
+   - Client component with session guard.
+   - On mount: reads ?session_token= from URL, stores it in sessionStorage as "tood_session",
+     removes param from URL via history.replaceState.
+   - If no token in sessionStorage → router.replace("/login").
+   - Validates session via GET /api/auth/session with Authorization: Bearer <token>.
+   - On 401: clears sessionStorage, redirects to /login.
+   - Displays role in header when session is valid.
+   - Sign out button: POST /api/auth/logout, clears sessionStorage, redirects to /login.
+   - Token never written to localStorage, cookies, or console.
+
+3. apps/web/next.config.ts  [UPDATED]
+   - Added /auth/google/callback → apiUrl/v1/auth/google/callback as the FIRST rewrite rule
+     (must precede the /api/:path* catch-all so Google's redirect lands at the correct handler).
+   - Existing /api/:path* rewrite retained unchanged.
+   - Uses API_URL env var (falls back to http://localhost:8000).
+
+4. apps/web/app/page.tsx  [UPDATED]
+   - Desktop "Sign in" Link: href changed from /dashboard → /login.
+   - Mobile "Sign in" Link: href changed from /dashboard → /login.
+
+Build result
+────────────
+  cd apps/web && npm run build
+  Exit code: 0
+  All 5 routes compiled (/, /_not-found, /admin, /dashboard, /login).
+  TypeScript check passed.
+  Two pre-existing CSS warnings for @custom-variant and @theme (Tailwind v4 directives);
+  these were present before this change and do not affect the build.
+
+Security checks
+───────────────
+  No secrets, API keys, or hardcoded credentials in any frontend file.
+  No client_secret references.
+  No hardcoded API URLs — all paths are relative (/api/...) or use NEXT_PUBLIC_API_URL / API_URL.

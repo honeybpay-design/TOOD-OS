@@ -26,7 +26,7 @@ function Navbar() {
           </div>
           <div className="hidden md:flex items-center gap-3">
             <Link
-              href="/dashboard"
+              href="/login"
               className="text-slate-300 hover:text-white text-sm font-medium transition-colors px-3 py-1.5"
             >
               Sign in
@@ -58,7 +58,7 @@ function Navbar() {
                 {item}
               </a>
             ))}
-            <Link href="/dashboard" className="text-slate-300 hover:text-white text-sm font-medium py-1">Sign in</Link>
+            <Link href="/login" className="text-slate-300 hover:text-white text-sm font-medium py-1">Sign in</Link>
             <Link href="/api/billing/checkout?plan=professional"
               className="bg-[#3B82F6] text-white text-sm font-semibold px-4 py-2 rounded-lg text-center">
               Start free trial
@@ -278,8 +278,8 @@ function Pricing() {
             <div
               key={p.name}
               className={`rounded-2xl p-8 border flex flex-col ${p.highlighted
-                  ? "bg-[#0F172A] border-[#3B82F6] shadow-2xl shadow-blue-500/20 relative"
-                  : "bg-white border-slate-200"
+                ? "bg-[#0F172A] border-[#3B82F6] shadow-2xl shadow-blue-500/20 relative"
+                : "bg-white border-slate-200"
                 }`}
             >
               {p.highlighted && (
@@ -310,8 +310,8 @@ function Pricing() {
               <a
                 href={p.href}
                 className={`block text-center font-semibold px-6 py-3 rounded-xl text-sm transition-all ${p.highlighted
-                    ? "bg-[#3B82F6] hover:bg-[#2563EB] text-white hover:shadow-lg hover:shadow-blue-500/30"
-                    : "border border-[#3B82F6] text-[#3B82F6] hover:bg-[#3B82F6] hover:text-white"
+                  ? "bg-[#3B82F6] hover:bg-[#2563EB] text-white hover:shadow-lg hover:shadow-blue-500/30"
+                  : "border border-[#3B82F6] text-[#3B82F6] hover:bg-[#3B82F6] hover:text-white"
                   }`}
               >
                 {p.cta}
