@@ -1,0 +1,1 @@
+Versioned compliance and regulatory rules. Each rule records an owner, source, effective date, jurisdiction, applicability condition, test cases and review date. A detected requirement is never a legal conclusion.

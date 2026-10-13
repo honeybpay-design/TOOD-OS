@@ -1,0 +1,26 @@
+T05 — Web application (Next.js) Result
+========================================
+
+Next.js version installed: v16.4.0
+
+shadcn init outcome:
+  - npx shadcn@latest init --yes timed out (interactive npm prompts on Windows)
+  - Manual setup performed instead per instructions fallback:
+      • Installed packages: class-variance-authority, clsx, tailwind-merge, lucide-react, tw-animate-css
+      • Created lib/utils.ts with cn() helper (clsx + tailwind-merge)
+      • Created components.json with shadcn config
+      • Updated app/globals.css with shadcn CSS variables (Tailwind v4 @import syntax)
+
+npm run build output (last lines):
+  ✓ Compiled successfully in 14.6s
+  ✓ Finished TypeScript in 12.8s
+  ✓ Collecting page data using 3 workers in 12.1s
+  ✓ Generating static pages using 3 workers (4/4) in 2.9s
+  ✓ Finalizing page optimization in 66ms
+
+  Route (app)
+  ┌ ○ /
+  └ ○ /_not-found
+  ○  (Static)  prerendered as static content
+
+Build exit code: 0 (SUCCESS)

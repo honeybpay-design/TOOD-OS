@@ -1,0 +1,1 @@
+Golden set and evaluation results. Put tender packs in `golden_set/` only with the right to use them. Write results to `results/latest.json`; thresholds are in `thresholds.json`. Neither real tender documents nor results are committed.

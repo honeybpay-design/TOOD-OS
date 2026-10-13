@@ -1,0 +1,38 @@
+T06 — API Client Generation Result
+====================================
+
+## File Verification
+
+- packages/api-client/openapi.json: EXISTS — 30115 bytes
+- packages/api-client/schema.d.ts:  EXISTS — 29101 bytes
+
+## Generation Details
+
+- OpenAPI schema exported via scripts/export_openapi.py (FastAPI app.openapi())
+- TypeScript types generated via openapi-typescript 7.13.0
+
+## npm run build (apps/web) — Final Output
+
+> web@0.1.0 build
+> next build
+
+▲ Next.js 16.4.0 (Turbopack)
+✓ Running next.config.ts took 1194ms
+✓ Compiled successfully in 11.6s
+  Running TypeScript ... Finished in 12.0s
+✓ Collecting page data using 3 workers in 3.6s
+✓ Generating static pages using 3 workers (4/4) in 1361ms
+✓ Finalizing page optimization in 101ms
+
+Route (app)
+┌ ○ /
+└ ○ /_not-found
+○  (Static)  prerendered as static content
+
+Exit Code: 0 — BUILD SUCCEEDED
+
+## Acceptance Checks
+
+[PASS] packages/api-client/openapi.json exists
+[PASS] packages/api-client/schema.d.ts exists
+[PASS] npm run build in apps/web succeeded

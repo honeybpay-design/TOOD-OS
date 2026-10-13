@@ -1,0 +1,60 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_PASSWORD: tood_dev_admin
+          POSTGRES_DB: tood
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d tood"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      DATABASE_ADMIN_URL: postgresql://postgres:tood_dev_admin@localhost:5432/tood
+      DATABASE_URL: postgresql://app_user:tood_dev_app@localhost:5432/tood
+      AUTH_DATABASE_URL: postgresql://auth_user:tood_dev_auth@localhost:5432/tood
+      APP_USER_PASSWORD: tood_dev_app
+      AUTH_USER_PASSWORD: tood_dev_auth
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -e "apps/api[dev]"
+      - run: ruff check apps/api scripts --config apps/api/pyproject.toml
+      - run: python scripts/migrate.py
+      - run: python scripts/verify_install.py
+      - run: pytest -q --maxfail=1 -rs
+        working-directory: apps/api
+      - name: Fail on skipped tests
+        run: |
+          cd apps/api && pytest -q -rs | tee /tmp/pytest.txt
+          ! grep -q "skipped" /tmp/pytest.txt
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  web:
+    runs-on: ubuntu-latest
+    if: ${{ hashFiles('apps/web/package.json') != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - run: npm ci
+        working-directory: apps/web
+      - run: npm run build
+        working-directory: apps/web

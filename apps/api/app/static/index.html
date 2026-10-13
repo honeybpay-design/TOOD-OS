@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TOOD-OS</title>
+<style>
+:root{--navy:#0f2a4a;--gold:#c8a24a;--soft:#eef3f9;--ink:#1f2937;--muted:#6b7280;--rule:#dde2e8;--red:#b91c1c;--green:#15803d;--amber:#b45309}
+*{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif;color:var(--ink);background:#f6f8fa}
+header{background:var(--navy);color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center}
+header b{letter-spacing:2px}header span{font-size:13px;opacity:.8}
+main{max-width:1000px;margin:20px auto;padding:0 16px}
+section{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:16px 18px;margin-bottom:16px}
+h2{margin:0 0 10px;font-size:17px;color:var(--navy)}h2 small{color:var(--muted);font-weight:400;font-size:13px}
+input,select,textarea,button{font:inherit}input,select,textarea{border:1px solid #c5ccd6;border-radius:6px;padding:7px 9px;width:100%}
+textarea{min-height:170px}button{background:var(--navy);color:#fff;border:0;border-radius:6px;padding:8px 14px;cursor:pointer}
+button.alt{background:#fff;color:var(--navy);border:1px solid var(--navy)}button:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0}.row>*{flex:1;min-width:140px}.row>button{flex:0 0 auto}
+table{width:100%;border-collapse:collapse;font-size:13px}th{background:var(--navy);color:#fff;text-align:left;padding:6px 8px}td{padding:6px 8px;border-bottom:1px solid var(--rule);vertical-align:top}
+.pill{display:inline-block;border-radius:10px;padding:1px 9px;font-size:12px;background:var(--soft);color:var(--navy)}
+.ok{color:var(--green)}.bad{color:var(--red)}.warn{color:var(--amber)}.muted{color:var(--muted);font-size:13px}
+.msg{padding:8px 12px;border-radius:6px;margin:8px 0;background:var(--soft)}.msg.err{background:#fef2f2;color:var(--red)}
+.q{border:1px solid var(--rule);border-radius:8px;padding:12px;margin:10px 0}.q p{margin:4px 0}
+.claim{padding:4px 8px;margin:4px 0;border-left:4px solid var(--green);background:#ecfdf3;font-size:13px}.claim.unsupported{border-color:var(--red);background:#fef2f2}.claim.acknowledged{border-color:var(--amber);background:#fffbeb}
+.bar{display:flex;height:12px;border-radius:6px;overflow:hidden;margin:6px 0}.bar i{display:block}
+.legend span{margin-right:12px;font-size:12px}.legend b{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<header><div><b>TOOD-OS</b> <span>Verifiable bid workspace</span></div><div id="who" class="muted" style="color:#fff"></div></header>
+<main>
+<div id="msg"></div>
+
+<section id="s-signup"><h2>1. Create your workspace <small>development sign-up, no password</small></h2>
+  <div class="row"><input id="org" placeholder="Organisation name"><input id="email" placeholder="Email address"><button onclick="signup()">Create</button></div>
+  <p class="muted">You get a private token that is kept in this browser. Everything below is limited to your organisation.</p></section>
+
+<section id="s-tender" class="hidden"><h2>2. Tender <small>upload the tender pack (PDF, Word or text)</small></h2>
+  <div class="row"><input id="ttitle" placeholder="Tender title" value="Riverside Council: Digital Services"><button onclick="createTender()">New tender</button>
+  <select id="tsel" onchange="pick()"></select></div>
+  <div class="row"><input type="file" id="file"><button id="up" onclick="upload()">Upload and read</button></div>
+  <div id="upres"></div></section>
+
+<section id="s-req" class="hidden"><h2>3. Requirements found <small>every one is verbatim text from the tender, with its source</small></h2><div id="reqs" class="muted">Upload a tender to see requirements.</div></section>
+
+<section id="s-ev" class="hidden"><h2>4. Evidence library <small>only approved evidence can support a claim</small></h2>
+  <div class="row"><select id="ekind"><option>case_study</option><option>company_fact</option><option>policy</option><option>method</option><option>cv</option><option>financial</option></select><input id="etitle" placeholder="Title"></div>
+  <textarea id="ebody" style="min-height:80px" placeholder="What is true and provable, in plain sentences. Include figures exactly as they appear in your records."></textarea>
+  <div class="row"><label><input type="checkbox" id="eappr" style="width:auto"> Approved (bid manager)</label><button onclick="addEvidence()">Add evidence</button><button class="alt" onclick="loadSample()">Load sample evidence</button></div>
+  <div id="evs"></div></section>
+
+<section id="s-q" class="hidden"><h2>5. Answer the questions <small>draft, edit, resolve flags, approve</small></h2><div id="qs" class="muted">No questions yet.</div></section>
+
+<section id="s-x" class="hidden"><h2>6. Check and export</h2>
+  <div class="row"><button class="alt" onclick="checkReady()">Check readiness</button><button onclick="exportDoc()">Export Word document</button></div><div id="ready"></div></section>
+</main>
+<script>
+const S={token:localStorage.getItem('tood_token'),tender:null,drafts:{}};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function say(t,err){$('msg').innerHTML=t?`<div class="msg ${err?'err':''}">${esc(t)}</div>`:''}
+async function api(path,opt={}){
+  opt.headers=Object.assign({},opt.headers||{});
+  if(S.token)opt.headers.Authorization='Bearer '+S.token;
+  if(opt.body&&!(opt.body instanceof FormData)){opt.headers['Content-Type']='application/json';opt.body=JSON.stringify(opt.body)}
+  const r=await fetch('/v1'+path,opt);
+  if(!r.ok){let d;try{d=(await r.json()).detail}catch(e){d=r.statusText}
+    throw new Error(typeof d==='string'?d:(d.message?d.message+': '+d.problems.map(p=>p.problem).join('; '):JSON.stringify(d)))}
+  return r;
+}
+const J=async(p,o)=>(await api(p,o)).json();
+const wrap=fn=>async(...a)=>{try{say('');await fn(...a)}catch(e){say(e.message,true)}};
+function show(){const on=!!S.token;['s-tender','s-req','s-ev','s-q','s-x'].forEach(i=>$(i).classList.toggle('hidden',!on));$('s-signup').classList.toggle('hidden',on)}
+const signup=wrap(async()=>{const r=await J('/signup',{method:'POST',body:{org_name:$('org').value,email:$('email').value}});
+  S.token=r.token;localStorage.setItem('tood_token',r.token);await boot()});
+async function boot(){if(!S.token){show();return}
+  try{const me=await J('/me');$('who').textContent=me.org.name+' · '+me.user.email+' · '+me.role+' · AI: '+me.ai_provider}
+  catch(e){localStorage.removeItem('tood_token');S.token=null;show();return}
+  show();await loadTenders();await loadEvidence()}
+async function loadTenders(){const ts=await J('/tenders');$('tsel').innerHTML=ts.map(t=>`<option value="${t.id}">${esc(t.title)} (${t.requirements} req, ${t.questions} q)</option>`).join('');
+  if(ts.length){S.tender=$('tsel').value;await refresh()}}
+const pick=wrap(async()=>{S.tender=$('tsel').value;await refresh()});
+const createTender=wrap(async()=>{await J('/tenders',{method:'POST',body:{title:$('ttitle').value}});await loadTenders();$('tsel').selectedIndex=0;S.tender=$('tsel').value;await refresh()});
+const upload=wrap(async()=>{if(!S.tender)throw new Error('Create or choose a tender first');const f=$('file').files[0];if(!f)throw new Error('Choose a file');
+  const fd=new FormData();fd.append('file',f);const r=await J(`/tenders/${S.tender}/documents`,{method:'POST',body:fd});
+  $('upres').innerHTML=`<div class="msg">Read ${r.blocks} blocks. Found ${r.requirements} requirements and ${r.questions} questions. ${r.needs_review} need review. ${r.rejected_unverifiable} unverifiable items discarded.<br><span class="muted">${esc(r.scan)}</span></div>`;
+  await loadTenders();$('tsel').value=S.tender;await refresh()});
+async function refresh(){if(!S.tender)return;await Promise.all([loadReqs(),loadQuestions()])}
+async function loadReqs(){const rs=await J(`/tenders/${S.tender}/requirements`);
+  $('reqs').innerHTML=rs.length?`<table><tr><th>Type</th><th>Requirement (verbatim)</th><th>Limit</th><th>Weight</th><th>Due</th><th>Source</th><th>Confidence</th></tr>`+rs.map(r=>`<tr><td><span class="pill">${esc(r.type)}</span></td><td>${esc(r.text_verbatim)}</td><td>${r.word_limit??''}</td><td>${r.weighting?r.weighting+'%':''}</td><td>${r.due_at?esc(new Date(r.due_at).toLocaleString('en-GB',{timeZone:'Europe/London'})):''}</td><td>${esc(r.file_name)}${r.page?' p.'+r.page:''}</td><td class="${r.confidence<0.7?'warn':''}">${r.confidence}${r.status==='requires_review'?' (review)':''}</td></tr>`).join('')+'</table>':'Upload a tender to see requirements.'}
+const addEvidence=wrap(async()=>{await J('/evidence',{method:'POST',body:{kind:$('ekind').value,title:$('etitle').value,body:$('ebody').value,approved:$('eappr').checked}});$('etitle').value='';$('ebody').value='';await loadEvidence()});
+const loadSample=wrap(async()=>{const items=[{kind:'case_study',title:'County council service transfer',body:'We transferred 12 services from an incumbent supplier for a county council in 6 weeks. Our mobilisation plan assigns a named transition manager to each service. We hold a weekly risk review with the council during transfer.'},{kind:'company_fact',title:'Security certifications',body:'We hold Cyber Essentials Plus certification, renewed in 2026. All staff complete annual security training. Customer data is encrypted at rest and in transit.'}];
+  for(const e of items)await J('/evidence',{method:'POST',body:{...e,approved:true}});await loadEvidence()});
+async function loadEvidence(){const es=await J('/evidence');$('evs').innerHTML=es.length?'<table><tr><th>Title</th><th>Kind</th><th>Status</th><th></th></tr>'+es.map(e=>`<tr><td>${esc(e.title)}<div class="muted">${esc(e.preview)}</div></td><td>${esc(e.kind)}</td><td class="${e.status==='approved'?'ok':'warn'}">${e.status}</td><td>${e.status==='approved'?'':`<button class="alt" onclick="approveEv('${e.id}')">Approve</button>`}</td></tr>`).join('')+'</table>':'<p class="muted">No evidence yet.</p>'}
+const approveEv=wrap(async id=>{await J(`/evidence/${id}/approve`,{method:'POST'});await loadEvidence()});
+async function loadQuestions(){const qs=await J(`/tenders/${S.tender}/questions`);
+  if(!qs.length){$('qs').innerHTML='No questions found in this tender.';return}
+  const parts=[];for(const q of qs){let d=null;if(q.latest_draft)d=await J(`/drafts/${q.latest_draft}`);S.drafts[q.id]=d;parts.push(card(q,d))}
+  $('qs').innerHTML=parts.join('')}
+function card(q,d){const lim=q.word_limit?` · limit ${q.word_limit} words`:'';
+  let h=`<div class="q"><b>${esc(q.prompt.slice(0,160))}${q.prompt.length>160?'…':''}</b><p class="muted">${q.weighting?q.weighting+'% · ':''}${lim.slice(3)}</p>`;
+  if(!d)return h+`<button onclick="gen('${q.id}')">Draft answer</button></div>`;
+  const a=Math.round(d.ai_retained_ratio*100);
+  h+=`<p class="muted">Version ${d.version} · ${d.word_count} words${d.over_limit?' <b class="bad">over the limit</b>':''} · model ${esc(d.model_id)} · AI text kept ${a}% ${d.approved?'· <b class="ok">approved</b>':''}</p>`;
+  h+=`<textarea id="t-${d.id}">${esc(d.text)}</textarea>`;
+  h+=d.claims.map(c=>`<div class="claim ${c.status}"><b>${c.status}</b>: ${esc(c.sentence_span.replace(/\[EV:[^\]]+\]/g,''))}${c.status==='unsupported'?` <button class="alt" onclick="ack('${c.id}')">I accept responsibility</button>`:''}</div>`).join('');
+  h+=`<div class="row"><button onclick="save('${d.id}')">Save as new version</button><button class="alt" onclick="gen('${q.id}')">Regenerate</button><button class="alt" onclick="prov('${d.id}')">Where did each part come from?</button><button onclick="approve('${d.id}')" ${d.approved?'disabled':''}>Approve as me</button></div><div id="p-${d.id}"></div></div>`;
+  return h}
+const gen=wrap(async qid=>{const d=await J(`/questions/${qid}/drafts`,{method:'POST'});if(d.note)say(d.note);await loadQuestions()});
+const save=wrap(async id=>{await J(`/drafts/${id}`,{method:'PATCH',body:{text:$('t-'+id).value}});await loadQuestions()});
+const ack=wrap(async id=>{await J(`/claims/${id}/acknowledge`,{method:'POST'});await loadQuestions()});
+const approve=wrap(async id=>{await J(`/drafts/${id}/approve`,{method:'POST'});await loadQuestions()});
+const prov=wrap(async id=>{const p=await J(`/drafts/${id}/provenance`);const col={ai:'#c8a24a',evidence:'#2f9e6b',human:'#0f2a4a',tender:'#0e8f9c',external:'#b91c1c'};
+  const tot=p.spans.reduce((n,s)=>n+s.text.length,0)||1;
+  $('p-'+id).innerHTML=`<div class="bar">${p.spans.map(s=>`<i title="${s.origin}" style="width:${s.text.length/tot*100}%;background:${col[s.origin]||'#999'}"></i>`).join('')}</div><div class="legend">${Object.keys(col).map(k=>`<span><b style="background:${col[k]}"></b>${k}</span>`).join('')}</div><p class="muted">AI text kept: ${Math.round(p.ai_retained_ratio*100)}% · history chain: <b class="${p.chain.ok?'ok':'bad'}">${p.chain.ok?'intact':'BROKEN at revision '+p.chain.first_bad_revision}</b> (${p.chain.revisions} revisions)</p>`});
+const checkReady=wrap(async()=>{const r=await J(`/tenders/${S.tender}/readiness`);
+  $('ready').innerHTML=r.ready?'<div class="msg ok">Ready to export: every answer is approved and every claim is supported.</div>':'<div class="msg err">Not ready:<ul>'+r.problems.map(p=>`<li>${esc(p.problem)}</li>`).join('')+'</ul></div>'});
+const exportDoc=wrap(async()=>{const r=await api(`/tenders/${S.tender}/export`);const b=await r.blob();const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='submission.docx';a.click();
+  $('ready').innerHTML=`<div class="msg">Exported. SHA-256 ${esc(r.headers.get('X-Export-SHA256'))}</div>`});
+boot();
+</script>
+</body>
+</html>

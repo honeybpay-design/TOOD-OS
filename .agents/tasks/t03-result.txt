@@ -1,0 +1,17 @@
+T03 — Run the API: RESULT
+=========================
+Date: 2026-10-13
+
+PASS  /healthz  → {"status":"ok"}
+PASS  /readyz   → {"status":"ready"}
+PASS  demo.py   → printed "export 200" (output: export 200, saved to ...demo_submission.docx (sha256 0206fab19380631e...))
+PASS  data/demo_submission.docx exists (37546 bytes)
+
+All 4 acceptance checks PASSED.
+
+Notes:
+- Docker Desktop was started to bring up the PostgreSQL container (toodcom-postgres-1, pgvector/pgvector:pg16)
+- Database migrations were already applied (4 migrations skipped as already done)
+- API server (Python/uvicorn, PID 23328) was running on localhost:8000
+- A conflicting Docker container (doccute_v2_service) was stopped to free port 8000
+- API server was stopped after demo run

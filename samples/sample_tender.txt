@@ -1,0 +1,19 @@
+Riverside Council: Digital Services Tender
+
+Instructions to Tenderers
+
+Tenders must be submitted no later than 12:00 on 14 November 2026 through the council portal. Late tenders will be rejected.
+
+Tenderers must attach a copy of their current Cyber Essentials certificate. Tenderers must also provide a copy of their information security policy.
+
+Tenderers must confirm that they are not subject to any exclusion grounds. This declaration is mandatory.
+
+Question 1: Mobilisation (20%)
+
+Describe your approach to mobilisation, including how you will transfer services from the incumbent supplier. Your response must not exceed 750 words. This question carries a weighting of 20%.
+
+Question 2: Information Security (15%)
+
+Explain how you protect council data and demonstrate your relevant certifications. Responses should not exceed 500 words. This question carries a weighting of 15%.
+
+Pass/fail: Tenderers who do not hold Cyber Essentials will fail this stage and will be rejected.
