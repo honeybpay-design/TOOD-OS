@@ -1,0 +1,42 @@
+## Phase 3 — Google OAuth Backend: DONE
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| apps/api/pyproject.toml | Moved httpx to main deps; added itsdangerous>=2.2,<3 and python-jose[cryptography]>=3.3,<4 |
+| apps/api/app/core/config.py | Added google_client_id, google_client_secret, google_redirect_uri, session_secret to Settings |
+| apps/api/app/core/oauth.py | New: make_state, verify_state, build_auth_url, exchange_code, get_userinfo |
+| apps/api/app/routes_oauth.py | New: GET /v1/auth/google, GET /v1/auth/google/callback, GET /v1/auth/session, POST /v1/auth/logout |
+| apps/api/app/core/auth.py | Added authenticate_session(); updated authenticate() to accept X-Session-Token header |
+| apps/api/app/main.py | Registered oauth_router |
+| migrations/0006_oauth.sql | New: google_sub/avatar_url/display_name columns on users; oauth_accounts table; user_sessions table with RLS |
+
+### Security Properties Maintained
+- google_client_secret never logged anywhere
+- access_token and session_token never logged
+- Session tokens stored as SHA-256 hashes only (token_hash char(64))
+- State parameter signed with itsdangerous URLSafeTimedSerializer (CSRF protection, 600s max age)
+- All new DB tables have ENABLE/FORCE ROW LEVEL SECURITY
+- No existing RLS, append-only triggers, or hash chain touched
+- authenticate() still supports existing Bearer API token flow unchanged
+
+### Test Results
+- ruff check: All checks passed (0 errors)
+- pytest apps/api -q: 17 passed, 27 skipped (DB-dependent tests skip without live DB — same baseline)
+- oauth state sign/verify: verified working (dict with ts and hint keys)
+- config settings: google_redirect_uri = https://tood.uk/auth/google/callback confirmed
+- oauth_router.routes count: 4 confirmed
+- Paths: /v1/auth/google, /v1/auth/google/callback, /v1/auth/session, /v1/auth/logout
+
+### Migration Status
+- 0006_oauth.sql created and content-verified
+- Cloud SQL migration timed out (instance only reachable from authorized IP 5.151.90.57/32)
+  → Run `python scripts/migrate.py` from that network/machine to apply
+
+### Environment Variables Required
+Add to .env (never commit):
+  GOOGLE_CLIENT_ID=<from Google Cloud Console>
+  GOOGLE_CLIENT_SECRET=<from Google Cloud Console>
+  GOOGLE_REDIRECT_URI=https://tood.uk/auth/google/callback
+  SESSION_SECRET=<generate: python -c "import secrets; print(secrets.token_hex(32))">
