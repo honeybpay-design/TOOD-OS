@@ -7,10 +7,11 @@ from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
-from app.routes import router
+from app.routes import admin_router, router
 
 app = FastAPI(title="TOOD-OS API", version="0.2.0")
 app.include_router(router)
+app.include_router(admin_router)
 STATIC = pathlib.Path(__file__).parent / "static"
 app.mount("/ui", StaticFiles(directory=STATIC, html=True), name="ui")
 

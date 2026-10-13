@@ -15,6 +15,7 @@ dependencies = [
   "google-auth>=2.30",
   "google-cloud-monitoring>=2.20",
   "google-cloud-logging>=3.10",
+  "stripe>=10.0",
 ]
 
 [project.optional-dependencies]

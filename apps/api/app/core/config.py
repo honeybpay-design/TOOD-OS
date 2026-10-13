@@ -18,6 +18,12 @@ class Settings(BaseSettings):
     storage_dir: str = str(ROOT / "data" / "uploads")
     max_upload_mb: int = 20
     allow_signup: bool = True  # development sign-up. Turn off in any shared environment
+    stripe_secret_key: str = ""
+    stripe_publishable_key: str = ""
+    stripe_webhook_secret: str = ""
+    stripe_price_starter: str = ""
+    stripe_price_professional: str = ""
+    stripe_price_enterprise: str = ""
 
     @property
     def allowed_regions(self) -> set[str]:
