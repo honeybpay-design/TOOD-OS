@@ -7,60 +7,99 @@ import { useState } from "react";
 function Navbar() {
   const [open, setOpen] = useState(false);
   return (
-    <nav className="fixed top-0 inset-x-0 z-50 bg-[#0F172A]/95 backdrop-blur border-b border-white/10">
+    <nav
+      className="fixed top-0 inset-x-0 z-50 bg-[#F8F6F1] border-b border-[#D4CFC8]"
+      aria-label="Main navigation"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <span className="text-white text-xl font-bold tracking-tight">
-            TOOD
-          </span>
+          {/* Logo */}
+          <a href="/" className="flex items-center gap-2" aria-label="TOOD home">
+            <img src="/tood logo png.png" alt="TOOD" className="h-8 w-auto" />
+            <span
+              className="text-[#1C1917] font-bold text-base"
+              style={{ fontFamily: 'var(--font-inter)' }}
+            >
+              TOOD
+            </span>
+          </a>
+
+          {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-8">
             {["Features", "Pricing", "About"].map((item) => (
               <a
                 key={item}
                 href={`#${item.toLowerCase()}`}
-                className="text-slate-300 hover:text-white text-sm font-medium transition-colors"
+                className="text-[#6B6560] text-sm hover:text-[#1C1917] transition-colors"
+                style={{ fontFamily: 'var(--font-inter)' }}
               >
                 {item}
               </a>
             ))}
           </div>
+
+          {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-3">
             <Link
               href="/login"
-              className="text-slate-300 hover:text-white text-sm font-medium transition-colors px-3 py-1.5"
+              className="text-[#1B4FD8] text-sm font-medium hover:text-[#1541B0] transition-colors"
+              style={{ fontFamily: 'var(--font-inter)' }}
             >
               Sign in
             </Link>
             <Link
               href="/api/billing/checkout?plan=professional"
-              className="bg-[#3B82F6] hover:bg-[#2563EB] text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+              className="bg-[#1B4FD8] hover:bg-[#1541B0] text-[#F8F6F1] text-sm font-semibold px-4 py-2 rounded transition-colors"
+              style={{ fontFamily: 'var(--font-inter)' }}
             >
               Start free trial
             </Link>
           </div>
+
+          {/* Mobile hamburger */}
           <button
-            className="md:hidden text-slate-300 hover:text-white p-2"
+            className="md:hidden text-[#6B6560] hover:text-[#1C1917] p-2"
             onClick={() => setOpen(!open)}
-            aria-label="Toggle menu"
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d={open ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d={open ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
+              />
             </svg>
           </button>
         </div>
+
+        {/* Mobile menu */}
         {open && (
-          <div className="md:hidden py-3 border-t border-white/10 flex flex-col gap-3">
+          <div className="md:hidden py-3 border-t border-[#D4CFC8] flex flex-col gap-3">
             {["Features", "Pricing", "About"].map((item) => (
-              <a key={item} href={`#${item.toLowerCase()}`}
-                className="text-slate-300 hover:text-white text-sm font-medium py-1"
-                onClick={() => setOpen(false)}>
+              <a
+                key={item}
+                href={`#${item.toLowerCase()}`}
+                className="text-[#6B6560] hover:text-[#1C1917] text-sm py-1 transition-colors"
+                onClick={() => setOpen(false)}
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
                 {item}
               </a>
             ))}
-            <Link href="/login" className="text-slate-300 hover:text-white text-sm font-medium py-1">Sign in</Link>
-            <Link href="/api/billing/checkout?plan=professional"
-              className="bg-[#3B82F6] text-white text-sm font-semibold px-4 py-2 rounded-lg text-center">
+            <Link
+              href="/login"
+              className="text-[#1B4FD8] text-sm py-1"
+              style={{ fontFamily: 'var(--font-inter)' }}
+            >
+              Sign in
+            </Link>
+            <Link
+              href="/api/billing/checkout?plan=professional"
+              className="bg-[#1B4FD8] text-[#F8F6F1] text-sm font-semibold px-4 py-2 rounded text-center"
+              style={{ fontFamily: 'var(--font-inter)' }}
+            >
               Start free trial
             </Link>
           </div>
@@ -70,69 +109,106 @@ function Navbar() {
   );
 }
 
-// ── Hero ─────────────────────────────────────────────────────────────────────
+// ── Hero ──────────────────────────────────────────────────────────────────────
 function Hero() {
   return (
-    <section className="bg-[#0F172A] pt-32 pb-24 px-4" id="hero">
+    <section className="pt-32 pb-20 px-4 bg-[#F8F6F1]" id="hero">
       <div className="max-w-7xl mx-auto">
-        <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 bg-[#3B82F6]/10 border border-[#3B82F6]/30 rounded-full px-4 py-1.5 mb-8">
-            <span className="w-2 h-2 rounded-full bg-[#3B82F6] animate-pulse" />
-            <span className="text-[#93C5FD] text-sm font-medium">Trusted by UK Public Sector</span>
-          </div>
-          <h1 className="text-5xl sm:text-6xl font-extrabold text-white leading-tight mb-6 animate-slide-up">
-            Win More Tenders.<br />
-            <span className="text-[#3B82F6]">Write Better Bids.</span>
-          </h1>
-          <p className="text-lg text-slate-400 max-w-2xl mb-10 leading-relaxed">
-            TOOD-OS automates requirement extraction, draft generation, and compliance checking —
-            so your team focuses on strategy, not paperwork.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Link
-              href="/api/billing/checkout?plan=professional"
-              className="inline-flex items-center justify-center bg-[#3B82F6] hover:bg-[#2563EB] text-white font-semibold px-8 py-3.5 rounded-xl text-base transition-all hover:shadow-lg hover:shadow-blue-500/25"
+        <div className="flex flex-col lg:flex-row gap-12 lg:gap-16 items-start">
+          {/* Left column — 58% */}
+          <div className="lg:w-[58%]">
+            <p
+              className="text-[15px] text-[#6B6560] mb-4"
+              style={{ fontFamily: 'var(--font-inter)' }}
             >
-              Start free trial
-            </Link>
-            <button
-              className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 text-white font-semibold px-8 py-3.5 rounded-xl text-base transition-colors"
-              onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+              AI-assisted tender writing for UK public sector
+            </p>
+            <h1
+              className="hero-headline text-[#1C1917] max-w-[580px] mb-6 leading-[1.1]"
+              style={{
+                fontFamily: 'var(--font-dm-serif)',
+                fontSize: '56px',
+              }}
             >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-              </svg>
-              Watch demo
-            </button>
+              Tender writing that holds up to scrutiny.
+            </h1>
+            <p
+              className="text-[17px] text-[#6B6560] max-w-[520px] leading-relaxed mb-8"
+              style={{ fontFamily: 'var(--font-inter)' }}
+            >
+              Extract requirements verbatim, draft grounded answers, and export only when every response is approved.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/api/billing/checkout?plan=professional"
+                className="inline-flex items-center justify-center bg-[#1B4FD8] hover:bg-[#1541B0] text-[#F8F6F1] px-6 py-3 rounded font-semibold text-base transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4FD8]"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
+                Start free trial
+              </Link>
+              <button
+                onClick={() =>
+                  document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })
+                }
+                className="inline-flex items-center justify-center border border-[#1C1917] text-[#1C1917] px-6 py-3 rounded font-semibold text-base hover:bg-[#EFEDE8] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4FD8]"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
+                See how it works
+              </button>
+            </div>
           </div>
-        </div>
-        {/* Abstract dashboard wireframe SVG */}
-        <div className="mt-16 relative">
-          <div className="bg-[#1E293B] rounded-2xl border border-white/10 overflow-hidden shadow-2xl p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-3 h-3 rounded-full bg-red-500" />
-              <div className="w-3 h-3 rounded-full bg-yellow-500" />
-              <div className="w-3 h-3 rounded-full bg-green-500" />
-              <div className="ml-4 text-slate-500 text-xs font-mono">tood.uk/dashboard</div>
-            </div>
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              {[{ "label": "Active Tenders", "val": "12" }, { "label": "Requirements Extracted", "val": "847" }, { "label": "Win Rate", "val": "94%" }].map((c) => (
-                <div key={c.label} className="bg-[#0F172A] rounded-xl p-4">
-                  <div className="text-slate-400 text-xs mb-1">{c.label}</div>
-                  <div className="text-white text-2xl font-bold">{c.val}</div>
-                </div>
-              ))}
-            </div>
-            <div className="space-y-2">
-              {[85, 60, 40, 90, 55].map((w, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="w-32 text-slate-500 text-xs truncate">Requirement {i + 1}</div>
-                  <div className="flex-1 bg-[#0F172A] rounded-full h-2">
-                    <div className="bg-[#3B82F6] h-2 rounded-full transition-all" style={{ width: `${w}%` }} />
-                  </div>
-                  <div className="text-slate-400 text-xs w-8">{w}%</div>
-                </div>
-              ))}
+
+          {/* Right column — 42% — Tender requirement card mockup */}
+          <div className="lg:w-[42%] w-full">
+            <div
+              className="bg-white border border-[#D4CFC8] rounded-lg p-6 shadow-sm"
+              aria-label="Tender requirement card example"
+              aria-hidden="true"
+            >
+              <p
+                className="text-[13px] text-[#6B6560] mb-3"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
+                Requirement 3.2
+              </p>
+
+              {/* Highlighted clause */}
+              <div className="bg-[#00C2A8]/15 border-l-2 border-[#00C2A8] px-3 py-2 rounded-r mb-3">
+                <p
+                  className="text-[14px] text-[#1C1917] leading-relaxed"
+                  style={{ fontFamily: 'var(--font-inter)' }}
+                >
+                  The supplier must demonstrate a minimum of three years&rsquo; experience delivering similar contracts to public sector bodies.
+                </p>
+              </div>
+
+              {/* Badge */}
+              <div className="flex items-center gap-3 mb-4">
+                <span
+                  className="inline-flex items-center text-[#00C2A8] bg-[#00C2A8]/10 rounded-full px-3 py-1 text-xs font-medium"
+                  style={{ fontFamily: 'var(--font-inter)' }}
+                >
+                  Requirement extracted
+                </span>
+              </div>
+
+              {/* Word count */}
+              <p
+                className="text-[13px] text-[#6B6560] mb-3"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
+                Word count: 247 / 500
+              </p>
+
+              {/* Draft answer placeholder */}
+              <textarea
+                className="w-full border border-[#D4CFC8] rounded px-3 py-2 text-[13px] text-[#6B6560] bg-[#F8F6F1] resize-none focus:outline-none"
+                rows={3}
+                placeholder="Draft answer…"
+                readOnly
+                aria-label="Draft answer field"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              />
             </div>
           </div>
         </div>
@@ -141,62 +217,87 @@ function Hero() {
   );
 }
 
-// ── Stats Bar ────────────────────────────────────────────────────────────────
-function StatsBar() {
-  const stats = [
-    { value: "£2.3B+", label: "Tenders processed" },
-    { value: "340+", label: "Organisations" },
-    { value: "94%", label: "Win rate improvement" },
-    { value: "ISO 27001", label: "Compliant" },
-  ];
-  return (
-    <section className="bg-[#1E293B] border-y border-white/10 py-8 px-4">
-      <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-        {stats.map((s) => (
-          <div key={s.label}>
-            <div className="text-2xl font-extrabold text-white">{s.value}</div>
-            <div className="text-slate-400 text-sm mt-1">{s.label}</div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-// ── Features ─────────────────────────────────────────────────────────────────
+// ── Features ──────────────────────────────────────────────────────────────────
 function Features() {
   const features = [
     {
-      icon: "🔍",
-      title: "Requirement Extraction",
-      desc: "Auto-extract every scored question with verbatim precision. Zero manual copy-paste.",
+      icon: (
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.75}
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12C3.75 7.5 7.5 4.5 12 4.5s8.25 3 9.75 7.5c-1.5 4.5-5.25 7.5-9.75 7.5S3.75 16.5 2.25 12z" />
+          <circle cx="12" cy="12" r="3" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ),
+      title: "Requirements extracted verbatim",
+      body: "Pulls exact wording from tender documents, nothing paraphrased. Quoted page and clause references included.",
     },
     {
-      icon: "✍️",
-      title: "AI-Assisted Drafting",
-      desc: "Gemini-powered responses grounded in your approved evidence library.",
+      icon: (
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.75}
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+        </svg>
+      ),
+      title: "Every draft grounded in evidence",
+      body: "Gemini writes only from your approved evidence library. No hallucinated capabilities, no invented past contracts.",
     },
     {
-      icon: "🔒",
-      title: "Provenance & Compliance",
-      desc: "Hash-chained audit trail, forced RLS, gated export — built for public sector scrutiny.",
+      icon: (
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.75}
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+        </svg>
+      ),
+      title: "Export only when every answer is approved",
+      body: "The gate exists for compliance, not as an upsell. Unapproved responses cannot be included in an export.",
     },
   ];
+
   return (
-    <section id="features" className="bg-white py-24 px-4">
+    <section id="features" className="py-20 px-4 bg-[#F8F6F1]">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-extrabold text-[#0F172A] mb-4">Built for the way bids actually work</h2>
-          <p className="text-slate-500 text-lg max-w-2xl mx-auto">
-            Every feature is designed around the reality of public sector procurement — not generic AI demos.
-          </p>
-        </div>
-        <div className="grid md:grid-cols-3 gap-8">
+        <h2
+          className="text-[#1C1917] mb-14"
+          style={{ fontFamily: 'var(--font-dm-serif)', fontSize: '40px' }}
+        >
+          What makes it different
+        </h2>
+        <div className="flex flex-col gap-12">
           {features.map((f) => (
-            <div key={f.title} className="bg-slate-50 rounded-2xl p-8 border border-slate-100 hover:border-[#3B82F6]/40 hover:shadow-lg transition-all">
-              <div className="text-4xl mb-4">{f.icon}</div>
-              <h3 className="text-xl font-bold text-[#0F172A] mb-3">{f.title}</h3>
-              <p className="text-slate-500 leading-relaxed">{f.desc}</p>
+            <div key={f.title} className="flex gap-6 items-start max-w-2xl">
+              <div className="text-[#00C2A8] flex-shrink-0 mt-0.5">{f.icon}</div>
+              <div>
+                <h3
+                  className="text-[21px] font-semibold text-[#1C1917] mb-2"
+                  style={{ fontFamily: 'var(--font-inter)' }}
+                >
+                  {f.title}
+                </h3>
+                <p
+                  className="text-[15px] text-[#6B6560] leading-relaxed"
+                  style={{ fontFamily: 'var(--font-inter)' }}
+                >
+                  {f.body}
+                </p>
+              </div>
             </div>
           ))}
         </div>
@@ -205,25 +306,61 @@ function Features() {
   );
 }
 
-// ── How it Works ──────────────────────────────────────────────────────────────
+// ── How it works ──────────────────────────────────────────────────────────────
 function HowItWorks() {
   const steps = [
-    { n: "01", title: "Upload Tender", desc: "Upload PDF or DOCX tender documents. TOOD parses every page." },
-    { n: "02", title: "Extract Requirements", desc: "AI identifies every scored question, weighting, and word limit automatically." },
-    { n: "03", title: "Draft & Export", desc: "Generate compliant drafts, approve them, and export a gated submission pack." },
+    {
+      n: "1",
+      title: "Upload the tender document",
+      body: "Upload a PDF or DOCX. TOOD reads every page and preserves the original structure.",
+    },
+    {
+      n: "2",
+      title: "Review extracted requirements",
+      body: "Check the requirements TOOD found. Add, remove, or reorder before any drafting begins.",
+    },
+    {
+      n: "3",
+      title: "Draft, approve, and export",
+      body: "Write or generate draft answers, approve each one, then export a clean submission pack.",
+    },
   ];
+
   return (
-    <section className="bg-slate-50 py-24 px-4">
+    <section className="py-20 px-4 bg-[#EFEDE8]">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-extrabold text-[#0F172A] mb-4">How it works</h2>
-        </div>
-        <div className="grid md:grid-cols-3 gap-8">
+        <h2
+          className="text-[#1C1917] mb-14"
+          style={{ fontFamily: 'var(--font-dm-serif)', fontSize: '40px' }}
+        >
+          How it works
+        </h2>
+        <div className="grid md:grid-cols-3 gap-10">
           {steps.map((s) => (
-            <div key={s.n} className="relative">
-              <div className="text-6xl font-black text-[#3B82F6]/15 mb-4">{s.n}</div>
-              <h3 className="text-xl font-bold text-[#0F172A] mb-3">{s.title}</h3>
-              <p className="text-slate-500 leading-relaxed">{s.desc}</p>
+            <div key={s.n}>
+              <div
+                className="leading-none text-[#D4CFC8] mb-3"
+                style={{
+                  fontFamily: 'var(--font-dm-serif)',
+                  fontSize: '64px',
+                  lineHeight: 1,
+                }}
+                aria-hidden="true"
+              >
+                {s.n}
+              </div>
+              <h3
+                className="text-[21px] font-semibold text-[#1C1917] mb-2"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
+                {s.title}
+              </h3>
+              <p
+                className="text-[15px] text-[#6B6560] leading-relaxed"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
+                {s.body}
+              </p>
             </div>
           ))}
         </div>
@@ -238,9 +375,14 @@ function Pricing() {
     {
       name: "Starter",
       price: "£99",
-      period: "/month",
-      desc: "For small teams getting started with bid automation.",
-      features: ["3 active tenders", "2 user seats", "Template AI drafting", "Requirement extraction", "Audit trail"],
+      period: "/mo",
+      features: [
+        "3 active tenders",
+        "2 user seats",
+        "Template AI drafting",
+        "Requirement extraction",
+        "Audit trail",
+      ],
       cta: "Start free trial",
       href: "/api/billing/checkout?plan=starter",
       highlighted: false,
@@ -248,9 +390,15 @@ function Pricing() {
     {
       name: "Professional",
       price: "£299",
-      period: "/month",
-      desc: "For established bid teams winning complex contracts.",
-      features: ["20 active tenders", "10 user seats", "Gemini AI drafting", "Advanced requirement extraction", "Priority support", "Compliance reports"],
+      period: "/mo",
+      features: [
+        "20 active tenders",
+        "10 user seats",
+        "Gemini AI drafting",
+        "Advanced extraction",
+        "Priority support",
+        "Compliance reports",
+      ],
       cta: "Start free trial",
       href: "/api/billing/checkout?plan=professional",
       highlighted: true,
@@ -258,61 +406,96 @@ function Pricing() {
     {
       name: "Enterprise",
       price: "£799",
-      period: "/month",
-      desc: "For large organisations with enterprise compliance needs.",
-      features: ["Unlimited tenders", "Unlimited users", "Gemini AI drafting", "SSO / SAML", "Custom data residency", "Dedicated SLA", "On-premise option"],
+      period: "/mo",
+      features: [
+        "Unlimited tenders",
+        "Unlimited users",
+        "Gemini AI drafting",
+        "SSO/SAML",
+        "Custom data residency",
+        "Dedicated SLA",
+      ],
       cta: "Contact sales",
-      href: "/api/billing/checkout?plan=enterprise",
+      href: "mailto:hello@tood.uk",
       highlighted: false,
     },
   ];
+
+  const CheckIcon = () => (
+    <svg
+      className="w-4 h-4 text-[#00C2A8] flex-shrink-0 mt-0.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.5}
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+    </svg>
+  );
+
   return (
-    <section id="pricing" className="bg-white py-24 px-4">
+    <section id="pricing" className="py-20 px-4 bg-[#EFEDE8]">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-extrabold text-[#0F172A] mb-4">Simple, transparent pricing</h2>
-          <p className="text-slate-500 text-lg">No hidden fees. Cancel any time. VAT not included.</p>
-        </div>
+        <h2
+          className="text-[#1C1917] mb-14"
+          style={{ fontFamily: 'var(--font-dm-serif)', fontSize: '40px' }}
+        >
+          Simple, transparent pricing
+        </h2>
         <div className="grid md:grid-cols-3 gap-8">
           {plans.map((p) => (
             <div
               key={p.name}
-              className={`rounded-2xl p-8 border flex flex-col ${p.highlighted
-                ? "bg-[#0F172A] border-[#3B82F6] shadow-2xl shadow-blue-500/20 relative"
-                : "bg-white border-slate-200"
+              className={`flex flex-col p-8 ${p.highlighted
+                  ? "border-2 border-[#1B4FD8] bg-[#F8F6F1]"
+                  : "border border-[#D4CFC8] bg-[#F8F6F1]"
                 }`}
             >
-              {p.highlighted && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#3B82F6] text-white text-xs font-bold px-4 py-1.5 rounded-full">
-                  Most Popular
-                </div>
-              )}
-              <div className={`text-sm font-semibold mb-2 ${p.highlighted ? "text-[#93C5FD]" : "text-[#3B82F6]"}`}>
+              <div
+                className="text-[15px] font-semibold text-[#1C1917] mb-4"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
                 {p.name}
               </div>
-              <div className="flex items-end gap-1 mb-2">
-                <span className={`text-5xl font-extrabold ${p.highlighted ? "text-white" : "text-[#0F172A]"}`}>
+              <div className="flex items-end gap-1 mb-6">
+                <span
+                  className="text-[#1C1917]"
+                  style={{
+                    fontFamily: 'var(--font-dm-serif)',
+                    fontSize: '40px',
+                    lineHeight: 1,
+                  }}
+                >
                   {p.price}
                 </span>
-                <span className={`text-sm mb-2 ${p.highlighted ? "text-slate-400" : "text-slate-500"}`}>{p.period}</span>
+                <span
+                  className="text-[#6B6560] text-sm mb-1"
+                  style={{ fontFamily: 'var(--font-inter)' }}
+                >
+                  {p.period}
+                </span>
               </div>
-              <p className={`text-sm mb-6 ${p.highlighted ? "text-slate-400" : "text-slate-500"}`}>{p.desc}</p>
-              <ul className="space-y-3 mb-8 flex-1">
+              <ul className="flex flex-col gap-3 mb-8 flex-1">
                 {p.features.map((f) => (
-                  <li key={f} className="flex items-center gap-3">
-                    <svg className="w-5 h-5 flex-shrink-0 text-[#3B82F6]" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    <span className={`text-sm ${p.highlighted ? "text-slate-300" : "text-slate-600"}`}>{f}</span>
+                  <li key={f} className="flex items-start gap-2">
+                    <CheckIcon />
+                    <span
+                      className="text-[14px] text-[#1C1917]"
+                      style={{ fontFamily: 'var(--font-inter)' }}
+                    >
+                      {f}
+                    </span>
                   </li>
                 ))}
               </ul>
               <a
                 href={p.href}
-                className={`block text-center font-semibold px-6 py-3 rounded-xl text-sm transition-all ${p.highlighted
-                  ? "bg-[#3B82F6] hover:bg-[#2563EB] text-white hover:shadow-lg hover:shadow-blue-500/30"
-                  : "border border-[#3B82F6] text-[#3B82F6] hover:bg-[#3B82F6] hover:text-white"
+                className={`block text-center font-semibold px-5 py-2.5 rounded text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4FD8] ${p.highlighted
+                    ? "bg-[#1B4FD8] hover:bg-[#1541B0] text-[#F8F6F1]"
+                    : "border border-[#1B4FD8] text-[#1B4FD8] hover:bg-[#1B4FD8] hover:text-[#F8F6F1]"
                   }`}
+                style={{ fontFamily: 'var(--font-inter)' }}
               >
                 {p.cta}
               </a>
@@ -343,23 +526,36 @@ function Testimonials() {
       role: "Senior Bid Writer, PublicFirst Group",
     },
   ];
+
   return (
-    <section className="bg-slate-50 py-24 px-4">
+    <section className="py-20 px-4 bg-[#F8F6F1]">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-extrabold text-[#0F172A] mb-4">What our customers say</h2>
-        </div>
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-3 gap-10">
           {testimonials.map((t) => (
-            <div key={t.name} className="bg-white rounded-2xl p-8 border border-slate-100 shadow-sm">
-              <svg className="w-8 h-8 text-[#3B82F6] mb-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-              </svg>
-              <p className="text-slate-600 leading-relaxed mb-6 italic">&ldquo;{t.quote}&rdquo;</p>
-              <div>
-                <div className="font-semibold text-[#0F172A]">{t.name}</div>
-                <div className="text-slate-500 text-sm">{t.role}</div>
+            <div key={t.name}>
+              <div
+                className="leading-none text-[#D4CFC8] mb-2 select-none"
+                style={{
+                  fontFamily: 'var(--font-dm-serif)',
+                  fontSize: '80px',
+                  lineHeight: 1,
+                }}
+                aria-hidden="true"
+              >
+                &ldquo;
               </div>
+              <p
+                className="text-[21px] text-[#1C1917] italic leading-snug mb-4"
+                style={{ fontFamily: 'var(--font-dm-serif)' }}
+              >
+                {t.quote}
+              </p>
+              <p
+                className="text-[13px] text-[#6B6560]"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
+                {t.name} &mdash; {t.role}
+              </p>
             </div>
           ))}
         </div>
@@ -368,31 +564,24 @@ function Testimonials() {
   );
 }
 
-// ── CTA Banner ────────────────────────────────────────────────────────────────
-function CTABanner() {
+// ── CTA section ───────────────────────────────────────────────────────────────
+function CTASection() {
   return (
-    <section className="bg-[#0F172A] py-24 px-4">
-      <div className="max-w-3xl mx-auto text-center">
-        <h2 className="text-4xl font-extrabold text-white mb-6">
-          Ready to win your next tender?
+    <section className="bg-[#1B4FD8] py-24 px-4">
+      <div className="max-w-3xl mx-auto">
+        <h2
+          className="text-white mb-8 leading-tight"
+          style={{ fontFamily: 'var(--font-dm-serif)', fontSize: '40px' }}
+        >
+          Start your first tender today.
         </h2>
-        <p className="text-slate-400 text-lg mb-10">
-          Join 340+ organisations using TOOD-OS to write better bids, faster.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            href="/api/billing/checkout?plan=professional"
-            className="inline-flex items-center justify-center bg-[#3B82F6] hover:bg-[#2563EB] text-white font-semibold px-8 py-4 rounded-xl text-base transition-all hover:shadow-lg hover:shadow-blue-500/30"
-          >
-            Start free trial — 14 days free
-          </Link>
-          <a
-            href="mailto:hello@tood.uk"
-            className="inline-flex items-center justify-center border border-white/20 hover:border-white/40 text-white font-semibold px-8 py-4 rounded-xl text-base transition-colors"
-          >
-            Talk to sales
-          </a>
-        </div>
+        <Link
+          href="/api/billing/checkout?plan=professional"
+          className="inline-flex items-center justify-center bg-[#F8F6F1] hover:bg-[#EFEDE8] text-[#1B4FD8] font-semibold px-8 py-4 rounded text-base transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          style={{ fontFamily: 'var(--font-inter)' }}
+        >
+          Start your first tender
+        </Link>
       </div>
     </section>
   );
@@ -401,37 +590,33 @@ function CTABanner() {
 // ── Footer ────────────────────────────────────────────────────────────────────
 function Footer() {
   return (
-    <footer id="about" className="bg-[#0F172A] border-t border-white/10 py-12 px-4">
+    <footer id="about" className="bg-[#1C1917] py-12 px-4">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between gap-8 mb-8">
-          <div>
-            <span className="text-white text-xl font-bold">TOOD</span>
-            <p className="text-slate-500 text-sm mt-2 max-w-xs">
-              AI-powered tender management for UK public sector organisations.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-8 text-sm">
-            <div>
-              <div className="text-white font-semibold mb-3">Product</div>
-              {["Features", "Pricing", "Security", "Compliance"].map((l) => (
-                <a key={l} href="#" className="block text-slate-400 hover:text-white py-1 transition-colors">{l}</a>
-              ))}
-            </div>
-            <div>
-              <div className="text-white font-semibold mb-3">Company</div>
-              {["About", "Blog", "Careers", "Contact"].map((l) => (
-                <a key={l} href="#" className="block text-slate-400 hover:text-white py-1 transition-colors">{l}</a>
-              ))}
-            </div>
-          </div>
+        <div className="mb-8">
+          <img
+            src="/tood logo png.png"
+            className="h-8 w-auto"
+            style={{ filter: 'brightness(0) invert(1)' }}
+            alt="TOOD"
+          />
         </div>
-        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-slate-500 text-sm">
-            &copy; 2026 Honey B2024 Ltd. Registered in England. All rights reserved.
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-t border-white/10 pt-8">
+          <p
+            className="text-white/60 text-sm"
+            style={{ fontFamily: 'var(--font-inter)' }}
+          >
+            &copy; 2026 Honey B2024 Ltd &mdash; Trusted Operations &amp; Organised Documents
           </p>
           <div className="flex gap-6">
-            {["Privacy Policy", "Terms of Service", "Cookie Policy"].map((l) => (
-              <a key={l} href="#" className="text-slate-500 hover:text-white text-sm transition-colors">{l}</a>
+            {["Privacy Policy", "Terms of Service", "Contact"].map((l) => (
+              <a
+                key={l}
+                href="#"
+                className="text-white/60 hover:text-white text-sm transition-colors"
+                style={{ fontFamily: 'var(--font-inter)' }}
+              >
+                {l}
+              </a>
             ))}
           </div>
         </div>
@@ -447,12 +632,11 @@ export default function Home() {
       <Navbar />
       <main>
         <Hero />
-        <StatsBar />
         <Features />
         <HowItWorks />
         <Pricing />
         <Testimonials />
-        <CTABanner />
+        <CTASection />
       </main>
       <Footer />
     </>

@@ -74,24 +74,36 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0F172A] flex flex-col">
+    <div className="min-h-screen bg-[#F8F6F1] flex flex-col">
       {/* Header */}
-      <header className="bg-[#1E293B] border-b border-white/10 px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-        <span className="text-white text-xl font-bold tracking-tight">TOOD</span>
+      <header className="bg-[#F8F6F1] border-b border-[#D4CFC8] px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <img src="/tood logo png.png" alt="TOOD" className="h-8 w-auto" />
+          <span
+            className="text-[#6B6560] text-sm ml-3"
+            style={{ fontFamily: 'var(--font-inter)' }}
+          >
+            Dashboard
+          </span>
+        </div>
 
         {user && (
           <div className="flex items-center gap-4">
-            <span className="text-slate-300 text-sm hidden sm:block">
+            <span
+              className="text-[#6B6560] text-sm hidden sm:block"
+              style={{ fontFamily: 'var(--font-inter)' }}
+            >
               {user.org_id && (
-                <span className="text-slate-500 mr-2">org</span>
+                <span className="text-[#6B6560] mr-2">org</span>
               )}
-              <span className="font-medium text-white">{user.role}</span>
+              <span className="font-medium text-[#1C1917]">{user.role}</span>
             </span>
             <button
               onClick={handleLogout}
               disabled={loggingOut}
               aria-label="Sign out of TOOD"
-              className="text-slate-400 hover:text-white text-sm font-medium transition-colors disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#3B82F6] rounded"
+              className="text-[#6B6560] hover:text-[#1C1917] text-sm font-medium transition-colors disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4FD8] rounded"
+              style={{ fontFamily: 'var(--font-inter)' }}
             >
               {loggingOut ? "Signing out…" : "Sign out"}
             </button>
@@ -100,14 +112,26 @@ export default function DashboardPage() {
       </header>
 
       {/* Main content */}
-      <main className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-white mb-4">Welcome to TOOD</h1>
-          <p className="text-slate-400 mb-8">
+      <main className="flex-1 flex items-center justify-center px-4">
+        <div>
+          <h1
+            className="text-[28px] text-[#1C1917] mb-3"
+            style={{ fontFamily: 'var(--font-dm-serif)' }}
+          >
+            Welcome to TOOD
+          </h1>
+          <p
+            className="text-[#6B6560] mb-8"
+            style={{ fontFamily: 'var(--font-inter)' }}
+          >
             Your bid management dashboard is coming soon.
           </p>
-          <a href="/" className="text-[#3B82F6] hover:underline text-sm">
-            ← Back to homepage
+          <a
+            href="/"
+            className="text-[#1B4FD8] hover:text-[#1541B0] text-sm transition-colors"
+            style={{ fontFamily: 'var(--font-inter)' }}
+          >
+            &larr; Back to homepage
           </a>
         </div>
       </main>
