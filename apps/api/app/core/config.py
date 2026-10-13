@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     auth_database_url: str = "postgresql://auth_user:tood_dev_auth@localhost:5432/tood"
     ai_allowed_regions: str = "uk-south,eu-west-2,eu-west-1,eu-central-1,europe-west2,europe-west1,europe-west4"
     ai_provider: str = "template"  # no language model is connected in the local pack
+    gcp_project: str = "tood-os"
+    gcp_region: str = "europe-west2"
     storage_dir: str = str(ROOT / "data" / "uploads")
     max_upload_mb: int = 20
     allow_signup: bool = True  # development sign-up. Turn off in any shared environment

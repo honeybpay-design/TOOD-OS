@@ -1,7 +1,8 @@
 import pathlib
+import time
 
 import psycopg
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -12,6 +13,35 @@ app = FastAPI(title="TOOD-OS API", version="0.2.0")
 app.include_router(router)
 STATIC = pathlib.Path(__file__).parent / "static"
 app.mount("/ui", StaticFiles(directory=STATIC, html=True), name="ui")
+
+
+@app.middleware("http")
+async def record_request_latency(request: Request, call_next) -> Response:
+    start = time.monotonic()
+    response = await call_next(request)
+    latency_ms = round((time.monotonic() - start) * 1000)
+    try:
+        from app.core.monitoring import get_monitor
+
+        get_monitor().record_api_request(
+            endpoint=request.url.path,
+            method=request.method,
+            status_code=response.status_code,
+            latency_ms=latency_ms,
+        )
+    except Exception:  # noqa: BLE001
+        pass  # never let monitoring crash the API
+    return response
+
+
+@app.on_event("startup")
+async def startup_event() -> None:
+    try:
+        from app.core.monitoring import get_monitor
+
+        get_monitor().health_ping()
+    except Exception:  # noqa: BLE001
+        pass  # never let monitoring crash startup
 
 
 @app.get("/", include_in_schema=False)
