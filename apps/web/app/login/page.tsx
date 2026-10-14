@@ -32,59 +32,72 @@ export default function LoginPage() {
 
   return (
     <div
-      className="min-h-screen bg-[#F8F6F1] flex flex-col items-center justify-center px-4"
+      style={{ minHeight: '100vh', background: 'var(--color-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 var(--space-4)' }}
       role="main"
     >
-      <div className="w-full max-w-sm flex flex-col items-center gap-6">
+      <div style={{ width: '100%', maxWidth: '360px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-6)' }}>
         {/* Logo */}
-        <div className="flex flex-col items-center gap-3">
-          <img
-            src="/tood logo png.png"
-            alt="TOOD"
-            className="h-20 w-auto"
-          />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-3)' }}>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ color: 'var(--color-text)' }}>
+            <rect x="3.5" y="3.5" width="17" height="17" rx="3.5" stroke="currentColor" strokeWidth="1.8" />
+            <path d="M8 9h8M8 12.5h5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            <circle cx="16" cy="16" r="2.2" fill="var(--color-primary)" />
+          </svg>
           <h1
-            className="text-[28px] text-[#1C1917] leading-tight text-center"
-            style={{ fontFamily: 'var(--font-dm-serif)' }}
+            style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-.03em', color: 'var(--color-text)', textAlign: 'center' }}
           >
-            Sign in to TOOD
+            Sign in to tood.os
           </h1>
-          <p
-            className="text-[15px] text-[#6B6560] text-center"
-            style={{ fontFamily: 'var(--font-inter)' }}
-          >
-            Trusted Operations &amp; Organised Documents
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', textAlign: 'center' }}>
+            Verifiable, evidence-bound AI for UK public-sector bids
           </p>
         </div>
 
         {/* Divider */}
-        <hr className="w-full border-[#D4CFC8]" />
+        <div style={{ width: '100%', height: '1px', background: 'var(--color-divider)' }} />
 
         {/* Google sign-in button */}
         <button
           onClick={handleSignIn}
           disabled={loading}
           aria-label="Sign in with your Google account"
-          className="w-full flex items-center justify-center gap-3 bg-white hover:bg-[#EFEDE8] disabled:opacity-60 disabled:cursor-not-allowed text-[#1C1917] font-semibold px-5 py-3 rounded border border-[#D4CFC8] text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1B4FD8]"
-          style={{ fontFamily: 'var(--font-inter)' }}
+          style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 'var(--space-3)',
+            background: 'var(--color-surface-2)',
+            border: '1.5px solid var(--color-border)',
+            borderRadius: 'var(--radius-full)',
+            padding: '0 var(--space-5)',
+            minHeight: '48px',
+            fontFamily: 'var(--font-body)',
+            fontWeight: 600,
+            fontSize: 'var(--text-sm)',
+            color: 'var(--color-text)',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            opacity: loading ? 0.6 : 1,
+            transition: 'background var(--transition-interactive), border-color var(--transition-interactive)',
+          }}
         >
           {loading ? (
             <>
               <svg
-                className="w-5 h-5 animate-spin text-[#1B4FD8]"
+                style={{ width: '20px', height: '20px', animation: 'spin .8s linear infinite', color: 'var(--color-primary)' }}
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
                 aria-hidden="true"
               >
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
               </svg>
               <span>Redirecting…</span>
             </>
           ) : (
             <>
-              <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+              <svg style={{ width: '20px', height: '20px', flexShrink: 0 }} viewBox="0 0 24 24" aria-hidden="true">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
@@ -98,19 +111,15 @@ export default function LoginPage() {
         {error && (
           <p
             role="alert"
-            className="text-red-600 text-sm text-center"
-            style={{ fontFamily: 'var(--font-inter)' }}
+            style={{ color: 'var(--p-flag)', fontSize: 'var(--text-sm)', textAlign: 'center', fontFamily: 'var(--font-body)' }}
           >
             {error}
           </p>
         )}
 
-        <p
-          className="text-[#6B6560] text-xs text-center leading-relaxed"
-          style={{ fontFamily: 'var(--font-inter)' }}
-        >
+        <p style={{ color: 'var(--color-text-faint)', fontSize: 'var(--text-xs)', textAlign: 'center', lineHeight: 1.6, fontFamily: 'var(--font-body)' }}>
           By signing in you agree to our{' '}
-          <a href="#" className="underline hover:text-[#1C1917] transition-colors">
+          <a href="#" style={{ textDecoration: 'underline', textUnderlineOffset: '3px' }}>
             Terms of Service
           </a>
         </p>
@@ -118,10 +127,9 @@ export default function LoginPage() {
 
       <a
         href="/"
-        className="mt-8 text-[#6B6560] hover:text-[#1C1917] text-sm transition-colors"
-        style={{ fontFamily: 'var(--font-inter)' }}
+        style={{ marginTop: 'var(--space-8)', color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)', fontFamily: 'var(--font-body)', textDecoration: 'none' }}
       >
-        &larr; Back to homepage
+        ← Back to homepage
       </a>
     </div>
   );
