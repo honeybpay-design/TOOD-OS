@@ -32,6 +32,11 @@ spec:
             secretKeyRef:
               name: tood-secrets
               key: STRIPE_WEBHOOK_SECRET
+        - name: DATABASE_ADMIN_URL
+          valueFrom:
+            secretKeyRef:
+              name: tood-secrets
+              key: DATABASE_ADMIN_URL
         resources:
           limits:
             cpu: "2"
