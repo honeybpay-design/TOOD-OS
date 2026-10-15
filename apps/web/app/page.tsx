@@ -1255,39 +1255,43 @@ function PricingSection() {
         </div>
         <div className="plans">
           <div className="plan reveal">
-            <h3>Tender analyser</h3>
-            <p className="plan__price">£0</p>
+            <h3>Starter</h3>
+            <p className="plan__price">£99<small> / month, excl. VAT</small></p>
             <p className="plan__d">One tender pack, full requirement matrix with verified source quotes.</p>
             <ul role="list">
+              <li>3 active tenders</li>
+              <li>2 user seats</li>
               <li>Requirement matrix</li>
-              <li>Pass/fail and deadline summary</li>
-              <li>Bid / no-bid checklist</li>
+              <li>Audit trail</li>
             </ul>
-            <a className="btn btn--ghost" href="#live">Try it now</a>
+            <a className="btn btn--ghost" href="/api/billing/checkout?plan=starter">Start free trial</a>
           </div>
           <div className="plan plan--feat reveal">
             <p className="seats"><span>30</span> founding places</p>
-            <h3>Founding</h3>
-            <p className="plan__price">£99<small> / month, excl. VAT</small></p>
+            <h3>Professional</h3>
+            <p className="plan__price">£299<small> / month, excl. VAT</small></p>
             <p className="plan__d">The full workspace for one company, with provenance and the AI use record on every bid.</p>
             <ul role="list">
-              <li>Evidence-bound drafting</li>
+              <li>20 active tenders</li>
+              <li>10 user seats</li>
+              <li>Gemini AI drafting</li>
               <li>Provenance view and export gate</li>
               <li>AI use &amp; verification record</li>
               <li>Price locked for 12 months</li>
             </ul>
-            <a className="btn btn--primary" href="#join">Apply for a founding place</a>
+            <a className="btn btn--primary" href="/api/billing/checkout?plan=professional">Start free trial</a>
           </div>
           <div className="plan reveal">
-            <h3>Bid consultant</h3>
-            <p className="plan__price">£249<small> / month, excl. VAT</small></p>
-            <p className="plan__d">For freelance bid writers with several clients and separate evidence libraries.</p>
+            <h3>Enterprise</h3>
+            <p className="plan__price">£799<small> / month, excl. VAT</small></p>
+            <p className="plan__d">For large organisations with unlimited tenders, SSO, and custom data residency.</p>
             <ul role="list">
-              <li>Multiple client workspaces</li>
-              <li>Client-ready AI use records</li>
-              <li>Shared review with clients</li>
+              <li>Unlimited tenders &amp; users</li>
+              <li>SSO / SAML</li>
+              <li>Custom data residency</li>
+              <li>Dedicated SLA</li>
             </ul>
-            <a className="btn btn--ghost" href="#join">Join the waitlist</a>
+            <a className="btn btn--ghost" href="/api/billing/checkout?plan=enterprise">Contact sales</a>
           </div>
         </div>
         <p className="plans__note">
