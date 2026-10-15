@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Update landing page with 14-day free trial CTAs, stats bar, pricing updates, and trial workflow section",
+  "status": "completed",
+  "steps": [
+    "Update Header component in page.tsx: change nav buttons to 'Sign in' and 'Start free trial' linking to /login",
+    "Update HeroSection component: replace CTAs with 'Start free trial — 14 days free' primary button and 'See how it works' secondary button, add subtext 'No credit card required · Cancel any time · Google sign-in'",
+    "Create StatsBar component: dark background with 4 stats ('Requirements extracted: 56+', 'Tender documents processed: 1+', 'UK procurement regulations: 3', 'Export accuracy: 100%'), place after HeroSection",
+    "Update PricingSection component: change all CTAs to 'Start 14-day free trial', add 'Most popular' badge on Professional plan, add tagline, update hrefs to /login?plan=...",
+    "Create TrialHowItWorks component: 4-step numbered section between pricing and FAQ, showing trial workflow",
+    "Update AnnouncementBar component: change text to '14-day free trial · No credit card · Sign in with Google', link to 'Start free →' linking to /login"
+  ],
+  "acceptance_criteria": [
+    "Landing page shows new CTAs 'Start free trial — 14 days free' and 'See how it works'",
+    "Stats bar appears with real verified numbers",
+    "Pricing cards show 'Start 14-day free trial' buttons with correct hrefs",
+    "Trial workflow section appears with 4 steps",
+    "Announcement bar shows updated messaging",
+    "npm run build completes without TypeScript errors"
+  ],
+  "verification": [
+    "Run cd apps/web && npm run build and confirm no errors",
+    "Check landing page in browser preview shows all new components",
+    "Verify all links point to correct destinations (/login, /login?plan=...)"
+  ],
+  "blocked_reason": null,
+  "findings": "Successfully implemented all 6 steps. Build completed with 0 TypeScript errors (only CSS warnings from existing code). All components: Header, HeroSection, StatsBar, PricingSection, TrialHowItWorks, AnnouncementBar are updated as specified. CSS added for new components (StatsBar, plan badge, trial steps)."
+}
