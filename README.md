@@ -8,7 +8,7 @@
 ![Cloud Run](https://img.shields.io/badge/cloud-run-europe--west2-4285F4)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-TOOD is a multi-tenant SaaS platform that helps UK public-sector suppliers write compliant tender responses. It extracts requirements verbatim from tender documents, generates AI-drafted answers grounded in an approved evidence library, and enforces a named human approval step before any export — no bid is ever submitted automatically. The platform is aligned with the Procurement Act 2023, PPN 01/17, and PPN 02/24.
+TOOD is a multi-tenant SaaS platform that helps UK public-sector suppliers write compliant tender responses. It extracts requirements verbatim from tender documents, generates AI-drafted answers grounded in an approved evidence library, and enforces a named human approval step before any export — no bid is ever submitted automatically. The platform is aligned with the Procurement Act 2023, PPN 017, and PPN 02/24.
 
 ---
 
@@ -21,7 +21,7 @@ TOOD is a multi-tenant SaaS platform that helps UK public-sector suppliers write
 | API docs (Swagger) | https://tood-os-api-844874461521.europe-west2.run.app/docs |
 | Web app (Cloud Run) | https://tood-os-web-844874461521.europe-west2.run.app |
 
-**Compliance frame:** Procurement Act 2023 · PPN 01/17 · PPN 02/24
+**Compliance frame:** Procurement Act 2023 · PPN 017 · PPN 02/24
 
 ---
 
@@ -176,11 +176,11 @@ Subscription billing is managed via Stripe Checkout. Plan limits are enforced in
 ### Procurement Act 2023
 The Procurement Act 2023 replaces the Public Contracts Regulations 2015 as the primary framework for UK public procurement. TOOD helps suppliers structure responses that meet the updated evaluation criteria and transparency obligations. Requirement extraction ensures that tender questions are addressed verbatim, and the gated export ensures that every submitted answer has been explicitly reviewed and approved.
 
-### PPN 01/17 — Social Value
-Policy Procurement Note 01/17 requires that social value be evaluated in procurement decisions. TOOD's evidence library model ensures that social value claims included in bid responses are sourced from actual approved evidence items, not generated without a factual basis. Unapproved or unsupported claims are flagged before export.
+### PPN 017 — Improving Transparency of AI Use in Procurement
+Policy Procurement Note 017 (PPN 017), published by the Cabinet Office, sets out how contracting authorities and suppliers should approach AI use in public procurement. It does not prohibit AI-assisted bid writing, but requires suppliers to be able to disclose where AI was used and to confirm that outputs were checked and verified for accuracy. TOOD addresses this directly: every sentence in a draft records whether it originated from a person, an AI model, the tender document, or the evidence library. The AI use and verification record is generated automatically from the revision ledger — not written by a model — and can be provided to a contracting authority on request.
 
-### PPN 02/24 — AI in Procurement
-PPN 02/24 requires that AI use in procurement is transparent, human-supervised, and auditable. TOOD addresses this through three mechanisms: (1) named approval — a human with bid_manager role must explicitly approve every draft; (2) a hash-chained audit log recording every action and every draft revision; and (3) a hard rule that no bid is ever submitted automatically under any circumstances.
+### PPN 02/24 — Use of Artificial Intelligence in Public Procurement
+PPN 02/24 provides guidance to contracting authorities on how to manage and evaluate AI use by suppliers in the procurement process. It requires that AI use is transparent, that outputs are human-supervised, and that a clear audit trail exists. TOOD addresses this through three mechanisms: (1) named approval — a human with bid_manager role must explicitly approve every draft before export; (2) a hash-chained audit log recording every action, every draft revision, and every model call; and (3) a hard architectural rule that no bid is ever submitted automatically under any circumstances.
 
 ---
 
