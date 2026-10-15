@@ -14,6 +14,7 @@ from app.core.auth import Ctx, authenticate, create_account
 from app.core.config import settings
 from app.core.tenant import tenant_connection
 from app.provenance.hashchain import Revision, compute_hash, verify_chain
+from app.services import billing as billing_svc
 from app.services import drafting, parsing, requirements
 from app.services.export import build_docx
 from app.services.storage import get_store
@@ -665,3 +666,122 @@ def audit_log(ctx: Ctx = Depends(authenticate)):
             "SELECT id, action, target, at FROM audit_events WHERE org_id = %s ORDER BY id DESC LIMIT 30", (ctx.org_id,)
         ).fetchall()
     return {"chain_ok": ok, "first_bad_event": bad, "events_total": count, "recent": events}
+
+
+# ---------- billing ----------
+
+
+class CheckoutIn(BaseModel):
+    plan: str
+    success_url: str
+    cancel_url: str
+
+
+@router.post("/billing/checkout")
+def billing_checkout(body: CheckoutIn, ctx: Ctx = Depends(authenticate)):
+    """Create a Stripe Checkout session for the authenticated org."""
+    if body.plan not in ("starter", "professional", "enterprise"):
+        raise HTTPException(400, "plan must be starter, professional, or enterprise")
+    try:
+        url = billing_svc.create_checkout_session(str(ctx.org_id), body.plan, body.success_url, body.cancel_url)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return {"checkout_url": url}
+
+
+from fastapi import Request  # noqa: E402 — already imported via starlette transitively, explicit here
+
+
+@router.post("/billing/webhook")
+async def billing_webhook(request: Request):
+    """Stripe webhook endpoint — no auth, verifies Stripe signature."""
+    payload = await request.body()
+    sig_header = request.headers.get("stripe-signature", "")
+    try:
+        result = billing_svc.handle_webhook(payload, sig_header)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return result
+
+
+@router.get("/billing/status")
+def billing_status(ctx: Ctx = Depends(authenticate)):
+    """Return current plan, subscription status, and plan limits."""
+    with db(ctx) as conn:
+        sub = conn.execute(
+            "SELECT plan, status, current_period_end FROM subscriptions WHERE org_id = %s ORDER BY created_at DESC LIMIT 1",
+            (ctx.org_id,),
+        ).fetchone()
+        org = conn.execute("SELECT plan FROM organisations WHERE id = %s", (ctx.org_id,)).fetchone()
+        tender_count = conn.execute("SELECT count(*) AS n FROM tenders").fetchone()["n"]
+        user_count = conn.execute("SELECT count(*) AS n FROM memberships WHERE org_id = %s", (ctx.org_id,)).fetchone()[
+            "n"
+        ]
+    plan = sub["plan"] if sub else (org["plan"] if org else "starter")
+    limits = billing_svc.get_plan_limits(plan)
+    return {
+        "plan": plan,
+        "status": sub["status"] if sub else "none",
+        "current_period_end": sub["current_period_end"] if sub else None,
+        "limits": limits,
+        "usage": {"tenders": tender_count, "users": user_count},
+    }
+
+
+# ---------- admin ----------
+
+admin_router = APIRouter(prefix="/admin")
+
+
+def require_admin(ctx: Ctx = Depends(authenticate)) -> Ctx:
+    ctx.require("admin")
+    return ctx
+
+
+from app.ai_gateway.saas_agent import SaaSAgent  # noqa: E402
+
+_agent = SaaSAgent()
+
+
+@admin_router.get("/metrics")
+def admin_metrics(ctx: Ctx = Depends(require_admin)):
+    return _agent.get_platform_metrics()
+
+
+@admin_router.get("/tenants")
+def admin_tenants(ctx: Ctx = Depends(require_admin)):
+    import psycopg
+
+    with psycopg.connect(settings.database_url, row_factory=psycopg.rows.dict_row) as conn:
+        rows = conn.execute(
+            "SELECT o.id, o.name, o.plan, o.stripe_customer_id,"
+            " (SELECT count(*) FROM tenders t WHERE t.org_id = o.id) AS tender_count,"
+            " (SELECT count(*) FROM memberships m WHERE m.org_id = o.id) AS user_count"
+            " FROM organisations o ORDER BY o.created_at DESC"
+        ).fetchall()
+    return rows
+
+
+@admin_router.get("/health")
+def admin_health(ctx: Ctx = Depends(require_admin)):
+    return _agent.check_system_health()
+
+
+@admin_router.get("/report")
+def admin_report(ctx: Ctx = Depends(require_admin)):
+    return {"report": _agent.generate_daily_report()}
+
+
+class PlanChangeIn(BaseModel):
+    plan: str
+
+
+@admin_router.post("/tenant/{org_id}/plan")
+def admin_force_plan(org_id: str, body: PlanChangeIn, ctx: Ctx = Depends(require_admin)):
+    if body.plan not in ("starter", "professional", "enterprise"):
+        raise HTTPException(400, "invalid plan")
+    import psycopg
+
+    with psycopg.connect(settings.database_url) as conn:
+        conn.execute("UPDATE organisations SET plan = %s WHERE id = %s", (body.plan, uuid.UUID(org_id)))
+    return {"org_id": org_id, "plan": body.plan}

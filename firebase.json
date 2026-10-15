@@ -1,0 +1,49 @@
+{
+  "hosting": [
+    {
+      "site": "tood-os",
+      "rewrites": [
+        {
+          "source": "/v1/**",
+          "run": {
+            "serviceId": "tood-os-api",
+            "region": "europe-west2"
+          }
+        },
+        {
+          "source": "/healthz",
+          "run": {
+            "serviceId": "tood-os-api",
+            "region": "europe-west2"
+          }
+        },
+        {
+          "source": "/docs",
+          "run": {
+            "serviceId": "tood-os-api",
+            "region": "europe-west2"
+          }
+        },
+        {
+          "source": "**",
+          "run": {
+            "serviceId": "tood-os-web",
+            "region": "europe-west2"
+          }
+        }
+      ]
+    },
+    {
+      "site": "tood-os-api",
+      "rewrites": [
+        {
+          "source": "**",
+          "run": {
+            "serviceId": "tood-os-api",
+            "region": "europe-west2"
+          }
+        }
+      ]
+    }
+  ]
+}

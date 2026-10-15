@@ -1,0 +1,59 @@
+PHASE 9: Final Verification Report
+===================================
+Date: 2025-01-31
+Commit: f5c39b8
+
+Check 1: migrate.py
+  Result: PASS
+  Output:
+    skip   0001_schema.sql
+    skip   0002_security.sql
+    skip   0003_tokens_and_audit_rls.sql
+    skip   0004_ordering.sql
+    skip   0005_billing.sql
+    migrations complete
+
+Check 2: verify_install.py
+  Result: PASS (17/17 checks passed)
+  Output:
+    PASS  Python >= 3.12
+    PASS  .env present
+    PASS  Database reachable (admin)
+    PASS  Extension vector
+    PASS  Extension pg_trgm
+    PASS  Extension pgcrypto
+    PASS  All 22 tables exist
+    PASS  Forced RLS on all tenant and identity tables
+    PASS  Role app_user is unprivileged
+    PASS  Role auth_user is unprivileged
+    PASS  Trigger revisions_append_only
+    PASS  Trigger audit_append_only
+    PASS  Trigger anchors_append_only
+    PASS  Tenant isolation default-deny (no context => 0 rows)
+    PASS  API /healthz
+    PASS  API /readyz (database)
+    PASS  Workflow: upload, extract, draft, approve, gated export
+    17/17 checks passed
+  Note: exit code 1 due to non-fatal Cloud Monitoring SDK probe warning
+        (google.cloud.logging not installed) — not a check failure.
+
+Check 3: API tests (pytest -q)
+  Result: PASS (44 passed, 0 failed)
+  Note: Initial run had 1 failure — ModuleNotFoundError: No module named 'pymupdf'.
+        pymupdf is listed in pyproject.toml dependencies but was not installed.
+        Installed it with pip; re-run passed 44/44.
+
+Check 4: Ruff lint
+  Result: PASS
+  Output: All checks passed!
+
+Check 5: Web build (npm run build)
+  Result: PASS
+  Output: Build compiled successfully in 9.6s
+          Routes: / /_not-found /admin /dashboard (all static)
+  Note: 2 CSS warnings for @custom-variant and @theme (Tailwind v4 at-rules
+        not yet parsed by Turbopack) — warnings only, build exited 0.
+
+Commit hash: f5c39b8
+
+No lint fixes required; no new commit needed.

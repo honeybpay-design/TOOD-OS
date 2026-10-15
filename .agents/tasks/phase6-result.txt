@@ -1,0 +1,27 @@
+PASS
+
+Build output:
+  ▲ Next.js 16.4.0 (Turbopack)
+  ✓ Compiled successfully in 9.3s
+  ✓ TypeScript passed in 12.3s
+  ✓ Collecting page data (6 pages)
+  ✓ Generating static pages (6/6) in 1950ms
+  ✓ Finalizing page optimization in 28.5s
+
+Routes built:
+  ○ /             (Landing page — corporate SaaS)
+  ○ /admin        (Admin dashboard)
+  ○ /dashboard    (Placeholder dashboard)
+  ○ /_not-found
+
+Warnings (non-blocking):
+  - @custom-variant and @theme: Turbopack CSS parser warns but Tailwind v4 handles them correctly.
+
+Fixes applied during phase:
+  - Removed @import "shadcn/tailwind.css" (package does not exist)
+  - Removed @import "tw-animate-css" (Turbopack CSS resolver could not resolve module)
+  - Replaced @apply directives with native CSS (Tailwind v4 compatible)
+  - Removed LayoutProps<"/"> type reference from layout.tsx (undefined type replaced with React.ReactNode)
+  - Added explicit type annotations to admin/page.tsx fetch callbacks
+
+Commit: e04e818 feat(web): corporate SaaS landing page, admin dashboard, Cloud Run Dockerfile

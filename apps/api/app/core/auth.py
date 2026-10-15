@@ -33,7 +33,31 @@ def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
 
-def authenticate(authorization: str | None = Header(default=None)) -> Ctx:
+def authenticate_session(token: str) -> Ctx | None:
+    """Look up a valid, non-expired session token from user_sessions. Returns Ctx or None."""
+    token_hash = hash_token(token)
+    with psycopg.connect(settings.auth_database_url) as conn:
+        row = conn.execute(
+            "SELECT user_id, org_id, role FROM user_sessions WHERE token_hash = %s AND expires_at > now()",
+            (token_hash,),
+        ).fetchone()
+    if not row:
+        return None
+    return Ctx(org_id=row[1], user_id=row[0], role=row[2])
+
+
+def authenticate(
+    authorization: str | None = Header(default=None),
+    x_session_token: str | None = Header(default=None),
+) -> Ctx:
+    # Try X-Session-Token header first (OAuth session flow)
+    if x_session_token:
+        ctx = authenticate_session(x_session_token)
+        if ctx:
+            return ctx
+        raise HTTPException(401, "session expired or invalid")
+
+    # Fall back to Bearer token (existing JWT/API key flow)
     if not authorization or not authorization.lower().startswith("bearer "):
         raise HTTPException(401, "missing bearer token")
     token = authorization.split(" ", 1)[1].strip()
