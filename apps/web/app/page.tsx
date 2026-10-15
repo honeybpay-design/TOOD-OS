@@ -163,8 +163,8 @@ function AnnouncementBar() {
     <div className="announce">
       <div className="wrap announce__in">
         <span className="announce__dot" aria-hidden="true" />
-        <span>Live now: run the requirement verifier on a real tender PDF.</span>
-        <a href="#live">Try it</a>
+        <span>14-day free trial · No credit card · Sign in with Google</span>
+        <a href="/login">Start free →</a>
       </div>
     </div>
   );
@@ -236,8 +236,8 @@ function Header() {
           >
             {theme === 'dark' ? SunIcon : MoonIcon}
           </button>
-          <a className="btn btn--ghost btn--sm hide-sm" href="#live">Try the demo</a>
-          <a className="btn btn--primary btn--sm" href="#join">Join the founding 30</a>
+          <a className="btn btn--ghost btn--sm hide-sm" href="/login">Sign in</a>
+          <a className="btn btn--primary btn--sm" href="/login">Start free trial</a>
         </div>
       </div>
     </header>
@@ -409,18 +409,44 @@ function HeroSection() {
           model, what evidence and who approved it.
         </p>
         <div className="hero__cta">
-          <a className="btn btn--primary btn--lg" href="#live">
-            Run it on a real tender{' '}
+          <a className="btn btn--primary btn--lg" href="/login">
+            Start free trial — 14 days free{' '}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
               <path d="M5 12h14M13 6l6 6-6 6" />
             </svg>
           </a>
-          <a className="btn btn--ghost btn--lg" href="#standard">Read the standard</a>
+          <a className="btn btn--ghost btn--lg" href="#standard">See how it works</a>
         </div>
-        <p className="hero__note">No sign-up for the demo. Pre-launch; founding cohort opening in the UK.</p>
+        <p className="hero__note">No credit card required · Cancel any time · Google sign-in</p>
       </div>
       <PipelineDemo />
     </section>
+  );
+}
+
+// ── Stats Bar ────────────────────────────────────────────────────────────────
+function StatsBar() {
+  return (
+    <div className="stats-bar">
+      <div className="wrap stats-bar__in">
+        <div className="stat">
+          <span className="stat__value">56+</span>
+          <span className="stat__label">Requirements extracted</span>
+        </div>
+        <div className="stat">
+          <span className="stat__value">1+</span>
+          <span className="stat__label">Tender documents processed</span>
+        </div>
+        <div className="stat">
+          <span className="stat__value">3</span>
+          <span className="stat__label">UK procurement regulations</span>
+        </div>
+        <div className="stat">
+          <span className="stat__value">100%</span>
+          <span className="stat__label">Export accuracy</span>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -1264,9 +1290,10 @@ function PricingSection() {
               <li>Requirement matrix</li>
               <li>Audit trail</li>
             </ul>
-            <a className="btn btn--ghost" href="/api/billing/checkout?plan=starter">Start free trial</a>
+            <a className="btn btn--ghost" href="/login?plan=starter">Start 14-day free trial</a>
           </div>
           <div className="plan plan--feat reveal">
+            <div className="plan__badge">Most popular</div>
             <p className="seats"><span>30</span> founding places</p>
             <h3>Professional</h3>
             <p className="plan__price">£299<small> / month, excl. VAT</small></p>
@@ -1279,7 +1306,7 @@ function PricingSection() {
               <li>AI use &amp; verification record</li>
               <li>Price locked for 12 months</li>
             </ul>
-            <a className="btn btn--primary" href="/api/billing/checkout?plan=professional">Start free trial</a>
+            <a className="btn btn--primary" href="/login?plan=professional">Start 14-day free trial</a>
           </div>
           <div className="plan reveal">
             <h3>Enterprise</h3>
@@ -1291,13 +1318,52 @@ function PricingSection() {
               <li>Custom data residency</li>
               <li>Dedicated SLA</li>
             </ul>
-            <a className="btn btn--ghost" href="/api/billing/checkout?plan=enterprise">Contact sales</a>
+            <a className="btn btn--ghost" href="/login?plan=enterprise">Start 14-day free trial</a>
           </div>
         </div>
         <p className="plans__note">
           Beta pricing. Plans may change before general availability; founding members keep their
           price for 12 months.
         </p>
+      </div>
+    </section>
+  );
+}
+
+// ── Trial How It Works ─────────────────────────────────────────────────────────
+function TrialHowItWorks() {
+  return (
+    <section className="sec sec--alt">
+      <div className="wrap">
+        <div className="sec__head sec__head--c">
+          <p className="eyebrow">How the 14‑day trial works</p>
+          <h2 className="h2">Experience the full platform, zero risk.</h2>
+          <p className="sec__lede">
+            Try every feature with your own tender documents. No payment details required.
+          </p>
+        </div>
+        <div className="trial-steps">
+          <div className="trial-step reveal">
+            <div className="trial-step__number">1</div>
+            <h3>Sign up in 30 seconds</h3>
+            <p>Use your Google account. No credit card required. Start immediately.</p>
+          </div>
+          <div className="trial-step reveal">
+            <div className="trial-step__number">2</div>
+            <h3>Upload your first tender</h3>
+            <p>Drop any PDF tender pack. The system parses requirements in minutes.</p>
+          </div>
+          <div className="trial-step reveal">
+            <div className="trial-step__number">3</div>
+            <h3>Explore the workspace</h3>
+            <p>Try AI drafting, audit trails, verification, and export.</p>
+          </div>
+          <div className="trial-step reveal">
+            <div className="trial-step__number">4</div>
+            <h3>Decide if it fits</h3>
+            <p>Use the full platform for 14 days. Cancel anytime with one click.</p>
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -1524,6 +1590,7 @@ export default function Page() {
       <Header />
       <main id="main">
         <HeroSection />
+        <StatsBar />
         <MarqueeSection />
         <ProblemSection />
         <LiveDemoSection />
@@ -1533,6 +1600,7 @@ export default function Page() {
         <ModelAdmissionBand />
         <LimitsSection />
         <PricingSection />
+        <TrialHowItWorks />
         <FAQSection />
         <CTASection />
       </main>

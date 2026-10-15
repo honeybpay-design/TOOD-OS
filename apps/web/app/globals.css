@@ -2527,6 +2527,23 @@ a {
   background: #6ae0b6;
 }
 
+.plan__badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--mint);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
 .seats {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
@@ -2736,6 +2753,103 @@ details p a {
 .form__fine {
   font-size: 11px;
   color: var(--ink-muted);
+}
+
+/* stats bar */
+.stats-bar {
+  background: var(--ink);
+  color: var(--ink-text);
+  padding: var(--space-8) 0;
+}
+
+.stats-bar__in {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex: 1;
+}
+
+.stat__value {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-2xl);
+  line-height: 1;
+  letter-spacing: -.04em;
+  margin-bottom: var(--space-1);
+  color: var(--mint);
+}
+
+.stat__label {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  max-width: 150px;
+}
+
+@media (max-width: 768px) {
+  .stats-bar__in {
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  .stat {
+    width: 100%;
+  }
+}
+
+/* trial steps */
+.trial-steps {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-12) var(--space-8);
+  margin-top: var(--space-12);
+}
+
+.trial-step {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.trial-step__number {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--color-primary-highlight);
+  color: var(--color-primary);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-4);
+}
+
+.trial-step h3 {
+  font-size: var(--text-base);
+  font-weight: 700;
+  margin-bottom: var(--space-2);
+}
+
+.trial-step p {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .trial-steps {
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+  }
 }
 
 /* footer */
