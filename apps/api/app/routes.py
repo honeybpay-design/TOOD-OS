@@ -833,7 +833,7 @@ def admin_delete_tenant(org_id: str, ctx: Ctx = Depends(require_admin)):
     if not settings.database_admin_url:
         raise HTTPException(503, "admin DB connection is not configured")
 
-    with _psycopg.connect(settings.database_admin_url) as conn:
+    with _psycopg.connect(settings.database_admin_url, autocommit=True) as conn:
         # Verify the org exists first
         if not conn.execute("SELECT 1 FROM organisations WHERE id = %s", (oid,)).fetchone():
             raise HTTPException(404, "organisation not found")
@@ -842,9 +842,9 @@ def admin_delete_tenant(org_id: str, ctx: Ctx = Depends(require_admin)):
         user_ids = [r[0] for r in conn.execute("SELECT user_id FROM memberships WHERE org_id = %s", (oid,))]
 
         # Disable append-only triggers so historical rows can be removed.
-        # These DDL statements run inside the same transaction; if the transaction
-        # is rolled back PostgreSQL will roll back the trigger-state changes too,
-        # which is the correct safe outcome.
+        # With autocommit=True each statement executes immediately; the finally
+        # block below unconditionally re-enables the triggers whether the
+        # deletions succeed or fail.
         for tbl, trg in _APPEND_ONLY_TRIGGERS:
             conn.execute(f"ALTER TABLE {tbl} DISABLE TRIGGER {trg}")
 
@@ -856,14 +856,9 @@ def admin_delete_tenant(org_id: str, ctx: Ctx = Depends(require_admin)):
                 conn.execute("DELETE FROM users WHERE id = ANY(%s)", (user_ids,))
 
             conn.execute("DELETE FROM organisations WHERE id = %s", (oid,))
-
-            # Re-enable triggers before committing so trigger state is consistent.
+        finally:
+            # Always re-enable append-only triggers, even if deletion fails mid-way.
             for tbl, trg in _APPEND_ONLY_TRIGGERS:
                 conn.execute(f"ALTER TABLE {tbl} ENABLE TRIGGER {trg}")
-
-            conn.commit()
-        except Exception:
-            conn.rollback()
-            raise
 
     return {"deleted": org_id, "ok": True}
