@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Redesign login page as conversion-focused two-panel layout with Google sign-in and benefit panel",
+  "status": "completed",
+  "steps": [
+    "Complete redesign of apps/web/app/login/page.tsx with two-panel layout (40%/60% desktop, full-width mobile)",
+    "Left panel: Logo, headline 'Start your 14-day free trial', sub-headline 'No credit card required', large Google Sign-in button, existing handleSignIn logic",
+    "Right panel: Dark ink background (#0f1215) with benefit points (checkmarks) and testimonial quote",
+    "Add useSearchParams hook to read ?plan= URL parameter, show plan-specific notice",
+    "Modify handleSignIn function to read plan param and pass to /api/auth/google?plan=<plan>",
+    "Add footer text: 'By continuing you agree to our Terms of Service'"
+  ],
+  "acceptance_criteria": [
+    "Login page shows two-panel layout on desktop (responsive on mobile)",
+    "Google Sign-in button is prominent with existing functionality",
+    "Right panel shows dark background with benefit points and testimonial",
+    "Plan parameter handling works (shows 'You're starting the [Plan] plan — 14 days free')",
+    "OAuth redirect includes plan parameter when present"
+  ],
+  "verification": [
+    "Run cd apps/web && npm run build and confirm no errors",
+    "Test login page with ?plan=starter and ?plan=professional parameters",
+    "Verify Google sign-in flow maintains plan parameter",
+    "Check mobile responsiveness"
+  ],
+  "blocked_reason": null,
+  "findings": "Implemented all requirements: 1) Two-panel layout with 40%/60% split on desktop (responsive columns on mobile), 2) Left panel includes logo, 'Start your 14-day free trial' headline, 'No credit card required' subheadline, and prominent Google Sign-in button, 3) Right panel has dark ink background (#0f1215) with benefit checklist and testimonial quote, 4) Plan parameter handling implemented using useSearchParams with Suspense boundary, 5) handleSignIn function modified to pass plan parameter to OAuth endpoint, 6) Footer text added. Build successful with only CSS warnings from existing Tailwind config."
+}
