@@ -1,0 +1,33 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Implement real dashboard with API integration, trial banner, and functional components",
+  "status": "completed",
+  "steps": [
+    "Replace placeholder dashboard in apps/web/app/dashboard/page.tsx with functional dashboard",
+    "Header: Logo from /tood logo png.png, org name from /me endpoint, plan badge, sign out button",
+    "Trial banner: Read trial_started from localStorage, show 'X days left in your free trial — Upgrade now' with link to /#pricing, redirect after 14 days",
+    "Quick action buttons: '+ New tender' (href='/dashboard/tenders/new'), 'Load sample tender' (POST /api/analyse-sample), 'Add evidence' (href='/dashboard/evidence/new')",
+    "Recent tenders list: Fetch GET /api/tenders with Bearer token, show name + created_at, empty state handling",
+    "Stats row: Fetch GET /api/evidence and tender count, display counts",
+    "Integrate /me endpoint: Fetch user data, handle 401 redirect to /login",
+    "Add error handling for network errors and API failures"
+  ],
+  "acceptance_criteria": [
+    "Dashboard shows real data from API endpoints (/me, /api/tenders, /api/evidence)",
+    "Trial banner shows countdown from localStorage",
+    "Quick action buttons work (placeholders okay for new tender/evidence)",
+    "Sample tender button calls API and shows notification",
+    "All API calls include Authorization: Bearer <token> from sessionStorage",
+    "401 errors redirect to /login automatically"
+  ],
+  "verification": [
+    "Run cd apps/web && npm run build and confirm no errors",
+    "Login and navigate to dashboard, verify all components load",
+    "Check API calls in browser DevTools include correct headers",
+    "Test trial banner countdown logic",
+    "Verify 401 handling redirects to login"
+  ],
+  "blocked_reason": null,
+  "findings": "Successfully implemented FEAT-003. All requirements met: 1) Dashboard replaced with functional implementation using React hooks and API integration. 2) Header includes logo from /tood logo png.png, org name from /me endpoint, plan badge, and sign out button. 3) Trial banner reads from localStorage, shows countdown, links to /#pricing, redirects after 14 days. 4) Quick action buttons implemented with proper hrefs and API calls. 5) Recent tenders list fetches from /api/tenders with Bearer token. 6) Stats row shows counts from API data. 7) /me endpoint integration with 401 redirect handling. 8) Comprehensive error handling for network and API failures. Build completed successfully with no errors."
+}
