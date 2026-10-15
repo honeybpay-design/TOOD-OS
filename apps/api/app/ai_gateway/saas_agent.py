@@ -41,37 +41,53 @@ class SaaSAgent:
             max_t = limits["max_tenders"]
             max_u = limits["max_users"]
             if max_t and max_t < 9999 and org["tender_count"] / max_t >= 0.8:
-                alerts.append({
-                    "org_id": str(org["id"]),
-                    "org_name": org["name"],
-                    "resource": "tenders",
-                    "usage": org["tender_count"],
-                    "limit": max_t,
-                    "pct": round(org["tender_count"] / max_t * 100),
-                })
+                alerts.append(
+                    {
+                        "org_id": str(org["id"]),
+                        "org_name": org["name"],
+                        "resource": "tenders",
+                        "usage": org["tender_count"],
+                        "limit": max_t,
+                        "pct": round(org["tender_count"] / max_t * 100),
+                    }
+                )
             if max_u and max_u < 9999 and org["user_count"] / max_u >= 0.8:
-                alerts.append({
-                    "org_id": str(org["id"]),
-                    "org_name": org["name"],
-                    "resource": "users",
-                    "usage": org["user_count"],
-                    "limit": max_u,
-                    "pct": round(org["user_count"] / max_u * 100),
-                })
+                alerts.append(
+                    {
+                        "org_id": str(org["id"]),
+                        "org_name": org["name"],
+                        "resource": "users",
+                        "usage": org["user_count"],
+                        "limit": max_u,
+                        "pct": round(org["user_count"] / max_u * 100),
+                    }
+                )
         return alerts
 
     def get_platform_metrics(self) -> dict:
         """Return MRR, active subscriptions, churn rate, total orgs."""
         PLAN_PRICES = {"starter": 99, "professional": 299, "enterprise": 799}
-        with self._conn() as conn:
-            total_orgs = conn.execute("SELECT count(*) AS n FROM organisations").fetchone()["n"]
-            active_subs = conn.execute(
-                "SELECT plan, count(*) AS n FROM subscriptions WHERE status = 'active' GROUP BY plan"
-            ).fetchall()
-            cancelled_last_30 = conn.execute(
-                "SELECT count(*) AS n FROM subscriptions WHERE status = 'cancelled'"
-                " AND updated_at > now() - interval '30 days'"
-            ).fetchone()["n"]
+        try:
+            with self._conn() as conn:
+                total_orgs = conn.execute("SELECT count(*) AS n FROM organisations").fetchone()["n"]
+                active_subs = conn.execute(
+                    "SELECT plan, count(*) AS n FROM subscriptions WHERE status = 'active' GROUP BY plan"
+                ).fetchall()
+                cancelled_last_30 = conn.execute(
+                    "SELECT count(*) AS n FROM subscriptions WHERE status = 'cancelled'"
+                    " AND updated_at > now() - interval '30 days'"
+                ).fetchone()["n"]
+        except Exception:  # noqa: BLE001
+            log.exception("get_platform_metrics: DB query failed")
+            return {
+                "mrr_gbp": 0,
+                "active_subscriptions": 0,
+                "total_orgs": 0,
+                "churn_rate_30d_pct": 0.0,
+                "subscriptions_by_plan": {},
+                "error": "metrics_unavailable",
+                "generated_at": datetime.datetime.utcnow().isoformat(),
+            }
 
         mrr = sum(PLAN_PRICES.get(row["plan"], 0) * row["n"] for row in active_subs)
         total_active = sum(row["n"] for row in active_subs)
@@ -143,10 +159,12 @@ class SaaSAgent:
 
         anomalies = []
         for row in burst_tenders:
-            anomalies.append({
-                "type": "burst_tender_creation",
-                "org_id": str(row["id"]),
-                "org_name": row["name"],
-                "count_24h": row["n"],
-            })
+            anomalies.append(
+                {
+                    "type": "burst_tender_creation",
+                    "org_id": str(row["id"]),
+                    "org_name": row["name"],
+                    "count_24h": row["n"],
+                }
+            )
         return anomalies

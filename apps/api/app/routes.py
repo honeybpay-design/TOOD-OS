@@ -785,3 +785,73 @@ def admin_force_plan(org_id: str, body: PlanChangeIn, ctx: Ctx = Depends(require
     with psycopg.connect(settings.database_url) as conn:
         conn.execute("UPDATE organisations SET plan = %s WHERE id = %s", (body.plan, uuid.UUID(org_id)))
     return {"org_id": org_id, "plan": body.plan}
+
+
+# Ordered list matches conftest._delete_org and verify_install.workflow cleanup
+_TENANT_DELETE_TABLES = [
+    "approvals",
+    "draft_claims",
+    "revisions",
+    "drafts",
+    "questions",
+    "requirements",
+    "doc_blocks",
+    "documents",
+    "evidence_chunks",
+    "evidence_items",
+    "export_manifests",
+    "audit_events",
+    "api_tokens",
+    "memberships",
+    "tenders",
+    "company_profiles",
+    "jobs",
+    "certificates",
+]
+
+_APPEND_ONLY_TRIGGERS = [
+    ("revisions", "revisions_append_only"),
+    ("audit_events", "audit_append_only"),
+]
+
+
+@admin_router.delete("/tenant/{org_id}", status_code=200)
+def admin_delete_tenant(org_id: str, ctx: Ctx = Depends(require_admin)):
+    """Hard-delete all data for an organisation (admin only).
+
+    Uses the admin connection so that RLS and the append-only triggers can be
+    temporarily bypassed.  This operation is irreversible.
+    """
+    import psycopg as _psycopg  # local import: avoid circular at module level
+
+    oid = uid(org_id)
+
+    if not settings.database_admin_url:
+        raise HTTPException(503, "admin DB connection is not configured")
+
+    with _psycopg.connect(settings.database_admin_url, autocommit=True) as conn:
+        # Verify the org exists first
+        if not conn.execute("SELECT 1 FROM organisations WHERE id = %s", (oid,)).fetchone():
+            raise HTTPException(404, "organisation not found")
+
+        # Collect user IDs before memberships are deleted
+        user_ids = [r[0] for r in conn.execute("SELECT user_id FROM memberships WHERE org_id = %s", (oid,))]
+
+        # Disable append-only triggers so historical rows can be removed
+        for tbl, trg in _APPEND_ONLY_TRIGGERS:
+            conn.execute(f"ALTER TABLE {tbl} DISABLE TRIGGER {trg}")
+
+        try:
+            for tbl in _TENANT_DELETE_TABLES:
+                conn.execute(f"DELETE FROM {tbl} WHERE org_id = %s", (oid,))
+
+            if user_ids:
+                conn.execute("DELETE FROM users WHERE id = ANY(%s)", (user_ids,))
+
+            conn.execute("DELETE FROM organisations WHERE id = %s", (oid,))
+        finally:
+            # Always re-enable append-only triggers, even if deletion fails mid-way
+            for tbl, trg in _APPEND_ONLY_TRIGGERS:
+                conn.execute(f"ALTER TABLE {tbl} ENABLE TRIGGER {trg}")
+
+    return {"deleted": org_id, "ok": True}

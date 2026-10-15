@@ -57,6 +57,12 @@ def healthz() -> dict:
     return {"status": "ok"}
 
 
+# Alias for environments where GFE intercepts /healthz before it reaches Cloud Run
+@app.get("/health")
+def health() -> dict:
+    return {"status": "ok"}
+
+
 @app.get("/readyz")
 def readyz() -> dict:
     try:
