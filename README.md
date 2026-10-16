@@ -2,9 +2,9 @@
 
 > AI-assisted bid writing · Built for UK Public Sector Procurement
 
-![Tests](https://img.shields.io/badge/tests-44%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/tests-51%20passed-brightgreen)
 ![Python](https://img.shields.io/badge/python-3.12-blue)
-![Next.js](https://img.shields.io/badge/next.js-16.4.0-black)
+![Next.js](https://img.shields.io/badge/next.js-15-black)
 ![Cloud Run](https://img.shields.io/badge/cloud-run-europe--west2-4285F4)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -35,7 +35,7 @@ TOOD is a multi-tenant SaaS platform that helps UK public-sector suppliers write
 - **Hash-chained audit trail (append-only)** — every draft revision and user action is stored with a hash chain. Database triggers enforce that audit records can never be updated or deleted.
 - **Multi-tenant with forced Row-Level Security** — all tenant queries run through `tenant_connection()`, which sets tenant context locally to the transaction. The database enforces RLS on all tenant tables — a bug in application code cannot return cross-tenant data.
 - **Stripe billing (3 plans)** — Starter £99/mo, Professional £299/mo, Enterprise £799/mo. Subscription lifecycle is managed via Stripe Checkout and webhooks.
-- **Google OAuth login (configured; not yet tested in production)** — server-side OAuth 2.0 flow implemented; session tokens stored as SHA-256 hashes. Full production test pending.
+- **Google OAuth login** — server-side OAuth 2.0 flow live in production. Google sign-in tested and working at https://tood.uk/login. Session tokens stored as SHA-256 hashes.
 
 ---
 
@@ -196,7 +196,7 @@ PPN 02/24 provides guidance to contracting authorities on how to manage and eval
 
 ```bash
 cd apps/api && pytest -q
-# Expected: 44 passed, 0 failed, 0 skipped
+# Expected: 51 passed, 0 failed, 0 skipped
 ```
 
 ### Lint
@@ -260,16 +260,15 @@ firebase deploy --only hosting
 
 ## Known limitations
 
-- **Google OAuth configured but not yet tested in production** — the server-side OAuth 2.0 flow is implemented and migration 0006 is applied locally, but the full redirect → Google consent → callback flow has not been exercised against the live deployment. Test in staging before enabling for end users.
-- **Cloud SQL instance in `us-east4`, not `europe-west2`** — the Vertex AI region is correctly set to `europe-west2` for UK data residency, but the Cloud SQL instance (`tood-os-instance`) is provisioned in `us-east4`. This is a data residency gap that should be reviewed before production.
-- **No malware scanner on file uploads** — uploaded documents are parsed and stored but no malware scanning step runs. The upload response explicitly notes this. A scanner should be configured before production use.
+- **Cloud SQL instance in `us-east4`, not `europe-west2`** — the Vertex AI region is correctly set to `europe-west2` for UK data residency, but the Cloud SQL instance (`tood-os-instance`) is provisioned in `us-east4`. This is a data residency gap that should be reviewed and resolved post-launch.
+- **No malware scanner on file uploads** — uploaded documents are parsed and stored but no malware scanning step runs. A scanner should be configured before handling sensitive documents at scale.
 - **CI deploy job runs only on merge to `main`; PRs do not auto-deploy** — the `deploy` job in `ci.yml` is gated on `github.ref == 'refs/heads/main'` and `github.event_name == 'push'`.
 
 ---
 
 ## Version
 
-v0.2.0 — 2026-10-15
+v1.0.0 — 2026-10-15 — Production launch
 
 ---
 
