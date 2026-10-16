@@ -24,7 +24,7 @@ function LoginContent() {
     setLoading(true);
     setError(null);
     try {
-      const url = plan ? `/api/auth/google?plan=${encodeURIComponent(plan)}` : '/api/auth/google';
+      const url = plan ? `/v1/auth/google?plan=${encodeURIComponent(plan)}` : '/v1/auth/google';
       const res = await fetch(url);
       if (!res.ok) throw new Error(`${res.status}`);
       const data = (await res.json()) as { auth_url: string };
