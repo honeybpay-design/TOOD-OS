@@ -7,10 +7,13 @@ from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
-from app.routes import router
+from app.routes import admin_router, router
+from app.routes_oauth import oauth_router
 
 app = FastAPI(title="TOOD-OS API", version="0.2.0")
 app.include_router(router)
+app.include_router(admin_router)
+app.include_router(oauth_router)
 STATIC = pathlib.Path(__file__).parent / "static"
 app.mount("/ui", StaticFiles(directory=STATIC, html=True), name="ui")
 
@@ -51,6 +54,12 @@ def root():
 
 @app.get("/healthz")
 def healthz() -> dict:
+    return {"status": "ok"}
+
+
+# Alias for environments where GFE intercepts /healthz before it reaches Cloud Run
+@app.get("/health")
+def health() -> dict:
     return {"status": "ok"}
 
 

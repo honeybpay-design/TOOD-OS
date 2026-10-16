@@ -13,7 +13,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 def load_env() -> None:
     env = ROOT / ".env"
     if env.exists():
-        for line in env.read_text().splitlines():
+        for line in env.read_text(encoding="utf-8").splitlines():
             line = line.strip()
             if line and not line.startswith("#") and "=" in line:
                 k, v = line.split("=", 1)
@@ -26,12 +26,16 @@ def ensure_roles(conn: psycopg.Connection) -> None:
         if not password:
             sys.exit(f"{env_key} is not set (see .env.example)")
         exists = conn.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", (role,)).fetchone()
-        verb = "ALTER" if exists else "CREATE"
-        conn.execute(
-            sql.SQL(f"{verb} ROLE {{}} LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE PASSWORD {{}}").format(
-                sql.Identifier(role), sql.Literal(password)
+        if exists:
+            # On Cloud SQL, postgres cannot alter SUPERUSER attributes on roles it did not own
+            # with superuser. Only set LOGIN and PASSWORD (idempotent and safe).
+            conn.execute(sql.SQL("ALTER ROLE {} LOGIN PASSWORD {}").format(sql.Identifier(role), sql.Literal(password)))
+        else:
+            conn.execute(
+                sql.SQL("CREATE ROLE {} LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE PASSWORD {}").format(
+                    sql.Identifier(role), sql.Literal(password)
+                )
             )
-        )
 
 
 def main() -> None:
@@ -51,7 +55,7 @@ def main() -> None:
                 print(f"skip   {path.name}")
                 continue
             with conn.transaction():
-                conn.execute(path.read_text())
+                conn.execute(path.read_text(encoding="utf-8"))
                 conn.execute("INSERT INTO schema_migrations (name) VALUES (%s)", (path.name,))
             print(f"apply  {path.name}")
     print("migrations complete")

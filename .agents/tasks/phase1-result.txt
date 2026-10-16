@@ -1,0 +1,7 @@
+PASS
+skip   0001_schema.sql
+skip   0002_security.sql
+skip   0003_tokens_and_audit_rls.sql
+skip   0004_ordering.sql
+apply  0005_billing.sql
+migrations complete

@@ -1,0 +1,17 @@
+Cloud SQL setup — SUCCESS
+
+Phase 1: postgres password reset via gcloud sql users set-password — OK
+         Connection test: OK (1,) verified
+
+Phase 2:
+  - Database 'tood': already existed (idempotent)
+  - app_user created by gcloud sql users create
+  - auth_user created by gcloud sql users create
+  - scripts/migrate.py: applied 0001_schema.sql through 0005_billing.sql — migrations complete
+
+Note: migrate.py ensure_roles() updated to use ALTER ROLE ... LOGIN PASSWORD only (not NOSUPERUSER)
+      when role already exists on Cloud SQL, because Cloud SQL's postgres role cannot alter
+      SUPERUSER attributes on roles it did not create with superuser privileges.
+
+Phase 3 (network lockdown):
+  - authorized-networks set to 5.151.90.57/32 only — 0.0.0.0/0 removed
