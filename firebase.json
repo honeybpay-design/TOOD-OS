@@ -18,6 +18,20 @@
           }
         },
         {
+          "source": "/health",
+          "run": {
+            "serviceId": "tood-os-api",
+            "region": "europe-west2"
+          }
+        },
+        {
+          "source": "/readyz",
+          "run": {
+            "serviceId": "tood-os-api",
+            "region": "europe-west2"
+          }
+        },
+        {
           "source": "/docs",
           "run": {
             "serviceId": "tood-os-api",

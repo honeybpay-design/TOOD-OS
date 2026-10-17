@@ -3,6 +3,7 @@ import time
 
 import psycopg
 from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -11,6 +12,22 @@ from app.routes import admin_router, router
 from app.routes_oauth import oauth_router
 
 app = FastAPI(title="TOOD-OS API", version="0.2.0")
+
+# CORS — allow requests from tood.uk and api.tood.uk (browser-side fetch)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://tood.uk",
+        "https://www.tood.uk",
+        "https://api.tood.uk",
+        "https://tood-os.web.app",
+        "https://tood-os.firebaseapp.com",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(router)
 app.include_router(admin_router)
 app.include_router(oauth_router)

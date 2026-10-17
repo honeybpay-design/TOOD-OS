@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -84,7 +84,8 @@ export default function DashboardPage() {
     }
 
     // Fetch user data from /me endpoint
-    fetch("/api/me", {
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
+    fetch(`${apiBase}/v1/me`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(async (res) => {
@@ -98,7 +99,7 @@ export default function DashboardPage() {
         setUser(data);
 
         // Fetch tenders data
-        const tendersRes = await fetch("/api/tenders", {
+        const tendersRes = await fetch(`${apiBase}/v1/tenders`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (tendersRes.ok) {
@@ -107,7 +108,7 @@ export default function DashboardPage() {
         }
 
         // Fetch stats data
-        const statsRes = await fetch("/api/evidence", {
+        const statsRes = await fetch(`${apiBase}/v1/evidence`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (statsRes.ok) {
@@ -138,7 +139,7 @@ export default function DashboardPage() {
     const token = sessionStorage.getItem("tood_session");
     try {
       if (token) {
-        await fetch("/api/auth/logout", {
+        await fetch(`${apiBase}/v1/auth/logout`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -157,7 +158,7 @@ export default function DashboardPage() {
     }
 
     try {
-      const response = await fetch("/api/analyse-sample", {
+      const response = await fetch(`${apiBase}/v1/analyse-sample`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -165,7 +166,7 @@ export default function DashboardPage() {
       if (response.ok) {
         alert("Sample tender loaded successfully!");
         // Refresh tenders list
-        const tendersRes = await fetch("/api/tenders", {
+        const tendersRes = await fetch(`${apiBase}/v1/tenders`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (tendersRes.ok) {
@@ -224,7 +225,7 @@ export default function DashboardPage() {
               aria-label="Sign out of TOOD"
               className="bg-[var(--color-surface-2)] hover:bg-[var(--color-surface-offset)] text-[var(--color-text)] px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
             >
-              {loggingOut ? "Signing out…" : "Sign out"}
+              {loggingOut ? "Signing outâ€¦" : "Sign out"}
             </button>
           </div>
         )}
@@ -407,8 +408,8 @@ export default function DashboardPage() {
                           </span>
                           {tender.status && (
                             <span className={`text-xs px-2 py-0.5 rounded-full ${tender.status === 'active' ? 'bg-green-100 text-green-800' :
-                                tender.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-gray-100 text-gray-800'
+                              tender.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-gray-100 text-gray-800'
                               }`}>
                               {tender.status}
                             </span>
@@ -460,3 +461,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+
