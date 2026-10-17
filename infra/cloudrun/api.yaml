@@ -22,21 +22,72 @@ spec:
             secretKeyRef:
               name: tood-secrets
               key: DATABASE_URL
-        - name: STRIPE_SECRET_KEY
+        - name: AUTH_DATABASE_URL
           valueFrom:
             secretKeyRef:
               name: tood-secrets
-              key: STRIPE_SECRET_KEY
-        - name: STRIPE_WEBHOOK_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: tood-secrets
-              key: STRIPE_WEBHOOK_SECRET
+              key: AUTH_DATABASE_URL
         - name: DATABASE_ADMIN_URL
           valueFrom:
             secretKeyRef:
               name: tood-secrets
               key: DATABASE_ADMIN_URL
+        - name: STRIPE_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: tood-secrets
+              key: STRIPE_SECRET_KEY
+        - name: STRIPE_PUBLISHABLE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: tood-secrets
+              key: STRIPE_PUBLISHABLE_KEY
+        - name: STRIPE_WEBHOOK_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: tood-secrets
+              key: STRIPE_WEBHOOK_SECRET
+        - name: STRIPE_PRICE_STARTER
+          valueFrom:
+            secretKeyRef:
+              name: tood-secrets
+              key: STRIPE_PRICE_STARTER
+        - name: STRIPE_PRICE_PROFESSIONAL
+          valueFrom:
+            secretKeyRef:
+              name: tood-secrets
+              key: STRIPE_PRICE_PROFESSIONAL
+        - name: STRIPE_PRICE_ENTERPRISE
+          valueFrom:
+            secretKeyRef:
+              name: tood-secrets
+              key: STRIPE_PRICE_ENTERPRISE
+        - name: GOOGLE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: tood-secrets
+              key: GOOGLE_CLIENT_ID
+        - name: GOOGLE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: tood-secrets
+              key: GOOGLE_CLIENT_SECRET
+        - name: SESSION_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: tood-secrets
+              key: SESSION_SECRET
+        - name: AI_PROVIDER
+          valueFrom:
+            secretKeyRef:
+              name: tood-secrets
+              key: AI_PROVIDER
+        - name: GCP_PROJECT
+          value: "tood-os"
+        - name: GCP_REGION
+          value: "europe-west2"
+        - name: ALLOW_SIGNUP
+          value: "false"
         resources:
           limits:
             cpu: "2"
