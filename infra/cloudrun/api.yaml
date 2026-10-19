@@ -20,68 +20,68 @@ spec:
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
-              name: tood-secrets
-              key: DATABASE_URL
+              name: database-url
+              key: latest
         - name: AUTH_DATABASE_URL
           valueFrom:
             secretKeyRef:
-              name: tood-secrets
-              key: AUTH_DATABASE_URL
+              name: auth-database-url
+              key: latest
         - name: DATABASE_ADMIN_URL
           valueFrom:
             secretKeyRef:
-              name: tood-secrets
-              key: DATABASE_ADMIN_URL
+              name: database-admin-url
+              key: latest
         - name: STRIPE_SECRET_KEY
           valueFrom:
             secretKeyRef:
-              name: tood-secrets
-              key: STRIPE_SECRET_KEY
+              name: stripe-secret-key
+              key: latest
         - name: STRIPE_PUBLISHABLE_KEY
           valueFrom:
             secretKeyRef:
-              name: tood-secrets
-              key: STRIPE_PUBLISHABLE_KEY
+              name: stripe-publishable-key
+              key: latest
         - name: STRIPE_WEBHOOK_SECRET
           valueFrom:
             secretKeyRef:
-              name: tood-secrets
-              key: STRIPE_WEBHOOK_SECRET
+              name: stripe-webhook-secret
+              key: latest
         - name: STRIPE_PRICE_STARTER
           valueFrom:
             secretKeyRef:
-              name: tood-secrets
-              key: STRIPE_PRICE_STARTER
+              name: stripe-price-starter
+              key: latest
         - name: STRIPE_PRICE_PROFESSIONAL
           valueFrom:
             secretKeyRef:
-              name: tood-secrets
-              key: STRIPE_PRICE_PROFESSIONAL
+              name: stripe-price-professional
+              key: latest
         - name: STRIPE_PRICE_ENTERPRISE
           valueFrom:
             secretKeyRef:
-              name: tood-secrets
-              key: STRIPE_PRICE_ENTERPRISE
+              name: stripe-price-enterprise
+              key: latest
         - name: GOOGLE_CLIENT_ID
           valueFrom:
             secretKeyRef:
-              name: tood-secrets
-              key: GOOGLE_CLIENT_ID
+              name: google-client-id
+              key: latest
         - name: GOOGLE_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
-              name: tood-secrets
-              key: GOOGLE_CLIENT_SECRET
+              name: google-client-secret
+              key: latest
         - name: SESSION_SECRET
           valueFrom:
             secretKeyRef:
-              name: tood-secrets
-              key: SESSION_SECRET
+              name: session-secret
+              key: latest
         - name: AI_PROVIDER
           valueFrom:
             secretKeyRef:
-              name: tood-secrets
-              key: AI_PROVIDER
+              name: ai-provider
+              key: latest
         - name: GCP_PROJECT
           value: "tood-os"
         - name: GCP_REGION

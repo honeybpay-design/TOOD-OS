@@ -4,7 +4,10 @@
 - gcloud CLI authenticated with `honeybpay@gmail.com`
 - Project: `tood-os`, Region: `europe-west2`
 - Artifact Registry repo `tood` created in `europe-west2`
-- Secret Manager secrets: `tood-secrets` with keys DATABASE_URL, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
+- Secret Manager secrets use one secret per environment variable. Secret IDs are lowercase with
+  underscores converted to hyphens, for example `DATABASE_URL` becomes `database-url`.
+- Each Cloud Run `secretKeyRef.name` is the Secret Manager secret ID and
+  `secretKeyRef.key` is the version (`latest` in the checked-in manifest).
 
 ## Deploy
 
@@ -41,5 +44,5 @@ After deploying, register the webhook endpoint in the Stripe Dashboard:
 
 Copy the webhook signing secret into Secret Manager:
 ```bash
-echo -n "whsec_xxx" | gcloud secrets versions add tood-secrets --data-file=-
+echo -n "whsec_xxx" | gcloud secrets versions add stripe-webhook-secret --data-file=-
 ```
