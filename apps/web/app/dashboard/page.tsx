@@ -1,465 +1,372 @@
-﻿"use client";
+"use client";
 
-import { useEffect, useState } from "react";
+import {
+  ArrowRight,
+  BookOpenCheck,
+  CheckCircle2,
+  ChevronRight,
+  FilePlus2,
+  FileText,
+  FolderKanban,
+  Library,
+  LogOut,
+  Menu,
+  Plus,
+  ShieldCheck,
+  Sparkles,
+  X,
+} from "lucide-react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Calendar, FileText, Upload, BarChart, ChevronRight, ExternalLink, Clock, CheckCircle, AlertCircle } from "lucide-react";
 
-interface SessionUser {
-  user_id: string;
-  org_id: string;
+type SessionUser = {
+  org: { id: string; name: string };
+  user: { id: string; email: string };
   role: string;
-  expires_at: string;
-  org_name?: string;
-  plan?: string;
-}
+  ai_provider: string;
+};
 
-interface Tender {
+type Tender = {
   id: string;
-  name: string;
-  created_at: string;
-  status?: string;
-  deadline?: string;
-}
+  title: string;
+  stage: string;
+  requirements: number;
+  questions: number;
+};
 
-interface Stats {
-  tenders_count: number;
-  evidence_count: number;
-  ai_checks_completed: number;
-  compliance_score: number;
+type EvidenceItem = {
+  id: string;
+  kind: string;
+  title: string;
+  status: string;
+  preview: string;
+};
+
+type BillingStatus = {
+  plan: string;
+  status: string;
+  limits: { max_tenders: number; max_users: number; ai_provider: string };
+  usage: { tenders: number; users: number };
+};
+
+type Composer = "tender" | "evidence" | null;
+
+function titleCase(value: string) {
+  return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<SessionUser | null>(null);
-  const [loggingOut, setLoggingOut] = useState(false);
   const [tenders, setTenders] = useState<Tender[]>([]);
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [evidence, setEvidence] = useState<EvidenceItem[]>([]);
+  const [billing, setBilling] = useState<BillingStatus | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [trialDaysLeft, setTrialDaysLeft] = useState<number>(14);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [composer, setComposer] = useState<Composer>(null);
+  const [saving, setSaving] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
-  // Calculate trial days from localStorage
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  const loadWorkspace = useCallback(async () => {
+    // All API calls go through Next.js route handlers that read the HttpOnly
+    // `tood_session` cookie server-side and attach it to the upstream request,
+    // so the client never handles the token and no auth header is needed here.
+    const responses = await Promise.all([
+      fetch("/api/me", { credentials: "include" }),
+      fetch("/api/tenders", { credentials: "include" }),
+      fetch("/api/evidence", { credentials: "include" }),
+      fetch("/api/billing/status", { credentials: "include" }),
+    ]);
 
-    const trialStarted = localStorage.getItem("trial_started");
-    if (trialStarted) {
-      const startDate = new Date(trialStarted);
-      const today = new Date();
-      const diffTime = Math.abs(today.getTime() - startDate.getTime());
-      const diffDays = 14 - Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      setTrialDaysLeft(Math.max(0, diffDays));
-
-      // Redirect if trial expired
-      if (diffDays <= 0) {
-        router.push("/#pricing");
-      }
-    } else {
-      // Set trial start date if not set
-      localStorage.setItem("trial_started", new Date().toISOString());
-    }
-  }, [router]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    // Capture token from URL query param (OAuth callback redirect)
-    const params = new URLSearchParams(window.location.search);
-    const urlToken = params.get("session_token");
-    if (urlToken) {
-      sessionStorage.setItem("tood_session", urlToken);
-      // Remove token from URL without triggering a navigation
-      const clean =
-        window.location.pathname +
-        (params.toString().replace(`session_token=${urlToken}`, "").replace(/^&|&$/, "")
-          ? "?" + params.toString().replace(`session_token=${urlToken}`, "").replace(/^&|&$/, "")
-          : "");
-      history.replaceState(null, "", clean);
-    }
-
-    const token = sessionStorage.getItem("tood_session");
-    if (!token) {
+    if (responses.some((response) => response.status === 401)) {
       router.replace("/login");
       return;
     }
 
-    // Fetch user data from /me endpoint
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
-    fetch(`${apiBase}/v1/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(async (res) => {
-        if (res.status === 401) {
-          sessionStorage.removeItem("tood_session");
-          router.replace("/login");
-          return;
-        }
-        if (!res.ok) throw new Error(`Failed to fetch user data: ${res.status}`);
-        const data = await res.json();
-        setUser(data);
+    const failed = responses.find((response) => !response.ok);
+    if (failed) throw new Error(`Workspace request failed (${failed.status})`);
 
-        // Fetch tenders data
-        const tendersRes = await fetch(`${apiBase}/v1/tenders`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (tendersRes.ok) {
-          const tendersData = await tendersRes.json();
-          setTenders(tendersData.tenders || tendersData || []);
-        }
-
-        // Fetch stats data
-        const statsRes = await fetch(`${apiBase}/v1/evidence`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (statsRes.ok) {
-          const evidenceData = await statsRes.json();
-          // Calculate stats from evidence and tenders
-          const tenderCount = Array.isArray(tenders) ? tenders.length : 0;
-          const evidenceCount = Array.isArray(evidenceData) ? evidenceData.length : 0;
-
-          setStats({
-            tenders_count: tenderCount,
-            evidence_count: evidenceCount,
-            ai_checks_completed: Math.floor(Math.random() * 50), // Placeholder
-            compliance_score: 85 + Math.floor(Math.random() * 15), // Placeholder
-          });
-        }
-      })
-      .catch((err) => {
-        console.error("API error:", err);
-        setError("Failed to load dashboard data. Please try again.");
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    const [meData, tenderData, evidenceData, billingData] = await Promise.all(
+      responses.map((response) => response.json()),
+    );
+    setUser(meData as SessionUser);
+    setTenders(tenderData as Tender[]);
+    setEvidence(evidenceData as EvidenceItem[]);
+    setBilling(billingData as BillingStatus);
   }, [router]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadWorkspace()
+        .catch(() => setError("We could not load your workspace. Check your connection and try again."))
+        .finally(() => setLoading(false));
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [loadWorkspace, router]);
+
+  const totals = useMemo(() => ({
+    requirements: tenders.reduce((sum, tender) => sum + tender.requirements, 0),
+    questions: tenders.reduce((sum, tender) => sum + tender.questions, 0),
+    approvedEvidence: evidence.filter((item) => item.status === "approved").length,
+  }), [evidence, tenders]);
+
+  async function refreshWorkspace() {
+    await loadWorkspace();
+  }
 
   async function handleLogout() {
     setLoggingOut(true);
-    const token = sessionStorage.getItem("tood_session");
     try {
-      if (token) {
-        await fetch(`${apiBase}/v1/auth/logout`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      }
+      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
     } finally {
-      sessionStorage.removeItem("tood_session");
       router.replace("/login");
     }
   }
 
-  async function handleLoadSampleTender() {
-    const token = sessionStorage.getItem("tood_session");
-    if (!token) {
-      router.replace("/login");
-      return;
-    }
-
+  async function createTender(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setSaving(true);
+    setError(null);
     try {
-      const response = await fetch(`${apiBase}/v1/analyse-sample`, {
+      const response = await fetch("/api/tenders", {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ title: form.get("title") }),
       });
-
-      if (response.ok) {
-        alert("Sample tender loaded successfully!");
-        // Refresh tenders list
-        const tendersRes = await fetch(`${apiBase}/v1/tenders`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (tendersRes.ok) {
-          const tendersData = await tendersRes.json();
-          setTenders(tendersData.tenders || tendersData || []);
-        }
-      } else {
-        alert("Failed to load sample tender. Please try again.");
+      if (response.status === 401) {
+        router.replace("/login");
+        return;
       }
-    } catch (error) {
-      console.error("Error loading sample tender:", error);
-      alert("Error loading sample tender. Please check your connection.");
+      if (!response.ok) throw new Error(String(response.status));
+      await refreshWorkspace();
+      setComposer(null);
+      setNotice("Tender created. Add the tender documents when you are ready.");
+    } catch {
+      setError("The tender could not be created. Bid manager access is required.");
+    } finally {
+      setSaving(false);
     }
   }
 
-  function formatDate(dateString: string) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+  async function createEvidence(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setSaving(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/evidence", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          kind: form.get("kind"),
+          title: form.get("title"),
+          body: form.get("body"),
+          approved: false,
+        }),
+      });
+      if (response.status === 401) {
+        router.replace("/login");
+        return;
+      }
+      if (!response.ok) throw new Error(String(response.status));
+      await refreshWorkspace();
+      setComposer(null);
+      setNotice("Evidence saved as a draft. A bid manager can review and approve it.");
+    } catch {
+      setError("The evidence item could not be saved. Contributor access is required.");
+    } finally {
+      setSaving(false);
+    }
   }
+
+  const nav = [
+    { label: "Overview", icon: FolderKanban, href: "#overview" },
+    { label: "Tenders", icon: FileText, href: "#tenders" },
+    { label: "Evidence", icon: Library, href: "#evidence" },
+    { label: "Assurance", icon: ShieldCheck, href: "#assurance" },
+  ];
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] flex flex-col">
-      {/* Header */}
-      <header className="bg-[var(--color-surface)] border-b border-[var(--color-border)] sticky top-0 z-10 px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <img src="/tood logo png.png" alt="TOOD" className="h-8 w-auto" />
-          <div className="flex flex-col">
-            <span className="text-[var(--color-text)] text-sm font-medium">
-              {user?.org_name || user?.org_id || "Organization"}
-            </span>
-            <span className="text-[var(--color-text-muted)] text-xs">
-              {user?.plan ? `Plan: ${user.plan}` : "Free Trial"}
-            </span>
-          </div>
-        </div>
+    <div className="min-h-screen bg-[#08090b] text-[#eef2f5]">
+      <a href="#workspace-main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-[#4cc4ea] focus:px-4 focus:py-2 focus:text-[#031219]">
+        Skip to workspace
+      </a>
 
-        {user && (
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center gap-3">
-              <div className="text-right">
-                <span className="text-[var(--color-text)] text-sm font-medium block">
-                  {user.role}
-                </span>
-                <span className="text-[var(--color-text-muted)] text-xs">
-                  {user.user_id?.substring(0, 8)}...
-                </span>
-              </div>
-            </div>
-            <button
-              onClick={handleLogout}
-              disabled={loggingOut}
-              aria-label="Sign out of TOOD"
-              className="bg-[var(--color-surface-2)] hover:bg-[var(--color-surface-offset)] text-[var(--color-text)] px-4 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]"
-            >
-              {loggingOut ? "Signing outâ€¦" : "Sign out"}
+      <aside className={`fixed inset-y-0 left-0 z-40 w-72 border-r border-white/10 bg-[#0b0d10] p-5 transition-transform lg:translate-x-0 ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"}`} aria-label="Workspace navigation">
+        <div className="flex h-full flex-col">
+          <div className="flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-3 text-lg font-semibold tracking-tight">
+              <span className="grid h-9 w-9 place-items-center rounded-xl border border-[#4cc4ea]/35 bg-[#4cc4ea]/10 text-[#8fdcf5]">
+                <BookOpenCheck size={19} strokeWidth={1.8} />
+              </span>
+              tood.os
+            </Link>
+            <button className="rounded-lg p-2 text-[#a9b3bc] hover:bg-white/5 lg:hidden" onClick={() => setMobileNavOpen(false)} aria-label="Close navigation">
+              <X size={20} />
             </button>
           </div>
-        )}
-      </header>
 
-      {/* Trial Banner */}
-      {trialDaysLeft > 0 && trialDaysLeft <= 14 && (
-        <div className="bg-gradient-to-r from-[var(--color-primary)] to-[#2fb486] text-white px-4 sm:px-6 lg:px-8 py-3">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              <span className="text-sm font-medium">
-                {trialDaysLeft} {trialDaysLeft === 1 ? "day" : "days"} left in your free trial
+          <p className="mt-8 font-mono text-[11px] uppercase tracking-[0.16em] text-[#78838d]">Workspace</p>
+          <nav className="mt-3 space-y-1">
+            {nav.map(({ label, icon: Icon, href }, index) => (
+              <a key={label} href={href} onClick={() => setMobileNavOpen(false)} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition ${index === 0 ? "border border-[#4cc4ea]/25 bg-[#4cc4ea]/10 text-[#eef2f5]" : "text-[#a9b3bc] hover:bg-white/5 hover:text-[#eef2f5]"}`}>
+                <Icon size={18} strokeWidth={1.7} />
+                {label}
+              </a>
+            ))}
+          </nav>
+
+          <div className="mt-auto rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+            <p className="truncate text-sm font-medium">{user?.org.name ?? "Loading workspace"}</p>
+            <p className="mt-1 truncate text-xs text-[#78838d]">{user?.user.email ?? "Secure session"}</p>
+            <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-4">
+              <span className="rounded-full bg-[#4cc4ea]/10 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-[#8fdcf5]">
+                {billing ? titleCase(billing.plan) : "Workspace"}
               </span>
+              <button onClick={handleLogout} disabled={loggingOut} className="rounded-lg p-2 text-[#a9b3bc] hover:bg-white/5 hover:text-white disabled:opacity-50" aria-label="Sign out">
+                <LogOut size={17} />
+              </button>
             </div>
-            <a
-              href="/#pricing"
-              className="bg-white text-[var(--color-primary)] hover:bg-gray-100 px-4 py-1.5 text-sm font-medium rounded-lg transition-colors inline-flex items-center gap-1"
-            >
-              Upgrade now <ExternalLink className="h-3 w-3" />
-            </a>
           </div>
         </div>
-      )}
+      </aside>
 
-      {/* Main content */}
-      <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto w-full">
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-6 flex items-center gap-2">
-            <AlertCircle className="h-5 w-5" />
-            <span>{error}</span>
-          </div>
-        )}
+      {mobileNavOpen && <button className="fixed inset-0 z-30 bg-black/70 lg:hidden" onClick={() => setMobileNavOpen(false)} aria-label="Close navigation overlay" />}
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[var(--color-text)] mb-2">
-            Welcome back, {user?.role || "User"}
-          </h1>
-          <p className="text-[var(--color-text-muted)]">
-            Manage your tenders, evidence, and compliance checks in one place.
-          </p>
-        </div>
-
-        {/* Quick Action Buttons */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <a
-            href="/dashboard/tenders/new"
-            className="bg-[var(--color-surface-2)] border border-[var(--color-border)] hover:border-[var(--color-primary)] hover:shadow-md rounded-xl p-5 transition-all group"
-          >
-            <div className="flex items-center gap-4">
-              <div className="bg-[var(--color-primary-highlight)] p-3 rounded-lg">
-                <FileText className="h-6 w-6 text-[var(--color-primary)]" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-[var(--color-text)] group-hover:text-[var(--color-primary)]">
-                  + New tender
-                </h3>
-                <p className="text-sm text-[var(--color-text-muted)] mt-1">
-                  Create a new bid management project
-                </p>
-              </div>
-              <ChevronRight className="h-5 w-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-primary)]" />
-            </div>
-          </a>
-
-          <button
-            onClick={handleLoadSampleTender}
-            className="bg-[var(--color-surface-2)] border border-[var(--color-border)] hover:border-[var(--color-primary)] hover:shadow-md rounded-xl p-5 transition-all group text-left"
-          >
-            <div className="flex items-center gap-4">
-              <div className="bg-blue-50 p-3 rounded-lg">
-                <Upload className="h-6 w-6 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-[var(--color-text)] group-hover:text-[var(--color-primary)]">
-                  Load sample tender
-                </h3>
-                <p className="text-sm text-[var(--color-text-muted)] mt-1">
-                  Analyze a sample tender to get started
-                </p>
-              </div>
-              <ChevronRight className="h-5 w-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-primary)]" />
-            </div>
+      <div className="lg:pl-72">
+        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-white/10 bg-[#08090b]/90 px-4 backdrop-blur-xl sm:px-8">
+          <button className="rounded-lg p-2 text-[#a9b3bc] hover:bg-white/5 lg:hidden" onClick={() => setMobileNavOpen(true)} aria-label="Open navigation">
+            <Menu size={21} />
           </button>
+          <div className="hidden items-center gap-2 text-sm text-[#78838d] sm:flex">
+            <span>{user?.org.name ?? "Workspace"}</span>
+            <ChevronRight size={14} />
+            <span className="text-[#eef2f5]">Overview</span>
+          </div>
+          <button onClick={() => setComposer("tender")} className="inline-flex h-10 items-center gap-2 rounded-[10px] bg-[#4cc4ea] px-4 text-sm font-semibold text-[#031219] shadow-[0_10px_30px_rgba(76,196,234,.18)] transition hover:bg-[#6fd2f1] active:scale-[.97]">
+            <Plus size={17} strokeWidth={2} /> New tender
+          </button>
+        </header>
 
-          <a
-            href="/dashboard/evidence/new"
-            className="bg-[var(--color-surface-2)] border border-[var(--color-border)] hover:border-[var(--color-primary)] hover:shadow-md rounded-xl p-5 transition-all group"
-          >
-            <div className="flex items-center gap-4">
-              <div className="bg-green-50 p-3 rounded-lg">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-[var(--color-text)] group-hover:text-[var(--color-primary)]">
-                  Add evidence
-                </h3>
-                <p className="text-sm text-[var(--color-text-muted)] mt-1">
-                  Upload compliance evidence and documents
+        <main id="workspace-main" className="mx-auto max-w-[1240px] px-4 py-10 sm:px-8 sm:py-14">
+          <section id="overview" className="scroll-mt-24">
+            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-[#8fdcf5]">Document intelligence workspace</p>
+            <div className="mt-4 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+              <div>
+                <h1 className="max-w-3xl bg-gradient-to-b from-[#88939d] via-[#d6dde2] to-[#f3f6f8] bg-clip-text text-4xl font-semibold leading-[1.05] tracking-[-0.045em] text-transparent sm:text-6xl">
+                  Every bid, grounded in its source.
+                </h1>
+                <p className="mt-5 max-w-2xl text-base leading-7 text-[#a9b3bc] sm:text-lg">
+                  Review tenders, approved evidence and export blockers from one accountable workspace.
                 </p>
               </div>
-              <ChevronRight className="h-5 w-5 text-[var(--color-text-muted)] group-hover:text-[var(--color-primary)]" />
+              <div className="flex items-center gap-2 text-sm text-[#a9b3bc]">
+                <span className="h-2 w-2 rounded-full bg-[#6cc59a]" aria-hidden="true" />
+                {billing ? `${titleCase(billing.status)} ${titleCase(billing.plan)} plan` : "Loading plan status"}
+              </div>
             </div>
-          </a>
-        </div>
+          </section>
 
-        {/* Stats Row */}
-        {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl p-5">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-[var(--color-text-muted)]">Active Tenders</h3>
-                <FileText className="h-5 w-5 text-[var(--color-primary)]" />
-              </div>
-              <p className="text-3xl font-bold text-[var(--color-text)]">{stats.tenders_count}</p>
-              <p className="text-xs text-[var(--color-text-muted)] mt-1">Total bid projects</p>
+          {(error || notice) && (
+            <div className={`mt-8 flex items-start gap-3 rounded-xl border px-4 py-3 text-sm ${error ? "border-[#df8080]/35 bg-[#df8080]/10 text-[#f1b1b1]" : "border-[#6cc59a]/30 bg-[#6cc59a]/10 text-[#a8dfc2]"}`} role={error ? "alert" : "status"}>
+              {error ? <ShieldCheck className="mt-0.5 shrink-0" size={18} /> : <CheckCircle2 className="mt-0.5 shrink-0" size={18} />}
+              <span>{error ?? notice}</span>
             </div>
+          )}
 
-            <div className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl p-5">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-[var(--color-text-muted)]">Evidence Items</h3>
-                <CheckCircle className="h-5 w-5 text-green-600" />
-              </div>
-              <p className="text-3xl font-bold text-[var(--color-text)]">{stats.evidence_count}</p>
-              <p className="text-xs text-[var(--color-text-muted)] mt-1">Compliance documents</p>
-            </div>
-
-            <div className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl p-5">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-[var(--color-text-muted)]">AI Checks</h3>
-                <BarChart className="h-5 w-5 text-blue-600" />
-              </div>
-              <p className="text-3xl font-bold text-[var(--color-text)]">{stats.ai_checks_completed}</p>
-              <p className="text-xs text-[var(--color-text-muted)] mt-1">Verifications completed</p>
-            </div>
-
-            <div className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl p-5">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-[var(--color-text-muted)]">Compliance Score</h3>
-                <CheckCircle className="h-5 w-5 text-green-600" />
-              </div>
-              <p className="text-3xl font-bold text-[var(--color-text)]">{stats.compliance_score}%</p>
-              <p className="text-xs text-[var(--color-text-muted)] mt-1">Overall compliance rating</p>
-            </div>
-          </div>
-        )}
-
-        {/* Recent Tenders */}
-        <div className="bg-[var(--color-surface-2)] border border-[var(--color-border)] rounded-xl overflow-hidden">
-          <div className="border-b border-[var(--color-border)] px-6 py-4">
-            <h2 className="text-lg font-semibold text-[var(--color-text)]">Recent Tenders</h2>
-            <p className="text-sm text-[var(--color-text-muted)] mt-1">
-              Your most recent bid management projects
-            </p>
-          </div>
-
-          <div className="p-6">
-            {loading ? (
-              <div className="text-center py-8">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-primary)]"></div>
-                <p className="text-[var(--color-text-muted)] mt-2">Loading tenders...</p>
-              </div>
-            ) : tenders.length > 0 ? (
-              <div className="space-y-3">
-                {tenders.slice(0, 5).map((tender) => (
-                  <div
-                    key={tender.id}
-                    className="flex items-center justify-between p-4 hover:bg-[var(--color-surface)] rounded-lg transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="bg-[var(--color-primary-highlight)] p-2 rounded-lg">
-                        <FileText className="h-5 w-5 text-[var(--color-primary)]" />
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-[var(--color-text)]">{tender.name}</h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Calendar className="h-3 w-3 text-[var(--color-text-muted)]" />
-                          <span className="text-xs text-[var(--color-text-muted)]">
-                            Created {formatDate(tender.created_at)}
-                          </span>
-                          {tender.status && (
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${tender.status === 'active' ? 'bg-green-100 text-green-800' :
-                              tender.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-gray-100 text-gray-800'
-                              }`}>
-                              {tender.status}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-[var(--color-text-muted)]" />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <FileText className="h-12 w-12 text-[var(--color-text-muted)] mx-auto mb-3 opacity-50" />
-                <h3 className="text-lg font-medium text-[var(--color-text)] mb-2">No tenders yet</h3>
-                <p className="text-[var(--color-text-muted)] mb-4">
-                  Get started by creating your first tender or loading a sample.
-                </p>
-                <div className="flex gap-3 justify-center">
-                  <a
-                    href="/dashboard/tenders/new"
-                    className="bg-[var(--color-primary)] text-white px-4 py-2 rounded-lg font-medium hover:bg-[var(--color-primary-hover)] transition-colors"
-                  >
-                    + New tender
-                  </a>
-                  <button
-                    onClick={handleLoadSampleTender}
-                    className="border border-[var(--color-border)] text-[var(--color-text)] px-4 py-2 rounded-lg font-medium hover:bg-[var(--color-surface)] transition-colors"
-                  >
-                    Load sample
-                  </button>
+          {composer && (
+            <section className="mt-8 rounded-[22px] border border-[#4cc4ea]/25 bg-gradient-to-b from-[#0f151a] to-[#0b0d10] p-5 shadow-2xl sm:p-7" aria-labelledby="composer-title">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#8fdcf5]">New workspace record</p>
+                  <h2 id="composer-title" className="mt-2 text-2xl font-semibold tracking-tight">{composer === "tender" ? "Create a tender" : "Add evidence"}</h2>
                 </div>
+                <button onClick={() => setComposer(null)} className="rounded-lg p-2 text-[#a9b3bc] hover:bg-white/5 hover:text-white" aria-label="Close form"><X size={20} /></button>
               </div>
-            )}
 
-            {tenders.length > 5 && (
-              <div className="mt-6 pt-6 border-t border-[var(--color-border)]">
-                <a
-                  href="/dashboard/tenders"
-                  className="text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] font-medium inline-flex items-center gap-1"
-                >
-                  View all tenders <ExternalLink className="h-4 w-4" />
-                </a>
+              {composer === "tender" ? (
+                <form onSubmit={createTender} className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end">
+                  <label className="flex-1 text-sm text-[#a9b3bc]">Tender title
+                    <input required minLength={2} maxLength={300} name="title" className="mt-2 h-12 w-full rounded-[10px] border border-white/15 bg-[#14181d] px-4 text-[#eef2f5] outline-none transition placeholder:text-[#65707a] focus:border-[#4cc4ea] focus:ring-2 focus:ring-[#4cc4ea]/20" placeholder="e.g. Council service desk procurement" />
+                  </label>
+                  <button disabled={saving} className="h-12 rounded-[10px] bg-[#4cc4ea] px-5 font-semibold text-[#031219] hover:bg-[#6fd2f1] disabled:opacity-50">{saving ? "Creating..." : "Create tender"}</button>
+                </form>
+              ) : (
+                <form onSubmit={createEvidence} className="mt-6 grid gap-4 md:grid-cols-2">
+                  <label className="text-sm text-[#a9b3bc]">Evidence type
+                    <select name="kind" className="mt-2 h-12 w-full rounded-[10px] border border-white/15 bg-[#14181d] px-4 text-[#eef2f5] outline-none focus:border-[#4cc4ea]">
+                      <option value="case_study">Case study</option><option value="policy">Policy</option><option value="cv">CV</option><option value="method">Method</option><option value="financial">Financial</option><option value="company_fact">Company fact</option>
+                    </select>
+                  </label>
+                  <label className="text-sm text-[#a9b3bc]">Title
+                    <input required minLength={2} maxLength={200} name="title" className="mt-2 h-12 w-full rounded-[10px] border border-white/15 bg-[#14181d] px-4 text-[#eef2f5] outline-none focus:border-[#4cc4ea]" placeholder="Evidence title" />
+                  </label>
+                  <label className="text-sm text-[#a9b3bc] md:col-span-2">Evidence text
+                    <textarea required minLength={10} maxLength={20000} name="body" rows={5} className="mt-2 w-full rounded-[10px] border border-white/15 bg-[#14181d] px-4 py-3 text-[#eef2f5] outline-none focus:border-[#4cc4ea]" placeholder="Paste the approved source text. It will be saved as a draft until reviewed." />
+                  </label>
+                  <div className="md:col-span-2 flex justify-end"><button disabled={saving} className="h-12 rounded-[10px] bg-[#4cc4ea] px-5 font-semibold text-[#031219] hover:bg-[#6fd2f1] disabled:opacity-50">{saving ? "Saving..." : "Save evidence draft"}</button></div>
+                </form>
+              )}
+            </section>
+          )}
+
+          <section className="mt-10 grid gap-px overflow-hidden rounded-[18px] border border-white/10 bg-white/10 sm:grid-cols-2 xl:grid-cols-4" aria-label="Workspace totals">
+            {[
+              ["Tenders", tenders.length, "Active bid workspaces"],
+              ["Requirements", totals.requirements, "Source-linked requirements"],
+              ["Questions", totals.questions, "Drafting work items"],
+              ["Approved evidence", totals.approvedEvidence, `${evidence.length} total evidence items`],
+            ].map(([label, value, detail]) => (
+              <div key={label} className="bg-[#0f1216] p-5 sm:p-6">
+                <p className="text-sm text-[#78838d]">{label}</p>
+                <p className="mt-3 text-3xl font-semibold tabular-nums">{loading ? "–" : value}</p>
+                <p className="mt-2 text-xs text-[#78838d]">{detail}</p>
               </div>
-            )}
-          </div>
-        </div>
-      </main>
+            ))}
+          </section>
+
+          <section className="mt-10 grid gap-6 xl:grid-cols-[1.55fr_.85fr]">
+            <div id="tenders" className="scroll-mt-24 overflow-hidden rounded-[18px] border border-white/10 bg-[#0f1216]">
+              <div className="flex items-center justify-between border-b border-white/10 px-5 py-5 sm:px-6">
+                <div><h2 className="text-lg font-semibold">Tender workspaces</h2><p className="mt-1 text-sm text-[#78838d]">Requirements and questions grouped by tender.</p></div>
+                <button onClick={() => setComposer("tender")} className="rounded-lg p-2 text-[#8fdcf5] hover:bg-[#4cc4ea]/10" aria-label="Create a tender"><FilePlus2 size={20} /></button>
+              </div>
+              <div className="divide-y divide-white/10">
+                {loading ? <p className="p-6 text-sm text-[#78838d]">Loading tenders...</p> : tenders.length ? tenders.slice(0, 6).map((tender) => (
+                  <article key={tender.id} className="group flex items-center gap-4 px-5 py-4 transition hover:bg-white/[0.025] sm:px-6">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#4cc4ea]/10 text-[#8fdcf5]"><FileText size={19} /></span>
+                    <div className="min-w-0 flex-1"><h3 className="truncate text-sm font-medium">{tender.title}</h3><p className="mt-1 text-xs text-[#78838d]">{tender.requirements} requirements · {tender.questions} questions</p></div>
+                    <span className="rounded-full border border-white/10 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-[#a9b3bc]">{titleCase(tender.stage)}</span>
+                  </article>
+                )) : (
+                  <div className="px-6 py-12 text-center"><FileText className="mx-auto text-[#4d5861]" size={34} strokeWidth={1.4} /><h3 className="mt-4 font-medium">No tenders yet</h3><p className="mx-auto mt-2 max-w-sm text-sm text-[#78838d]">Create a tender workspace, then add source documents through the secured document flow.</p><button onClick={() => setComposer("tender")} className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-[#8fdcf5]">Create your first tender <ArrowRight size={16} /></button></div>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <section id="evidence" className="scroll-mt-24 rounded-[18px] border border-white/10 bg-[#0f1216] p-6">
+                <div className="flex items-start justify-between gap-4"><div><h2 className="text-lg font-semibold">Evidence library</h2><p className="mt-1 text-sm text-[#78838d]">Only approved evidence can support factual claims.</p></div><Library className="text-[#8fdcf5]" size={22} /></div>
+                <div className="mt-6 flex items-end justify-between"><div><p className="text-3xl font-semibold tabular-nums">{loading ? "–" : evidence.length}</p><p className="mt-1 text-xs text-[#78838d]">{totals.approvedEvidence} approved</p></div><button onClick={() => setComposer("evidence")} className="inline-flex h-10 items-center gap-2 rounded-[10px] border border-white/15 bg-white/[0.035] px-3 text-sm font-medium hover:border-[#4cc4ea]/45 hover:bg-[#4cc4ea]/10"><Plus size={16} /> Add evidence</button></div>
+              </section>
+
+              <section id="assurance" className="scroll-mt-24 rounded-[18px] border border-white/10 bg-gradient-to-b from-[#101820] to-[#0f1216] p-6">
+                <div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl border border-[#4cc4ea]/25 bg-[#4cc4ea]/10 text-[#8fdcf5]"><ShieldCheck size={20} /></span><div><h2 className="font-semibold">Assurance controls</h2><p className="text-xs text-[#78838d]">Enforced before export</p></div></div>
+                <ul className="mt-6 space-y-3 text-sm text-[#a9b3bc]">
+                  {["Verbatim requirement checks", "Evidence-linked factual claims", "Named human approval", "Revision hash chain"].map((item) => <li key={item} className="flex items-center gap-3"><CheckCircle2 size={16} className="shrink-0 text-[#6cc59a]" />{item}</li>)}
+                </ul>
+                <div className="mt-6 flex items-center gap-2 border-t border-white/10 pt-5 text-xs text-[#78838d]"><Sparkles size={15} className="text-[#8fdcf5]" /> AI provider: {user ? titleCase(user.ai_provider) : "Loading"}</div>
+              </section>
+            </div>
+          </section>
+        </main>
+      </div>
     </div>
   );
 }
-
-

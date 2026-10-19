@@ -1,22 +1,24 @@
 "use client";
 
 import { useEffect, useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 
 function LoginContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const plan = searchParams.get('plan') || '';
-  const planDisplayName = plan === 'professional' ? 'Professional' : plan === 'starter' ? 'Starter' : '';
-
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const token = sessionStorage.getItem('tood_session');
-      if (token) router.replace('/dashboard');
+      // The session lives in an HttpOnly cookie the browser cannot read, so ask
+      // the server: if /api/me still validates, the user is already signed in.
+      fetch('/api/me', { credentials: 'include' })
+        .then((res) => {
+          if (res.ok) router.replace('/dashboard');
+        })
+        .catch(() => { });
     }
   }, [router]);
 
@@ -24,8 +26,7 @@ function LoginContent() {
     setLoading(true);
     setError(null);
     try {
-      const url = plan ? `/v1/auth/google?plan=${encodeURIComponent(plan)}` : '/v1/auth/google';
-      const res = await fetch(url);
+      const res = await fetch('/v1/auth/google');
       if (!res.ok) throw new Error(`${res.status}`);
       const data = (await res.json()) as { auth_url: string };
       if (!data.auth_url) throw new Error('missing auth_url');
@@ -101,7 +102,7 @@ function LoginContent() {
                   color: 'var(--color-text)',
                   lineHeight: 1.1
                 }}>
-                  Start your 14-day free trial
+                  Sign in to your workspace
                 </h1>
                 <p style={{
                   fontFamily: 'var(--font-body)',
@@ -109,24 +110,10 @@ function LoginContent() {
                   color: 'var(--color-text-muted)',
                   lineHeight: 1.6
                 }}>
-                  No credit card required
+                  Continue with your authorised Google account
                 </p>
               </div>
 
-              {/* Plan notice */}
-              {planDisplayName && (
-                <div style={{
-                  background: 'var(--color-primary-highlight)',
-                  border: '1px solid var(--color-primary)',
-                  borderRadius: 'var(--radius-lg)',
-                  padding: 'var(--space-4) var(--space-5)',
-                  color: 'var(--color-primary)',
-                  fontSize: 'var(--text-sm)',
-                  fontWeight: 600
-                }}>
-                  You're starting the <span style={{ fontWeight: 800 }}>{planDisplayName}</span> plan — 14 days free
-                </div>
-              )}
             </div>
 
             {/* Google sign-in button */}
@@ -200,12 +187,12 @@ function LoginContent() {
                 fontFamily: 'var(--font-body)',
                 paddingTop: 'var(--space-2)'
               }}>
-                By continuing you agree to our Terms of Service
+                Continue only if you are authorised to use this workspace.
               </p>
             </div>
 
             {/* Back link */}
-            <a
+            <Link
               href="/"
               style={{
                 color: 'var(--color-text-muted)',
@@ -221,7 +208,7 @@ function LoginContent() {
                 <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               Back to homepage
-            </a>
+            </Link>
           </div>
         </div>
 
@@ -266,17 +253,17 @@ function LoginContent() {
                 letterSpacing: '-.03em',
                 color: 'var(--ink-text)'
               }}>
-                What you'll get with your trial
+                What you&apos;ll find in the workspace
               </h2>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
                 {[
                   'Full access to AI-assisted bid writing',
-                  'Compliance verification against 200+ public sector requirements',
+                  'Source-linked public-sector tender requirements',
                   'Real-time evidence matching from your knowledge base',
                   'Collaborative workspace for your entire bid team',
-                  'Export-ready bid documents in DOCX and PDF formats',
-                  'Priority support during your trial period'
+                  'Export-ready bid documents in DOCX format',
+                  'Human approval before export or submission'
                 ].map((benefit, index) => (
                   <div key={index} style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-3)' }}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ color: 'var(--mint)', flexShrink: 0, marginTop: '2px' }}>
@@ -290,39 +277,7 @@ function LoginContent() {
               </div>
             </div>
 
-            {/* Testimonial */}
-            <div style={{
-              background: 'var(--ink-2)',
-              border: '1px solid var(--ink-line)',
-              borderRadius: 'var(--radius-xl)',
-              padding: 'var(--space-6)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 'var(--space-4)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--ink-3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ color: 'var(--mint)' }}>
-                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ fontWeight: 600, fontSize: 'var(--text-base)', color: 'var(--ink-text)' }}>Sarah Chen</span>
-                  <span style={{ fontSize: 'var(--text-sm)', color: 'var(--ink-muted)' }}>Bid Director, NHS Trust</span>
-                </div>
-              </div>
 
-              <blockquote style={{
-                fontStyle: 'italic',
-                fontSize: 'var(--text-base)',
-                lineHeight: 1.6,
-                color: 'var(--ink-text)',
-                paddingLeft: 'var(--space-3)',
-                borderLeft: '2px solid var(--mint)'
-              }}>
-                "tood.os cut our bid preparation time by 60% and helped us win a £2.4M contract we'd been chasing for years. The evidence verification alone is worth the subscription."
-              </blockquote>
-            </div>
           </div>
         </div>
       </div>

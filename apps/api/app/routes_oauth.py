@@ -81,9 +81,7 @@ def google_callback(code: str | None = None, state: str | None = None, error: st
             )
         else:
             # Check if user exists by email
-            user_row = conn.execute(
-                "SELECT id FROM users WHERE email = %s", (email,)
-            ).fetchone()
+            user_row = conn.execute("SELECT id FROM users WHERE email = %s", (email,)).fetchone()
 
             if user_row:
                 user_id = user_row[0]
@@ -103,12 +101,9 @@ def google_callback(code: str | None = None, state: str | None = None, error: st
                 org_id = uuid.uuid4()
                 user_id = uuid.uuid4()
                 org_name = display_name or email.split("@")[0]
+                conn.execute("INSERT INTO organisations (id, name) VALUES (%s, %s)", (org_id, org_name))
                 conn.execute(
-                    "INSERT INTO organisations (id, name) VALUES (%s, %s)", (org_id, org_name)
-                )
-                conn.execute(
-                    "INSERT INTO users (id, email, google_sub, avatar_url, display_name)"
-                    " VALUES (%s, %s, %s, %s, %s)",
+                    "INSERT INTO users (id, email, google_sub, avatar_url, display_name) VALUES (%s, %s, %s, %s, %s)",
                     (user_id, email, g_sub, avatar_url, display_name),
                 )
                 conn.execute(
@@ -116,8 +111,7 @@ def google_callback(code: str | None = None, state: str | None = None, error: st
                     (user_id, org_id),
                 )
                 conn.execute(
-                    "INSERT INTO oauth_accounts (user_id, provider, provider_sub, email)"
-                    " VALUES (%s, 'google', %s, %s)",
+                    "INSERT INTO oauth_accounts (user_id, provider, provider_sub, email) VALUES (%s, 'google', %s, %s)",
                     (user_id, g_sub, email),
                 )
 
@@ -138,13 +132,26 @@ def google_callback(code: str | None = None, state: str | None = None, error: st
 
         # 7. Insert into user_sessions
         conn.execute(
-            "INSERT INTO user_sessions (user_id, org_id, role, token_hash, expires_at)"
-            " VALUES (%s, %s, %s, %s, %s)",
+            "INSERT INTO user_sessions (user_id, org_id, role, token_hash, expires_at) VALUES (%s, %s, %s, %s, %s)",
             (user_id, org_id, role, token_hash, expires_at),
         )
 
-    # 8. Redirect to dashboard with session token in query string
-    return RedirectResponse(url=f"https://tood.uk/dashboard?session_token={session_token}", status_code=302)
+    # 8. Issue the session as an HttpOnly cookie and redirect to the dashboard.
+    #    The token stays out of the URL. The Next.js callback route relays this
+    #    Set-Cookie to the browser under tood.uk (the API host cannot set a
+    #    tood.uk cookie directly), so the cookie is stored on the tood.uk origin.
+    response = RedirectResponse(url="https://tood.uk/dashboard", status_code=302)
+    response.set_cookie(
+        key="tood_session",
+        value=session_token,
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=30 * 24 * 60 * 60,
+        domain=".tood.uk",
+        path="/",
+    )
+    return response
 
 
 @oauth_router.get("/session")
@@ -157,8 +164,7 @@ def get_session(authorization: str | None = Header(default=None)):
 
     with _auth_conn() as conn:
         row = conn.execute(
-            "SELECT user_id, org_id, role, expires_at"
-            " FROM user_sessions WHERE token_hash = %s AND expires_at > now()",
+            "SELECT user_id, org_id, role, expires_at FROM user_sessions WHERE token_hash = %s AND expires_at > now()",
             (token_hash,),
         ).fetchone()
 
