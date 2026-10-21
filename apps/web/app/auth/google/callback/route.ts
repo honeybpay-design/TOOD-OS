@@ -1,11 +1,8 @@
 import { NextRequest } from "next/server";
 
-// Fail loudly at cold-start if API_URL is missing rather than silently
-// fetching http://localhost:8000 in production and breaking OAuth.
-const API_URL = process.env.API_URL;
-if (!API_URL) {
-  throw new Error("API_URL env var is required for the OAuth callback");
-}
+// Force dynamic rendering — this route handles OAuth callbacks and must never
+// be statically pre-rendered. API_URL is only available at runtime.
+export const dynamic = "force-dynamic";
 
 /**
  * Google OAuth callback relay.
@@ -22,6 +19,15 @@ if (!API_URL) {
  * stores the cookie. The session token never appears in the URL or in JS.
  */
 export async function GET(request: NextRequest) {
+  // Fail loudly at request time if API_URL is missing rather than silently
+  // fetching http://localhost:8000 in production and breaking OAuth.
+  // Validated here (not at module load) so the build succeeds without API_URL.
+  const API_URL = process.env.API_URL;
+  if (!API_URL) {
+    console.error("API_URL env var is required for the OAuth callback");
+    return redirectTo("/login");
+  }
+
   // Forward the full query string Google sent us (code, state, error).
   const search = request.nextUrl.search; // "" or "?code=...&state=..."
   const backendUrl = `${API_URL}/v1/auth/google/callback${search}`;
