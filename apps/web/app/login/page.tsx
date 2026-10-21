@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -15,9 +15,20 @@ function LoginContent() {
     // The session is stored as an HttpOnly cookie, not in sessionStorage.
     // Check with /api/me: if the server returns 200 the user is already
     // authenticated and should skip the login page.
-    fetch("/api/me", { credentials: "include" })
+    // AbortController ensures the fetch times out after 3000ms so the login
+    // page never hangs waiting for a slow or unavailable API.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+    fetch("/api/me", { credentials: "include", signal: controller.signal })
       .then((res) => { if (res.ok) router.replace("/dashboard"); })
-      .catch(() => { /* no session â€” stay on login */ });
+      .catch(() => { /* no session or timeout — stay on login */ })
+      .finally(() => clearTimeout(timeoutId));
+
+    return () => {
+      controller.abort();
+      clearTimeout(timeoutId);
+    };
   }, [router]);
 
   async function handleSignIn() {
