@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -304,19 +304,5 @@ function LoginContent() {
 }
 
 export default function LoginPage() {
-  return (
-    <Suspense fallback={
-      <div style={{
-        minHeight: '100vh',
-        background: 'var(--color-bg)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <div>Loading login...</div>
-      </div>
-    }>
-      <LoginContent />
-    </Suspense>
-  );
+  return <LoginContent />;
 }
