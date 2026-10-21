@@ -148,7 +148,6 @@ def google_callback(code: str | None = None, state: str | None = None, error: st
         secure=True,
         samesite="lax",
         max_age=30 * 24 * 60 * 60,
-        domain=".tood.uk",
         path="/",
     )
     return response
