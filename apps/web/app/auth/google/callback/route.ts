@@ -1,6 +1,11 @@
 import { NextRequest } from "next/server";
 
-const API_URL = process.env.API_URL ?? "http://localhost:8000";
+// Fail loudly at cold-start if API_URL is missing rather than silently
+// fetching http://localhost:8000 in production and breaking OAuth.
+const API_URL = process.env.API_URL;
+if (!API_URL) {
+  throw new Error("API_URL env var is required for the OAuth callback");
+}
 
 /**
  * Google OAuth callback relay.
@@ -35,7 +40,11 @@ export async function GET(request: NextRequest) {
     return redirectTo("/login");
   }
 
-  const setCookies = apiResponse.headers.getSetCookie();
+  // getSetCookie() is Node 18+; fall back to the raw header on older runtimes.
+  const setCookies: string[] =
+    typeof (apiResponse.headers as { getSetCookie?: () => string[] }).getSetCookie === "function"
+      ? apiResponse.headers.getSetCookie()
+      : (apiResponse.headers.get("set-cookie") ?? "").split(/,(?=[^ ])/).filter(Boolean);
   if (setCookies.length === 0) {
     // No session cookie was issued — nothing to authenticate with.
     return redirectTo("/login");

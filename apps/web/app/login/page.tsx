@@ -14,10 +14,12 @@ function LoginContent() {
   const planDisplayName = plan === 'professional' ? 'Professional' : plan === 'starter' ? 'Starter' : '';
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const token = sessionStorage.getItem('tood_session');
-      if (token) router.replace('/dashboard');
-    }
+    // The session is stored as an HttpOnly cookie, not in sessionStorage.
+    // Check with /api/me: if the server returns 200 the user is already
+    // authenticated and should skip the login page.
+    fetch("/api/me", { credentials: "include" })
+      .then((res) => { if (res.ok) router.replace("/dashboard"); })
+      .catch(() => { /* no session — stay on login */ });
   }, [router]);
 
   async function handleSignIn() {
@@ -290,39 +292,6 @@ function LoginContent() {
               </div>
             </div>
 
-            {/* Testimonial */}
-            <div style={{
-              background: 'var(--ink-2)',
-              border: '1px solid var(--ink-line)',
-              borderRadius: 'var(--radius-xl)',
-              padding: 'var(--space-6)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 'var(--space-4)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--ink-3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ color: 'var(--mint)' }}>
-                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ fontWeight: 600, fontSize: 'var(--text-base)', color: 'var(--ink-text)' }}>Sarah Chen</span>
-                  <span style={{ fontSize: 'var(--text-sm)', color: 'var(--ink-muted)' }}>Bid Director, NHS Trust</span>
-                </div>
-              </div>
-
-              <blockquote style={{
-                fontStyle: 'italic',
-                fontSize: 'var(--text-base)',
-                lineHeight: 1.6,
-                color: 'var(--ink-text)',
-                paddingLeft: 'var(--space-3)',
-                borderLeft: '2px solid var(--mint)'
-              }}>
-                "tood.os cut our bid preparation time by 60% and helped us win a £2.4M contract we'd been chasing for years. The evidence verification alone is worth the subscription."
-              </blockquote>
-            </div>
           </div>
         </div>
       </div>
