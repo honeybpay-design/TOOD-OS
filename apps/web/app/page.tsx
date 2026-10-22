@@ -158,18 +158,6 @@ function SkipLink() {
 }
 
 // ── Announcement bar ─────────────────────────────────────────────────────────
-function AnnouncementBar() {
-  return (
-    <div className="announce">
-      <div className="wrap announce__in">
-        <span className="announce__dot" aria-hidden="true" />
-        <span>14-day free trial · No credit card · Sign in with Google</span>
-        <a href="/login">Start free →</a>
-      </div>
-    </div>
-  );
-}
-
 // ── Header ───────────────────────────────────────────────────────────────────
 function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -180,8 +168,11 @@ function Header() {
     const initial =
       stored ??
       (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    setTheme(initial);
-    document.documentElement.setAttribute('data-theme', initial);
+    const frame = window.requestAnimationFrame(() => {
+      setTheme(initial);
+      document.documentElement.setAttribute('data-theme', initial);
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {
@@ -237,7 +228,7 @@ function Header() {
             {theme === 'dark' ? SunIcon : MoonIcon}
           </button>
           <a className="btn btn--ghost btn--sm hide-sm" href="/login">Sign in</a>
-          <a className="btn btn--primary btn--sm" href="/login">Start free trial</a>
+          <a className="btn btn--primary btn--sm" href="#join">Request access</a>
         </div>
       </div>
     </header>
@@ -249,6 +240,7 @@ function PipelineDemo() {
   const pipeRef = useRef<HTMLDivElement>(null);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const startedRef = useRef(false);
+  const cycleRef = useRef<() => void>(() => undefined);
 
   const cycle = useCallback(() => {
     const pipe = pipeRef.current;
@@ -284,10 +276,11 @@ function PipelineDemo() {
     at(6400, () => cards[2]?.classList.add('is-act'));
     ms.forEach((e, i) => at(6500 + i * 520, () => e.classList.add('on')));
     at(8800, () => { pipe.classList.add('is-sealed'); cards[2]?.classList.remove('is-act'); });
-    at(12500, cycle);
+    at(12500, () => cycleRef.current());
   }, []);
 
   useEffect(() => {
+    cycleRef.current = cycle;
     const pipe = pipeRef.current;
     if (!pipe) return;
     const io = new IntersectionObserver(
@@ -384,10 +377,7 @@ function HeroSection() {
       <canvas className="hero__canvas" id="glyphs" ref={canvasRef} aria-hidden="true" />
       <div className="hero__fade" aria-hidden="true" />
       <div className="wrap hero__in">
-        <p className="pill">
-          <span className="pill__tag">PPN 017 ready</span>
-          Built for the Procurement Act 2023
-        </p>
+        <p className="eyebrow">Evidence-bound bid workspace</p>
         <h1 className="hero__h">
           {words.map((w, i) => (
             <span key={i} className="w" style={{ animationDelay: `${0.08 + i * 0.07}s` }}>
@@ -409,15 +399,14 @@ function HeroSection() {
           model, what evidence and who approved it.
         </p>
         <div className="hero__cta">
-          <a className="btn btn--primary btn--lg" href="/login">
-            Start free trial — 14 days free{' '}
+          <a className="btn btn--primary btn--lg" href="#join">
+            Request access{' '}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
               <path d="M5 12h14M13 6l6 6-6 6" />
             </svg>
           </a>
-          <a className="btn btn--ghost btn--lg" href="#standard">See how it works</a>
         </div>
-        <p className="hero__note">No credit card required · Cancel any time · Google sign-in</p>
+        <p className="hero__note">Source-linked requirements · Evidence-bound drafting · Named human approval</p>
       </div>
       <PipelineDemo />
     </section>
@@ -425,31 +414,6 @@ function HeroSection() {
 }
 
 // ── Stats Bar ────────────────────────────────────────────────────────────────
-function StatsBar() {
-  return (
-    <div className="stats-bar">
-      <div className="wrap stats-bar__in">
-        <div className="stat">
-          <span className="stat__value">56+</span>
-          <span className="stat__label">Requirements extracted</span>
-        </div>
-        <div className="stat">
-          <span className="stat__value">1+</span>
-          <span className="stat__label">Tender documents processed</span>
-        </div>
-        <div className="stat">
-          <span className="stat__value">3</span>
-          <span className="stat__label">UK procurement regulations</span>
-        </div>
-        <div className="stat">
-          <span className="stat__value">100%</span>
-          <span className="stat__label">Export accuracy</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── Marquee ──────────────────────────────────────────────────────────────────
 const MARQUEE_ITEMS = [
   'Invitation to tender', 'Specification', 'Procurement Specific Questionnaire',
@@ -1290,7 +1254,7 @@ function PricingSection() {
               <li>Requirement matrix</li>
               <li>Audit trail</li>
             </ul>
-            <a className="btn btn--ghost" href="/login?plan=starter">Start 14-day free trial</a>
+            <a className="btn btn--ghost" href="#join">Request access</a>
           </div>
           <div className="plan plan--feat reveal">
             <div className="plan__badge">Most popular</div>
@@ -1306,7 +1270,7 @@ function PricingSection() {
               <li>AI use &amp; verification record</li>
               <li>Price locked for 12 months</li>
             </ul>
-            <a className="btn btn--primary" href="/login?plan=professional">Start 14-day free trial</a>
+            <a className="btn btn--primary" href="#join">Request access</a>
           </div>
           <div className="plan reveal">
             <h3>Enterprise</h3>
@@ -1318,7 +1282,7 @@ function PricingSection() {
               <li>Custom data residency</li>
               <li>Dedicated SLA</li>
             </ul>
-            <a className="btn btn--ghost" href="/login?plan=enterprise">Start 14-day free trial</a>
+            <a className="btn btn--ghost" href="#join">Request access</a>
           </div>
         </div>
         <p className="plans__note">
@@ -1336,32 +1300,32 @@ function TrialHowItWorks() {
     <section className="sec sec--alt">
       <div className="wrap">
         <div className="sec__head sec__head--c">
-          <p className="eyebrow">How the 14‑day trial works</p>
-          <h2 className="h2">Experience the full platform, zero risk.</h2>
+          <p className="eyebrow">How early access works</p>
+          <h2 className="h2">A controlled path into the workspace.</h2>
           <p className="sec__lede">
-            Try every feature with your own tender documents. No payment details required.
+            We confirm fit and workspace access before any tender document is uploaded.
           </p>
         </div>
         <div className="trial-steps">
           <div className="trial-step reveal">
             <div className="trial-step__number">1</div>
-            <h3>Sign up in 30 seconds</h3>
-            <p>Use your Google account. No credit card required. Start immediately.</p>
+            <h3>Request access</h3>
+            <p>Tell us about your organisation and the procurement work you support.</p>
           </div>
           <div className="trial-step reveal">
             <div className="trial-step__number">2</div>
-            <h3>Upload your first tender</h3>
-            <p>Drop any PDF tender pack. The system parses requirements in minutes.</p>
+            <h3>Confirm workspace fit</h3>
+            <p>We review access, data handling needs and the bid workflow with you.</p>
           </div>
           <div className="trial-step reveal">
             <div className="trial-step__number">3</div>
-            <h3>Explore the workspace</h3>
-            <p>Try AI drafting, audit trails, verification, and export.</p>
+            <h3>Work from a source</h3>
+            <p>Create a tender workspace and review source-linked requirements.</p>
           </div>
           <div className="trial-step reveal">
             <div className="trial-step__number">4</div>
-            <h3>Decide if it fits</h3>
-            <p>Use the full platform for 14 days. Cancel anytime with one click.</p>
+            <h3>Keep human control</h3>
+            <p>Review evidence, approvals and export blockers before any submission.</p>
           </div>
         </div>
       </div>
@@ -1571,7 +1535,7 @@ function useReveal() {
       },
       { threshold: 0.12 }
     );
-    items.forEach((el, i) => {
+    items.forEach((el) => {
       const sib = Array.from(el.parentElement?.children ?? []).indexOf(el);
       el.style.transitionDelay = `${Math.min(sib * 60, 360)}ms`;
       io.observe(el);
@@ -1586,11 +1550,9 @@ export default function Page() {
   return (
     <>
       <SkipLink />
-      <AnnouncementBar />
       <Header />
       <main id="main">
         <HeroSection />
-        <StatsBar />
         <MarqueeSection />
         <ProblemSection />
         <LiveDemoSection />

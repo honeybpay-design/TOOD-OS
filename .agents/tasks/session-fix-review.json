@@ -1,0 +1,8 @@
+{
+  "verdict": "APPROVED",
+  "findings": [
+    "Cold-start blast radius — The throw at module level in callback/route.ts crashes the entire Next.js cold-start when API_URL is absent, not just OAuth. Ensure API_URL is set in all Vercel environments (Production, Preview, Development) before deploying, and add it to the deploy checklist or .env.example.",
+    "Unconditional /api/me probe on login mount — The useEffect fetches /api/me on every mount, generating a 401 round-trip for every unauthenticated visitor. Consider a lightweight non-HttpOnly presence cookie to skip the probe for guests without exposing the session token to JS."
+  ],
+  "reviewDoc": "c:\\Users\\Donny\\Desktop\\tood.com\\.agents\\tasks\\session-fix-review.md"
+}

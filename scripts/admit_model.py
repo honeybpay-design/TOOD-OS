@@ -11,21 +11,28 @@ import os
 import pathlib
 import sys
 
-# Ensure the API package is on sys.path
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "apps" / "api"))
 
-# Load .env
-env_file = ROOT / ".env"
-if env_file.exists():
-    for line in env_file.read_text().splitlines():
-        line = line.strip()
-        if line and not line.startswith("#") and "=" in line:
-            k, v = line.split("=", 1)
-            os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
 
-from app.ai_gateway.provider import get_provider
-from app.services.drafting import verify_claims, word_count
+def _load_app_dependencies():
+    """Bootstrap the API package and environment before importing app modules."""
+    sys.path.insert(0, str(ROOT / "apps" / "api"))
+
+    env_file = ROOT / ".env"
+    if env_file.exists():
+        for line in env_file.read_text().splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                key, value = line.split("=", 1)
+                os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+    from app.ai_gateway.provider import get_provider
+    from app.services.drafting import verify_claims, word_count
+
+    return get_provider, verify_claims, word_count
+
+
+get_provider, verify_claims, word_count = _load_app_dependencies()
 
 SAMPLE_TENDER_BLOCKS = [
     {
@@ -132,7 +139,7 @@ try:
         check(
             "verify_claim_rejects_hallucination",
             _result is False,
-            f"local provider → False (fail-safe); got {_result!r}",
+            f"local provider -> False (fail-safe); got {_result!r}",
         )
     else:
         # Remote provider: model must actively reject the fabricated figures.

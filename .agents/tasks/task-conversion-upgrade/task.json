@@ -1,0 +1,7 @@
+{
+  "task_id": "task-conversion-upgrade",
+  "task_description": "Upgrade landing page, login page, and dashboard to convert visitors into paying customers with 14-day free trial messaging, Google login CTA, and real dashboard functionality",
+  "status": "pending",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004"],
+  "blocked_reason": null
+}

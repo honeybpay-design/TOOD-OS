@@ -1,0 +1,23 @@
+{
+  "project_type": "Next.js 16.4.0 standalone app with FastAPI backend, TypeScript monorepo",
+  "language": "TypeScript/React",
+  "build_system": "npm + Next.js build system, Tailwind CSS v4, Turbopack for dev",
+  "test_framework": "No frontend tests found, uses Next.js build for verification",
+  "build_command": "cd apps/web && npm run build",
+  "test_command": "cd apps/web && npm run build (no separate test command found)",
+  "verification_instructions": "1. Run npm run build to check for TypeScript errors. 2. Check browser preview for visual changes. 3. Verify API endpoints work with sessionStorage token. 4. Ensure mobile responsiveness.",
+  "snapshot_or_generated_files": "Next.js build generates .next/ directory. No generated files need to be committed.",
+  "environment_constraints": "Must use existing CSS variables from globals.css. Font: Arial only. Colors: use --ink (#0f1215), --color-bg (#f4f2ec), --color-primary (#0a7a5a), --mint (#3fd3a0). API rewrites defined in next.config.ts to https://tood-os-api-844874461521.europe-west2.run.app.",
+  "contribution_requirements": "From AGENTS.md: Never push to main, work on branch. Never use plain SET for tenant context. Never commit secrets. Human review required for authentication changes. Commit message ends with 'Agent: wf-coder'.",
+  "key_patterns": "1. Components are functional with TypeScript interfaces. 2. Uses CSS variables from globals.css. 3. API calls use fetch with Authorization: Bearer token from sessionStorage. 4. Dark/light theme via data-theme attribute. 5. Mobile-first responsive design with wrap container pattern.",
+  "relevant_files": [
+    "apps/web/app/page.tsx (landing page, 1700+ lines)",
+    "apps/web/app/login/page.tsx (login page)",
+    "apps/web/app/dashboard/page.tsx (dashboard)",
+    "apps/web/app/globals.css (design tokens)",
+    "apps/web/next.config.ts (rewrite config)",
+    "apps/web/public/tood logo png.png (logo)",
+    "apps/web/package.json (dependencies)"
+  ],
+  "directory_structure": "apps/web/ - Next.js frontend. app/ - App router pages. public/ - Static assets. packages/ui, packages/api-client, workers/ - Shared packages. apps/api/ - FastAPI backend. docs/, rules/, prompts/, migrations/, infra/, security/ - Backend and configuration."
+}

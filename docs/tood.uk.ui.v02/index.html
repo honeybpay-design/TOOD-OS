@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>tood.os — Every word in your bid, accounted for</title>
+<meta name="description" content="tood.os reads the whole tender pack, verifies every requirement against its source by code, and drafts answers where every sentence records who wrote it, which model, what evidence and who approved it.">
+<meta property="og:title" content="tood.os — Every word in your bid, accounted for">
+<meta property="og:description" content="Verifiable, evidence-bound AI for UK SMEs bidding for public contracts under the Procurement Act 2023.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='4' width='24' height='24' rx='5' fill='none' stroke='%2314161a' stroke-width='2.4'/%3E%3Cpath d='M10 12h12M10 17h7' stroke='%2314161a' stroke-width='2.4' stroke-linecap='round'/%3E%3Ccircle cx='21.5' cy='21.5' r='3' fill='%230a7a5a'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@500,700,800&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=switzer@400,500,600,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./base.css?v=5">
+<link rel="stylesheet" href="./style.css?v=5">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"tood.os","applicationCategory":"BusinessApplication","description":"Verifiable, evidence-bound AI workspace for UK public-sector tenders.","offers":{"@type":"Offer","price":"0","priceCurrency":"GBP"}}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<div class="announce"><div class="wrap announce__in"><span class="announce__dot" aria-hidden="true"></span><span>Live now: run the requirement verifier on a real tender PDF.</span><a href="#live">Try it</a></div></div>
+
+<header class="header" id="top">
+  <div class="wrap header__in">
+    <a class="brand" href="#top" aria-label="tood.os home">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3.5" stroke="currentColor" stroke-width="1.8"/><path d="M8 9h8M8 12.5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="16" cy="16" r="2.2" fill="var(--color-primary)"/></svg>
+      <span class="brand__word">tood<span>.</span>os</span>
+    </a>
+    <nav class="nav" aria-label="Primary">
+      <a href="#live">Live demo</a>
+      <a href="#inspect">Provenance</a>
+      <a href="#standard">The standard</a>
+      <a href="#record">AI use record</a>
+      <a href="#pricing">Pricing</a>
+    </nav>
+    <div class="header__actions">
+      <button class="icon-btn" data-theme-toggle aria-label="Switch to dark mode"></button>
+      <a class="btn btn--ghost btn--sm hide-sm" href="#live">Try the demo</a>
+      <a class="btn btn--primary btn--sm" href="#join">Join the founding 30</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- HERO -->
+<section class="hero">
+  <canvas class="hero__canvas" id="glyphs" aria-hidden="true"></canvas>
+  <div class="hero__fade" aria-hidden="true"></div>
+  <div class="wrap hero__in">
+    <p class="pill"><span class="pill__tag">PPN 017 ready</span>Built for the Procurement Act 2023</p>
+    <h1 class="hero__h">Every word in your bid.<br><em>Accounted for.</em></h1>
+    <p class="hero__lede">tood.os reads the whole tender pack, verifies every requirement against its source <b>by code</b>, and drafts answers where each sentence records who wrote it, which model, what evidence and who approved it.</p>
+    <div class="hero__cta">
+      <a class="btn btn--primary btn--lg" href="#live">Run it on a real tender <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="btn btn--ghost btn--lg" href="#standard">Read the standard</a>
+    </div>
+    <p class="hero__note">No sign-up for the demo. Pre-launch; founding cohort opening in the UK.</p>
+  </div>
+
+  <!-- Animated pipeline -->
+  <div class="wrap">
+    <div class="pipe reveal" id="pipe" aria-label="Animated overview: tender pack to verified requirements to traced draft">
+      <div class="pipe__card" data-step="0">
+        <div class="pipe__head"><span class="pipe__n">01</span>Tender pack<span class="pipe__file mono">ITT_Specification.pdf</span></div>
+        <div class="page" aria-hidden="true">
+          <i style="width:42%" class="t"></i>
+          <i style="width:92%"></i><i style="width:86%"></i><i style="width:64%" class="hl" data-h="0"></i>
+          <i style="width:90%"></i><i style="width:78%" class="hl" data-h="1"></i><i style="width:88%"></i>
+          <i style="width:30%" class="t"></i>
+          <i style="width:94%"></i><i style="width:70%" class="hl" data-h="2"></i><i style="width:84%"></i><i style="width:58%"></i>
+          <i style="width:91%" class="hl" data-h="3"></i><i style="width:66%"></i>
+          <span class="scan"></span>
+        </div>
+        <div class="pipe__foot mono"><span id="pipeParse">Parsing text layer</span><span class="pipe__ok">3 pages</span></div>
+      </div>
+      <div class="pipe__link" aria-hidden="true"><span></span></div>
+      <div class="pipe__card" data-step="1">
+        <div class="pipe__head"><span class="pipe__n">02</span>Requirements<span class="pipe__file mono">verified by code</span></div>
+        <ul class="reqs" role="list">
+          <li data-i="0"><span class="tag tag--pf">pass/fail</span><span>Cyber Essentials Plus at contract start</span><span class="vchk">p.1</span></li>
+          <li data-i="1"><span class="tag tag--sl">service</span><span>No loss of service in core hours</span><span class="vchk">p.2</span></li>
+          <li data-i="2"><span class="tag tag--fm">format</span><span>Q4 max 750 words</span><span class="vchk">p.3</span></li>
+          <li data-i="3"><span class="tag tag--pf">pass/fail</span><span>Declare whether AI tools were used</span><span class="vchk">p.3</span></li>
+          <li data-i="4" class="inj"><span class="tag tag--inj">blocked</span><span>Hidden instruction to AI ignored</span><span class="vchk vchk--x">p.3</span></li>
+        </ul>
+        <div class="pipe__foot mono"><span>28 found</span><span class="pipe__ok">28 / 28 quotes matched</span></div>
+      </div>
+      <div class="pipe__link" aria-hidden="true"><span></span></div>
+      <div class="pipe__card" data-step="2">
+        <div class="pipe__head"><span class="pipe__n">03</span>Traced draft<span class="pipe__file mono">Q4 Transition</span></div>
+        <p class="mini">
+          <span class="m" data-o="human" data-i="0">A named Transition Manager will lead a 12-week parallel run.</span>
+          <span class="m" data-o="tender" data-i="1">“No loss of service during core hours.”</span>
+          <span class="m" data-o="ai" data-i="2">We moved 1,400 users with no unplanned downtime.<sup>EV-031</sup></span>
+          <span class="m" data-o="evidence" data-i="3">ISO/IEC 27001:2022 covers all transition work.<sup>EV-112</sup></span>
+        </p>
+        <div class="pipe__foot mono"><span>Approved by S. Okafor</span><span class="pipe__ok seal">chain 9f2c…e41a</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<section class="marquee" aria-label="Documents and requirements tood.os handles">
+  <div class="marquee__track">
+    <div class="marquee__set"><span>Invitation to tender</span><span>Specification</span><span>Procurement Specific Questionnaire</span><span>Pricing schedule</span><span>Social value</span><span>Clarifications</span><span>Contract terms</span><span>Framework call-off</span><span>Dynamic market</span><span>Cyber Essentials</span><span>Service levels</span><span>Word limits</span></div>
+    <div class="marquee__set" aria-hidden="true"><span>Invitation to tender</span><span>Specification</span><span>Procurement Specific Questionnaire</span><span>Pricing schedule</span><span>Social value</span><span>Clarifications</span><span>Contract terms</span><span>Framework call-off</span><span>Dynamic market</span><span>Cyber Essentials</span><span>Service levels</span><span>Word limits</span></div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section class="sec">
+  <div class="wrap problem">
+    <div class="problem__quote reveal">
+      <p class="eyebrow">The problem</p>
+      <blockquote>“Statements, facts or references that appear plausible, but are in fact false.”</blockquote>
+      <p class="src">How UK government guidance describes the risk of AI-written tenders. <a href="https://www.gov.uk/government/publications/ppn-017-improving-transparency-of-ai-use-in-procurement/ppn-017-improving-transparency-of-ai-use-in-procurement-html" target="_blank" rel="noopener noreferrer">PPN 017, Cabinet Office</a></p>
+    </div>
+    <div class="problem__facts">
+      <div class="fact reveal"><span class="fact__k">Allowed</span><p>Suppliers' use of AI in bids is <b>not prohibited</b>.</p></div>
+      <div class="fact reveal"><span class="fact__k">Asked</span><p>Buyers <b>may ask you to disclose</b> where AI was used in your tender.</p></div>
+      <div class="fact reveal"><span class="fact__k">Checked</span><p>And to confirm the output was <b>checked and verified for accuracy</b>.</p></div>
+      <p class="problem__close reveal">Most AI bid tools sell speed. <b>tood.os sells the audit trail.</b> Speed is a side effect.</p>
+    </div>
+  </div>
+</section>
+
+<!-- LIVE DEMO -->
+<section class="live" id="live">
+  <div class="wrap">
+    <div class="live__head">
+      <div>
+        <p class="eyebrow eyebrow--inv">Live demo &middot; real model, real verification</p>
+        <h2 class="h2 h2--inv">Run it on a tender. <em>Right now.</em></h2>
+      </div>
+      <p class="live__lede">Pick the sample or drop your own PDF. A model extracts every requirement with a verbatim quote. Then plain code checks each quote against the document. Anything it cannot find is rejected, not trusted.</p>
+    </div>
+
+    <div class="live__grid">
+      <aside class="live__side">
+        <p class="side__label">Sample document</p>
+        <button class="sample" id="runSample" type="button">
+          <span class="sample__icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></span>
+          <span class="sample__t"><b>riverside-itt-sample.pdf</b><small>Fictional council ITT &middot; 3 pages &middot; includes a hidden prompt-injection test</small></span>
+          <span class="sample__go" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        </button>
+        <a class="side__dl" href="./samples/riverside-itt-sample.pdf" target="_blank" rel="noopener noreferrer">Open the sample PDF</a>
+
+        <p class="side__label" style="margin-top:var(--space-6)">Your own tender</p>
+        <label class="drop" id="drop" for="fileIn">
+          <input type="file" id="fileIn" accept="application/pdf" class="sr-only">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+          <b>Drop a PDF here</b>
+          <small>or click to choose &middot; text-based PDF &middot; up to 30 pages, 10 MB</small>
+        </label>
+        <p class="side__fine">Processed in memory for this demo and not stored. Do not upload confidential documents to a public demo. Scanned PDFs are not supported here yet.</p>
+
+        <div class="stages" id="stages" aria-live="polite">
+          <div class="stage" data-s="parse"><span class="stage__d"></span>Parse text layer</div>
+          <div class="stage" data-s="extract"><span class="stage__d"></span>Extract requirements (model)</div>
+          <div class="stage" data-s="verify"><span class="stage__d"></span>Verify every quote (code)</div>
+          <p class="stages__t mono" id="timer"></p>
+        </div>
+      </aside>
+
+      <div class="live__out" id="out">
+        <div class="empty" id="empty">
+          <div class="empty__art" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <p><b>Results appear here.</b> Each requirement links to the exact sentence it came from, highlighted in the document.</p>
+        </div>
+        <div class="res" id="res" hidden>
+          <div class="kpis">
+            <div class="kpi"><span class="kpi__n" id="kFound">0</span><span class="kpi__l">requirements found</span></div>
+            <div class="kpi"><span class="kpi__n kpi__n--ok" id="kVer">0</span><span class="kpi__l">quotes verified by code</span></div>
+            <div class="kpi"><span class="kpi__n kpi__n--bad" id="kRej">0</span><span class="kpi__l">rejected, quote not found</span></div>
+            <div class="kpi"><span class="kpi__n kpi__n--warn" id="kInj">0</span><span class="kpi__l">hidden AI instructions ignored</span></div>
+          </div>
+          <div class="res__body">
+            <div class="res__list">
+              <div class="filters" role="group" aria-label="Filter by type">
+                <button class="chip is-on" data-f="all">All</button>
+                <button class="chip" data-f="pass_fail">Pass/fail</button>
+                <button class="chip" data-f="scored">Scored</button>
+                <button class="chip" data-f="service_level">Service</button>
+                <button class="chip" data-f="deadline">Deadlines</button>
+                <button class="chip" data-f="format">Format</button>
+              </div>
+              <ul class="rlist" id="rlist" role="list"></ul>
+            </div>
+            <div class="res__doc">
+              <div class="doc__bar mono"><span id="docName"></span><span id="docPage"></span></div>
+              <div class="doc__text" id="docText" tabindex="0" aria-label="Document text"></div>
+            </div>
+          </div>
+          <p class="res__meta mono" id="resMeta"></p>
+        </div>
+        <div class="err" id="err" hidden></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INSPECT / PROVENANCE -->
+<section class="sec" id="inspect">
+  <div class="wrap">
+    <div class="sec__head">
+      <p class="eyebrow">Provenance view</p>
+      <h2 class="h2">Click any sentence. See exactly where it came from.</h2>
+      <p class="sec__lede">Person, model, evidence or tender. Unsupported claims block export until someone removes them or attaches proof.</p>
+    </div>
+
+    <div class="demo reveal" aria-label="Interactive demo: provenance view of a tender answer">
+      <div class="demo__bar">
+        <div class="demo__crumbs"><span>Service Desk &amp; End-User Support</span><span aria-hidden="true">/</span><b>Q4 Transition plan</b></div>
+        <label class="toggle"><input type="checkbox" id="provToggle" checked> Provenance view</label>
+      </div>
+      <div class="demo__body">
+        <div class="editor">
+          <div class="q"><span class="q__id">Q4</span><span class="q__t">Describe how you will maintain continuity of service during transition.</span></div>
+          <p class="q__meta">Weighting 20% &middot; 750 words max &middot; Sample answer by Northgate Digital Ltd (fictional)</p>
+          <p class="answer is-prov" id="answer">
+            <span class="span" data-o="human" data-k="s1" tabindex="0" role="button">We will run a 12-week parallel transition, led by a named Transition Manager who reports weekly to the Authority's contract lead.</span>
+            <span class="span" data-o="tender" data-k="s2" tabindex="0" role="button">This directly addresses the Authority's requirement for "no loss of service during core hours (08:00–18:00)".</span>
+            <span class="span" data-o="ai" data-k="s3" tabindex="0" role="button">In our 2024 migration for a regional housing association, we moved 1,400 users to a new service desk with no unplanned downtime.<span class="cite">EV-031</span></span>
+            <span class="span" data-o="evidence" data-k="s4" tabindex="0" role="button">Our ISO/IEC 27001:2022 certification covers all transition activities.<span class="cite">EV-112</span></span>
+            <span class="span" data-o="flag" data-k="s5" tabindex="0" role="button" id="flagSpan">We guarantee 99.99% availability throughout the contract.</span>
+          </p>
+          <div class="legend" aria-label="Legend">
+            <span><i style="background:var(--p-human)"></i>Written by a person</span>
+            <span><i style="background:var(--p-ai)"></i>Drafted by AI, evidence-bound</span>
+            <span><i style="background:var(--p-evidence)"></i>Quoted from your evidence</span>
+            <span><i style="background:var(--p-tender)"></i>Quoted from the tender</span>
+            <span><i style="background:var(--p-flag)"></i>Unsupported claim</span>
+          </div>
+          <div class="export" id="exportBar">
+            <div class="export__status"><span class="dot" aria-hidden="true"></span><span id="exportText">1 unsupported claim. Export is blocked until it is resolved.</span></div>
+            <button class="btn btn--primary btn--sm" id="exportBtn" aria-disabled="true">Export to DOCX</button>
+          </div>
+        </div>
+        <aside class="inspector" id="inspector" aria-live="polite"></aside>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STANDARD -->
+<section class="sec sec--alt" id="standard">
+  <div class="wrap">
+    <div class="sec__head">
+      <p class="eyebrow">The tood.os standard</p>
+      <h2 class="h2">Nine rules the product enforces. <em>Not a slogan.</em></h2>
+      <p class="sec__lede">They apply whoever writes the text, a person or any AI model, and they apply to our own engineering as well.</p>
+    </div>
+    <div class="rules">
+      <article class="rule rule--big reveal"><span class="rule__n">V1</span><h3>Provenance for every character</h3><p>Each span records its origin when it is created: a named person, a model and prompt version, a quoted evidence item, the tender itself, or “pasted, origin unknown”. Never guessed afterwards.</p>
+        <div class="rule__viz" aria-hidden="true"><span data-o="human">person</span><span data-o="ai">model</span><span data-o="evidence">evidence</span><span data-o="tender">tender</span><span data-o="unknown">unknown</span></div></article>
+      <article class="rule reveal"><span class="rule__n">V2</span><h3>Requirements tied to the source</h3><p>Every requirement carries a verbatim quote, located in the original by code. You just watched it happen.</p></article>
+      <article class="rule reveal"><span class="rule__n">V3</span><h3>Claims tied to evidence</h3><p>Figures, clients, certifications and past results must link to your evidence library or they are flagged.</p></article>
+      <article class="rule reveal"><span class="rule__n">V4</span><h3>A person is always accountable</h3><p>A model can draft. It can never approve. Every answer needs a named approver.</p></article>
+      <article class="rule reveal"><span class="rule__n">V5</span><h3>Tamper-evident history</h3><p>Append-only, hash-chained revisions. Rewriting history is detectable.</p></article>
+      <article class="rule reveal"><span class="rule__n">V6</span><h3>Disclosure-ready</h3><p>The AI use record is generated from the ledger, never written by a model.</p></article>
+      <article class="rule reveal"><span class="rule__n">V7</span><h3>Models earn their place</h3><p>No model is used until it passes admission tests, re-run on every version change.</p></article>
+      <article class="rule reveal"><span class="rule__n">V8</span><h3>Stays within bounds</h3><p>Only your tender and your evidence. No pricing commitments, no legal advice. When it does not know, it says so.</p></article>
+      <article class="rule rule--wide reveal"><span class="rule__n">V9</span><h3>We are auditable too</h3><p>A public trust centre will list the models we use, their latest test results, any fabrication incident that reached a customer, and every sub-processor that touches your data.</p></article>
+    </div>
+  </div>
+</section>
+
+<!-- RECORD -->
+<section class="sec" id="record">
+  <div class="wrap record">
+    <div class="record__copy reveal">
+      <p class="eyebrow">AI use &amp; verification record</p>
+      <h2 class="h2">When the buyer asks, you already have the answer.</h2>
+      <p>Contracting authorities may ask whether AI helped write your tender and whether it was checked. tood.os answers from the revision ledger, question by question, assembled by code from what actually happened.</p>
+      <ul>
+        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Which questions used AI, and which did not</li>
+        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>How much AI-originated text survived human editing</li>
+        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Who verified each answer, and when</li>
+        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>A chain-head hash tying the record to the exported file</li>
+      </ul>
+    </div>
+    <div class="paper reveal" aria-label="Sample AI use and verification record">
+      <div class="paper__h">
+        <div><p class="eyebrow">Sample record &middot; fictional</p><h3>AI Use &amp; Verification Record</h3></div>
+        <div class="mono muted" style="text-align:right">Northgate Digital Ltd<br>Service Desk &amp; EUS</div>
+      </div>
+      <table>
+        <thead><tr><th>Question</th><th>AI used</th><th>AI text kept</th><th>Verified by</th><th>Date</th></tr></thead>
+        <tbody>
+          <tr><td>Q1 Understanding</td><td class="no">No</td><td class="mono"><span class="bar" style="--w:0%"></span>0%</td><td>J. Patel</td><td class="mono">15 Sep</td></tr>
+          <tr><td>Q2 Methodology</td><td class="yes">Yes</td><td class="mono"><span class="bar" style="--w:38%"></span>38%</td><td>S. Okafor</td><td class="mono">16 Sep</td></tr>
+          <tr><td>Q3 Team &amp; CVs</td><td class="yes">Yes</td><td class="mono"><span class="bar" style="--w:12%"></span>12%</td><td>J. Patel</td><td class="mono">16 Sep</td></tr>
+          <tr><td>Q4 Transition</td><td class="yes">Yes</td><td class="mono"><span class="bar" style="--w:27%"></span>27%</td><td>S. Okafor</td><td class="mono">16 Sep</td></tr>
+          <tr><td>Q5 Social value</td><td class="no">No</td><td class="mono"><span class="bar" style="--w:0%"></span>0%</td><td>M. Reyes</td><td class="mono">17 Sep</td></tr>
+        </tbody>
+      </table>
+      <div class="chain" aria-label="Revision hash chain">
+        <div class="block"><b>rev 40</b>a71d…03be</div><span class="arrow" aria-hidden="true"></span>
+        <div class="block"><b>rev 41</b>c0e8…9a12</div><span class="arrow" aria-hidden="true"></span>
+        <div class="block"><b>rev 42</b>5b3f…d7c0</div><span class="arrow" aria-hidden="true"></span>
+        <div class="block is-head"><b>rev 43</b>9f2c…e41a</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ADMISSION (dark band) -->
+<section class="band">
+  <div class="wrap admit">
+    <div>
+      <p class="eyebrow eyebrow--inv">Model admission</p>
+      <h2 class="h2 h2--inv">No model works here <em>until it passes.</em></h2>
+      <p class="band__lede">Results are kept as a model card per version. Production pins the admitted version; a provider update does not reach your bids until it is re-tested. These are launch targets; measured results will be published.</p>
+    </div>
+    <div class="tests">
+      <div class="test reveal"><span class="test__t">Fabrication bait</span><span class="test__d">Asked to cite certificates that are not in the library</span><span class="test__v">refuse or flag 100%</span></div>
+      <div class="test reveal"><span class="test__t">Prompt injection</span><span class="test__d">Hidden instructions inside tender documents</span><span class="test__v">ignore 100%</span></div>
+      <div class="test reveal"><span class="test__t">Honest gaps</span><span class="test__d">Questions the evidence cannot answer</span><span class="test__v">says so ≥ 95%</span></div>
+      <div class="test reveal"><span class="test__t">Requirement recall</span><span class="test__d">Expert-annotated public tender packs</span><span class="test__v">≥ 95%, pass/fail ≥ 98%</span></div>
+      <div class="test reveal"><span class="test__t">Scope</span><span class="test__d">Pricing, legal advice, outside facts</span><span class="test__v">refuse or label ≥ 98%</span></div>
+      <div class="test reveal"><span class="test__t">Consistency</span><span class="test__d">Same input, five runs</span><span class="test__v">≥ 95% overlap</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- LIMITS -->
+<section class="sec sec--tight">
+  <div class="wrap limits">
+    <div>
+      <p class="eyebrow">What we do not promise</p>
+      <h2 class="h2">Honesty about the limits is part of the standard.</h2>
+    </div>
+    <ul class="limits__list" role="list">
+      <li><b>We do not guarantee your evidence is true.</b>We show a claim is traced and supported. If a case study is wrong, the approver is accountable.</li>
+      <li><b>We do not guarantee you will win.</b>We help you submit something complete, compliant and defensible.</li>
+      <li><b>We do not use AI detectors.</b>They guess. We record origin when text is created, and label pasted text as unknown.</li>
+      <li><b>We do not submit on your behalf.</b>A person in your company submits. Always.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="sec sec--alt" id="pricing">
+  <div class="wrap">
+    <div class="sec__head sec__head--c">
+      <p class="eyebrow">Pricing</p>
+      <h2 class="h2">We do not compete on price. <em>We price for being right.</em></h2>
+      <p class="sec__lede">Founding pricing for the first 30 companies, locked for 12 months, in exchange for honest feedback.</p>
+    </div>
+    <div class="plans">
+      <div class="plan reveal">
+        <h3>Tender analyser</h3>
+        <p class="plan__price">£0</p>
+        <p class="plan__d">One tender pack, full requirement matrix with verified source quotes.</p>
+        <ul role="list"><li>Requirement matrix</li><li>Pass/fail and deadline summary</li><li>Bid / no-bid checklist</li></ul>
+        <a class="btn btn--ghost" href="#live">Try it now</a>
+      </div>
+      <div class="plan plan--feat reveal">
+        <p class="seats"><span id="seatsLeft">30</span> founding places</p>
+        <h3>Founding</h3>
+        <p class="plan__price">£99<small> / month, excl. VAT</small></p>
+        <p class="plan__d">The full workspace for one company, with provenance and the AI use record on every bid.</p>
+        <ul role="list"><li>Evidence-bound drafting</li><li>Provenance view and export gate</li><li>AI use &amp; verification record</li><li>Price locked for 12 months</li></ul>
+        <a class="btn btn--primary" href="#join">Apply for a founding place</a>
+      </div>
+      <div class="plan reveal">
+        <h3>Bid consultant</h3>
+        <p class="plan__price">£249<small> / month, excl. VAT</small></p>
+        <p class="plan__d">For freelance bid writers with several clients and separate evidence libraries.</p>
+        <ul role="list"><li>Multiple client workspaces</li><li>Client-ready AI use records</li><li>Shared review with clients</li></ul>
+        <a class="btn btn--ghost" href="#join">Join the waitlist</a>
+      </div>
+    </div>
+    <p class="plans__note">Beta pricing. Plans may change before general availability; founding members keep their price for 12 months.</p>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="sec" id="faq">
+  <div class="wrap faq">
+    <div><p class="eyebrow">Questions</p><h2 class="h2">Asked plainly. Answered plainly.</h2></div>
+    <div>
+      <details><summary>Is it allowed to use AI to write a public-sector bid?<span class="plus" aria-hidden="true"></span></summary><p>Yes. Cabinet Office guidance states that suppliers' use of AI is not prohibited, but authorities may ask you to disclose it and to confirm the output was checked for accuracy. See <a href="https://www.gov.uk/government/publications/ppn-017-improving-transparency-of-ai-use-in-procurement/ppn-017-improving-transparency-of-ai-use-in-procurement-html" target="_blank" rel="noopener noreferrer">PPN 017</a>.</p></details>
+      <details><summary>Where is my data processed?<span class="plus" aria-hidden="true"></span></summary><p>The product is designed to run in the UK (AWS London), with AI inference routed only to providers and regions that meet our residency rules. Your documents are never used to train models. The public demo on this page processes files in memory and does not store them.</p></details>
+      <details><summary>Which AI models do you use?<span class="plus" aria-hidden="true"></span></summary><p>Only models that have passed our admission tests. We are provider-neutral; the admitted list and model cards will be published in our trust centre.</p></details>
+      <details><summary>What happens to text I paste from elsewhere?<span class="plus" aria-hidden="true"></span></summary><p>It is labelled “pasted, origin unknown” and counted separately in the AI use record. We do not guess where it came from.</p></details>
+      <details><summary>What do founding members commit to?<span class="plus" aria-hidden="true"></span></summary><p>Using tood.os on at least one real bid, and a short feedback call each month. In return you keep founding pricing for 12 months and shape the roadmap.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="sec sec--tight" id="join">
+  <div class="wrap">
+    <div class="cta">
+      <canvas class="cta__canvas" id="ctaGlyphs" aria-hidden="true"></canvas>
+      <div class="cta__in">
+        <div>
+          <p class="eyebrow eyebrow--inv">Founding cohort</p>
+          <h2 class="h2 h2--inv">Bid with AI. <em>Stand behind every word.</em></h2>
+          <p class="cta__p">We are onboarding 30 UK companies that bid for public contracts. Tell us a little about you and we will be in touch personally.</p>
+        </div>
+        <form class="form" id="joinForm" novalidate>
+          <div class="row">
+            <div class="field"><label for="f-name">Name</label><input id="f-name" name="name" autocomplete="name" required placeholder="Your name"></div>
+            <div class="field"><label for="f-email">Work email</label><input id="f-email" name="email" type="email" autocomplete="email" required placeholder="you@company.co.uk"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label for="f-co">Company</label><input id="f-co" name="company" autocomplete="organization" placeholder="Company name"></div>
+            <div class="field"><label for="f-role">You are</label>
+              <select id="f-role" name="role"><option>SME bidding for contracts</option><option>Freelance bid writer</option><option>Bid consultancy</option><option>Other</option></select></div>
+          </div>
+          <button type="submit">Apply for a founding place</button>
+          <p class="form__msg" id="formMsg" role="status"></p>
+          <p class="form__fine">We use your details only to contact you about tood.os. No newsletters, no sharing.</p>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__in">
+      <div>
+        <a class="brand" href="#top" aria-label="tood.os home">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3.5" stroke="currentColor" stroke-width="1.8"/><path d="M8 9h8M8 12.5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="16" cy="16" r="2.2" fill="var(--color-primary)"/></svg>
+          <span class="brand__word">tood<span>.</span>os</span>
+        </a>
+        <p style="margin-top:var(--space-3);max-width:36ch">Verifiable, evidence-bound AI for UK public-sector bids.</p>
+      </div>
+      <div><h4>Product</h4><ul role="list"><li><a href="#live">Live demo</a></li><li><a href="#inspect">Provenance</a></li><li><a href="#record">AI use record</a></li><li><a href="#pricing">Pricing</a></li></ul></div>
+      <div><h4>Trust</h4><ul role="list"><li><a href="#standard">The standard</a></li><li><a href="#standard">Model admission</a></li><li><a href="#faq">Data &amp; residency</a></li></ul></div>
+      <div><h4>Guidance</h4><ul role="list">
+        <li><a href="https://www.gov.uk/government/publications/ppn-017-improving-transparency-of-ai-use-in-procurement/ppn-017-improving-transparency-of-ai-use-in-procurement-html" target="_blank" rel="noopener noreferrer">PPN 017 AI transparency</a></li>
+        <li><a href="https://www.gov.uk/government/publications/ai-playbook-for-the-uk-government" target="_blank" rel="noopener noreferrer">UK Government AI Playbook</a></li>
+        <li><a href="https://www.find-tender.service.gov.uk/Developer/Documentation" target="_blank" rel="noopener noreferrer">Find a Tender data</a></li>
+      </ul></div>
+    </div>
+    <div class="footer__base"><span>&copy; 2026 tood.os. Pre-launch.</span><span>Sample companies and tenders on this page are fictional.</span></div>
+  </div>
+</footer>
+
+<script src="./app.js?v=5" defer></script>
+<script data-pplx-inline-edit>
+(function () {
+  if (window === window.top) return;
+
+  const allowedParentOrigins = ["https://www.perplexity.ai","https://perplexity.ai","https://testing.perplexity.ai","https://staging.perplexity.ai","https://*.preview.i.perplexity.ai","http://perplexity.localhost","http://localhost:1420","http://127.0.0.1:1420","http://localhost:3000","http://127.0.0.1:3000","http://localhost:5173","http://127.0.0.1:5173"];
+  const MAX_FONT_BYTES = 500 * 1024;
+  const MAX_TOTAL_FONT_BYTES = 2 * 1024 * 1024;
+  const DEFAULT_LINE_HEIGHT = 16;
+  let scrollForwarding = false;
+  let scrollRaf = 0;
+  let trustedTopOrigin = null;
+
+  // Allow entries like "https://*.preview.i.perplexity.ai" — the wildcard
+  // matches a single DNS label (no dots), so "https://*.foo" cannot stretch
+  // across multiple labels.
+  function matchesAllowedOrigin(origin) {
+    if (!origin) return false;
+    for (const entry of allowedParentOrigins) {
+      if (!entry.includes("*")) {
+        if (entry === origin) return true;
+        continue;
+      }
+      const pattern = new RegExp(
+        "^" +
+          entry.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^.]+") +
+          "$",
+      );
+      if (pattern.test(origin)) return true;
+    }
+    return false;
+  }
+
+  // Trust decision: when the sender is same-origin-visible (event.origin is a
+  // real origin like https://www.perplexity.ai) we trust event.origin directly.
+  // When event.origin is "null" (opaque broker srcdoc), we fall back to the
+  // broker's stamped `parentOrigin` to identify the top window. The fallback
+  // is claim-only — we rely on the browser's native `targetOrigin` enforcement
+  // on the response path (see postToTrustedTop) to ensure replies can't be
+  // delivered to anyone but the actual top window of that claimed origin.
+  function getTrustedParentOrigin(event) {
+    const forwardedParentOrigin =
+      typeof event.data.parentOrigin === "string" ? event.data.parentOrigin : null;
+    const parentOrigin = event.origin === "null" ? forwardedParentOrigin : event.origin;
+    return matchesAllowedOrigin(parentOrigin) ? parentOrigin : null;
+  }
+
+  // All responses go to window.top with targetOrigin = the allowlisted origin.
+  // An attacker that iframes us inside their own null-origin broker can claim
+  // any parentOrigin they like, but the browser will drop the reply whenever
+  // the real top's origin doesn't match — so the screenshot never leaves.
+  function postToTrustedTop(message) {
+    if (!trustedTopOrigin) return;
+    try {
+      window.top.postMessage(message, trustedTopOrigin);
+    } catch (_error) {}
+  }
+
+  function inlineAll(original, clone) {
+    if (original.nodeType !== 1 || clone.nodeType !== 1) return;
+
+    try {
+      const computedStyle = getComputedStyle(original);
+      // cssText on a computed style is the serialized declaration in modern
+      // Chromium/Safari — a single read beats enumerating ~400 longhand
+      // properties. Firefox returns "" here, so we fall back on empty.
+      const serialized = computedStyle.cssText;
+      if (serialized) {
+        clone.style.cssText = serialized;
+      } else {
+        const parts = new Array(computedStyle.length);
+        for (let index = 0; index < computedStyle.length; index += 1) {
+          const property = computedStyle[index];
+          parts[index] = `${property}:${computedStyle.getPropertyValue(property)};`;
+        }
+        clone.style.cssText = parts.join("");
+      }
+    } catch (_error) {}
+
+    const originalChildren = original.children;
+    const clonedChildren = clone.children;
+    for (
+      let index = 0;
+      index < originalChildren.length && index < clonedChildren.length;
+      index += 1
+    ) {
+      inlineAll(originalChildren[index], clonedChildren[index]);
+    }
+  }
+
+  function extractFontUrl(srcValue) {
+    const matches = [
+      ...srcValue.matchAll(
+        /url\(["']?([^"')]+)["']?\)(?:\s*format\(["']?([^"')]+)["']?\))?/gi,
+      ),
+    ];
+    if (matches.length === 0) return null;
+    const woff2 = matches.find((m) => m[2] && m[2].toLowerCase().includes("woff2"));
+    if (woff2) return woff2[1];
+    const woff = matches.find((m) => m[2] && m[2].toLowerCase().includes("woff"));
+    if (woff) return woff[1];
+    return matches[0][1];
+  }
+
+  // Cache resolved font URL -> data URI across captures. Fonts on a page
+  // essentially never change, and a batch run emits multiple captures back to
+  // back — without this we'd refetch + re-base64 every time.
+  const fontDataUriCache = new Map();
+  const SRC_DECLARATION_RE = /src\s*:\s*[^;}]+/i;
+
+  async function fetchAsDataUri(url) {
+    if (fontDataUriCache.has(url)) return fontDataUriCache.get(url);
+    let dataUri = null;
+    try {
+      const response = await fetch(url, { mode: "cors", credentials: "omit" });
+      if (response.ok) {
+        const blob = await response.blob();
+        if (blob.size <= MAX_FONT_BYTES) {
+          dataUri = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () =>
+              resolve(typeof reader.result === "string" ? reader.result : null);
+            reader.onerror = () => resolve(null);
+            reader.readAsDataURL(blob);
+          });
+        }
+      }
+    } catch (_error) {
+      dataUri = null;
+    }
+    fontDataUriCache.set(url, dataUri);
+    return dataUri;
+  }
+
+  function collectFontFaceRuleTexts() {
+    const rules = [];
+    for (const sheet of document.styleSheets) {
+      let cssRules;
+      try {
+        cssRules = sheet.cssRules;
+      } catch (_error) {
+        continue;
+      }
+      if (!cssRules) continue;
+      for (const rule of cssRules) {
+        const cssText = rule.cssText || "";
+        if (cssText.startsWith("@font-face")) rules.push(cssText);
+      }
+    }
+    return rules;
+  }
+
+  async function buildInlinedFontCss() {
+    const ruleTexts = collectFontFaceRuleTexts();
+    if (ruleTexts.length === 0) return null;
+
+    const resolved = ruleTexts.map((cssText) => {
+      if (!SRC_DECLARATION_RE.test(cssText)) return null;
+      const srcMatch = cssText.match(/src\s*:\s*([^;}]+)[;}]/i);
+      if (!srcMatch) return null;
+      const url = extractFontUrl(srcMatch[1]);
+      if (!url) return null;
+      try {
+        return { cssText, url: new URL(url, document.baseURI).href };
+      } catch (_error) {
+        return null;
+      }
+    });
+
+    const dataUris = await Promise.all(
+      resolved.map((entry) => (entry ? fetchAsDataUri(entry.url) : Promise.resolve(null))),
+    );
+
+    const inlined = [];
+    let totalBytes = 0;
+    for (let index = 0; index < resolved.length; index += 1) {
+      const entry = resolved[index];
+      const dataUri = dataUris[index];
+      if (!entry || !dataUri) continue;
+      const approxBytes = dataUri.length * 0.75;
+      if (totalBytes + approxBytes > MAX_TOTAL_FONT_BYTES) break;
+      totalBytes += approxBytes;
+      inlined.push(entry.cssText.replace(SRC_DECLARATION_RE, `src: url("${dataUri}")`));
+    }
+    return inlined.length > 0 ? inlined.join("\n") : null;
+  }
+
+  function stripExternal(clone) {
+    const images = clone.querySelectorAll("img");
+    for (let index = 0; index < images.length; index += 1) {
+      const src = images[index].getAttribute("src");
+      if (src && !src.startsWith("data:")) images[index].removeAttribute("src");
+    }
+
+    const elements = clone.querySelectorAll("*");
+    for (let index = 0; index < elements.length; index += 1) {
+      const style = elements[index].style.cssText;
+      if (style && style.includes("url(")) {
+        elements[index].style.cssText = style.replace(
+          /url\(["']?(?!data:)[^)"']*["']?\)/gi,
+          "none",
+        );
+      }
+    }
+  }
+
+  function emitScroll() {
+    scrollRaf = 0;
+    if (!scrollForwarding) return;
+    postToTrustedTop({
+      type: "INLINE_EDIT_SCROLL",
+      scrollX: window.scrollX,
+      scrollY: window.scrollY,
+    });
+  }
+
+  window.addEventListener(
+    "scroll",
+    function () {
+      if (!scrollForwarding || scrollRaf) return;
+      scrollRaf = requestAnimationFrame(emitScroll);
+    },
+    { passive: true, capture: true },
+  );
+
+  async function handleCaptureRequest(event) {
+    const requestId = event.data.requestId;
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    function postResult(dataUrl) {
+      postToTrustedTop({
+        type: "INLINE_EDIT_SCREENSHOT_RESULT",
+        requestId,
+        dataUrl,
+        scrollX,
+        scrollY,
+      });
+    }
+
+    try {
+      // Wait for any pending web fonts to resolve so both inline metrics and
+      // the @font-face inlining below see the same loaded faces.
+      if (document.fonts && document.fonts.ready) {
+        try {
+          await document.fonts.ready;
+        } catch (_error) {}
+      }
+
+      const clone = document.documentElement.cloneNode(true);
+      inlineAll(document.documentElement, clone);
+
+      const removedNodes = clone.querySelectorAll("script,link[rel=\"stylesheet\"],style");
+      for (let index = 0; index < removedNodes.length; index += 1) {
+        removedNodes[index].remove();
+      }
+
+      stripExternal(clone);
+
+      // Re-embed web fonts as data-URI @font-face rules so the SVG rasterizer
+      // can resolve them — external font URLs aren't fetched during
+      // foreignObject rendering, which would otherwise force a fallback face
+      // and change text metrics.
+      const inlinedFontCss = await buildInlinedFontCss();
+      if (inlinedFontCss) {
+        const styleEl = document.createElement("style");
+        styleEl.textContent = inlinedFontCss;
+        const head = clone.querySelector("head");
+        if (head) head.appendChild(styleEl);
+        else clone.insertBefore(styleEl, clone.firstChild);
+      }
+
+      const html = new XMLSerializer().serializeToString(clone);
+      const svg =
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">` +
+        '<foreignObject width="100%" height="100%">' +
+        `<div xmlns="http://www.w3.org/1999/xhtml" style="width:${width}px;height:${height}px;overflow:hidden">` +
+        `<div style="position:relative;left:-${scrollX}px;top:-${scrollY}px">` +
+        html +
+        "</div></div></foreignObject></svg>";
+      const svgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+      const image = new Image();
+      image.onload = function () {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(image, 0, 0);
+        postResult(canvas.toDataURL("image/png"));
+      };
+      image.onerror = function () {
+        postResult(null);
+      };
+      image.src = svgUrl;
+    } catch (_error) {
+      postResult(null);
+    }
+  }
+
+  window.addEventListener("message", function (event) {
+    if (!event.data) return;
+    // Only accept messages from the direct parent frame. Blocks sibling /
+    // unrelated-window postMessage senders that could otherwise reach us.
+    if (event.source !== window.parent) return;
+
+    const trustedParentOrigin = getTrustedParentOrigin(event);
+    if (!trustedParentOrigin) return;
+    trustedTopOrigin = trustedParentOrigin;
+
+    if (event.data.type === "INLINE_EDIT_SCROLL_START") {
+      scrollForwarding = true;
+      emitScroll();
+      return;
+    }
+
+    if (event.data.type === "INLINE_EDIT_SCROLL_STOP") {
+      scrollForwarding = false;
+      if (scrollRaf) cancelAnimationFrame(scrollRaf);
+      scrollRaf = 0;
+      return;
+    }
+
+    if (event.data.type === "INLINE_EDIT_SCROLL_BY") {
+      const { deltaX, deltaY, deltaMode } = event.data;
+      if (!scrollForwarding || !Number.isFinite(deltaX) || !Number.isFinite(deltaY)) return;
+      if (deltaMode !== 0 && deltaMode !== 1 && deltaMode !== 2) return;
+      const lineHeight =
+        parseFloat(getComputedStyle(document.documentElement).lineHeight) || DEFAULT_LINE_HEIGHT;
+      const scaleX = deltaMode === 1 ? lineHeight : deltaMode === 2 ? window.innerWidth : 1;
+      const scaleY = deltaMode === 1 ? lineHeight : deltaMode === 2 ? window.innerHeight : 1;
+      // The selection overlay receives the wheel event instead of this iframe.
+      // Instant scrolling preserves trackpad deltas even on smooth-scroll sites.
+      window.scrollBy({ left: deltaX * scaleX, top: deltaY * scaleY, behavior: "instant" });
+      emitScroll();
+      return;
+    }
+
+    if (event.data.type !== "INLINE_EDIT_CAPTURE_REQUEST") return;
+
+    handleCaptureRequest(event);
+  });
+})();
+
+
+</script></body>
+</html>
