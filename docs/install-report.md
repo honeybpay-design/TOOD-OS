@@ -40,3 +40,6 @@ Open issues:
 - Pending source/docs/skill assets are being prepared for a branch push. Generated caches, desktop metadata, temporary screenshots/reports, absent staged UI-v01 files, and tender sample files are excluded from this commit without deleting local files.
 - Full Ruff check: FAIL, 5 existing import-order errors in `test_api_security.py`, `test_append_only.py`, `test_health.py`, `test_residency_guard.py`, `test_tenant_isolation.py`. Existing acceptance checks were not altered. New launch audit files had import ordering normalized before this full check.
 - Full API suite and web build were not run after the installation acceptance failure. Any PR is draft/unverified, not release-ready.
+- Offline launch-audit tests rerun after import formatting: 4 passed. Added-line secret-pattern scan: no candidates (limited pattern scan, not gitleaks).
+- Commit `b76ec74` pushed successfully to `origin/codex/gemini-launch-audit` (688 files). GitHub connector PR creation returned 403, resource not accessible by integration.
+- CI push trigger extended to this audit branch so validation can start without PR creation rights. Deploy condition remains main-only. CI result is pending; no worker can be started because only `workers/.gitkeep` exists.
