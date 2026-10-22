@@ -81,13 +81,17 @@ export default function DashboardPage() {
       fetch("/api/billing/status", { credentials: "include" }),
     ]);
 
-    if (responses.some((response) => response.status === 401)) {
+    // Only /api/me (responses[0]) determines authentication.
+    // Other endpoints may return non-200 for new users with no data yet —
+    // that should not log the user out.
+    if (responses[0].status === 401) {
       router.replace("/login");
       return;
     }
 
-    const failed = responses.find((response) => !response.ok);
-    if (failed) throw new Error(`Workspace request failed (${failed.status})`);
+    // /api/me must succeed. Other endpoints are best-effort for new users.
+    const failed = responses[0].ok ? null : responses[0];
+    if (failed) throw new Error(`Auth request failed (${failed.status})`);
 
     const [meData, tenderData, evidenceData, billingData] = await Promise.all(
       responses.map((response) => response.json()),
