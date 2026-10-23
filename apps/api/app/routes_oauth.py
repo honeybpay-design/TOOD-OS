@@ -11,7 +11,6 @@ from datetime import datetime, timedelta, timezone
 
 import psycopg
 from fastapi import APIRouter, Header, HTTPException
-from fastapi.responses import RedirectResponse
 
 from app.core import oauth
 from app.core.config import settings
@@ -136,21 +135,12 @@ def google_callback(code: str | None = None, state: str | None = None, error: st
             (user_id, org_id, role, token_hash, expires_at),
         )
 
-    # 8. Issue the session as an HttpOnly cookie and redirect to the dashboard.
-    #    The token stays out of the URL. The Next.js callback route relays this
-    #    Set-Cookie to the browser under tood.uk (the API host cannot set a
-    #    tood.uk cookie directly), so the cookie is stored on the tood.uk origin.
-    response = RedirectResponse(url="https://tood.uk/dashboard", status_code=302)
-    response.set_cookie(
-        key="tood_session",
-        value=session_token,
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        max_age=30 * 24 * 60 * 60,
-        path="/",
-    )
-    return response
+    # 8. Return session token as JSON — the Next.js callback route sets the
+    #    HttpOnly cookie directly on the tood.uk response, bypassing the
+    #    Firebase CDN redirect-stripping issue entirely.
+    from fastapi.responses import JSONResponse  # noqa: PLC0415
+
+    return JSONResponse({"session_token": session_token})
 
 
 @oauth_router.get("/session")
