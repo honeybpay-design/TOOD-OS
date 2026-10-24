@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
  */
 export async function POST() {
   const cookieStore = await cookies();
-  const token = cookieStore.get("tood_session")?.value;
+  const token = cookieStore.get("__session")?.value;
 
   if (token) {
     try {
@@ -32,7 +32,7 @@ export async function POST() {
     headers: {
       "content-type": "application/json",
       "set-cookie":
-        "tood_session=; Max-Age=0; Path=/; Domain=.tood.uk; HttpOnly; Secure; SameSite=Lax",
+        "__session=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax",
     },
   });
 }

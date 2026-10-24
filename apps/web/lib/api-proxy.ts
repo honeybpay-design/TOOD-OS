@@ -23,7 +23,7 @@ export async function proxyToApi(
   authMode: AuthMode = "session",
 ): Promise<Response> {
   const cookieStore = await cookies();
-  const token = cookieStore.get("tood_session")?.value;
+  const token = cookieStore.get("__session")?.value;
 
   if (!token) {
     // No session cookie -> tell the client to go back to login.
