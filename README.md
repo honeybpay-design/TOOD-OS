@@ -2,9 +2,9 @@
 
 > AI-assisted bid writing · Built for UK Public Sector Procurement
 
-![Tests](https://img.shields.io/badge/tests-51%20passed-brightgreen)
+<!-- Test counts are intentionally not displayed until reverified by CI. -->
 ![Python](https://img.shields.io/badge/python-3.12-blue)
-![Next.js](https://img.shields.io/badge/next.js-15-black)
+![Next.js](https://img.shields.io/badge/next.js-16-black)
 ![Cloud Run](https://img.shields.io/badge/cloud-run-europe--west2-4285F4)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -12,14 +12,18 @@ TOOD is a multi-tenant SaaS platform that helps UK public-sector suppliers write
 
 ---
 
+## Verification status (2026-10-25)
+
+This README is being reconciled with repository source and current operator information. The owner confirms that active infrastructure has moved to London (`europe-west2`); cloud runtime configuration has **not** been independently queried during this review. Historical test counts, OAuth success claims, billing readiness and feature descriptions below are inherited product descriptions, **not newly verified E2E results**. See [Production Readiness Audit](docs/audits/production-readiness-2026-10-25.md) for evidence, gaps and next checks.
+
 ## Live
 
 | Service | URL |
 |---|---|
 | Website | https://tood.uk |
-| API (Cloud Run) | https://tood-os-api-844874461521.europe-west2.run.app |
-| API docs (Swagger) | https://tood-os-api-844874461521.europe-west2.run.app/docs |
-| Web app (Cloud Run) | https://tood-os-web-844874461521.europe-west2.run.app |
+| API (Cloud Run) | Service `tood-os-api` in `europe-west2` (verify current public URL) |
+| API docs (Swagger) | `/docs` routed to `tood-os-api` via Firebase Hosting |
+| Web app (Cloud Run) | Service `tood-os-web` in `europe-west2` (verify current public URL) |
 
 **Compliance frame:** Procurement Act 2023 · PPN 017 · PPN 02/24
 
@@ -44,8 +48,8 @@ TOOD is a multi-tenant SaaS platform that helps UK public-sector suppliers write
 **Prerequisites:** Docker Desktop, Python 3.12, Node 20
 
 ```bash
-git clone <repo>
-cd tood.com
+git clone https://github.com/honeybpay-design/TOOD-OS.git
+cd TOOD-OS
 
 # Start database
 docker compose up -d --wait
@@ -56,7 +60,7 @@ python scripts/migrate.py
 # Verify installation (must print 17/17 checks passed)
 python scripts/verify_install.py
 
-# Run API tests (must print 44 passed)
+# Run API tests (verify the actual result; do not assume a fixed count)
 cd apps/api && pytest -q
 ```
 
@@ -74,7 +78,7 @@ cd apps/api && pytest -q
 | AI | Gemini 2.5 Pro via Vertex AI (europe-west2) | — |
 | AI fallback | Gemini 2.0 Flash, then local template provider | — |
 | Containerisation | Docker / Docker Compose | — |
-| CI/CD | GitHub Actions | — |
+| CI/CD | GitHub Actions + Google Cloud Build configurations (active triggers require verification) | — |
 | Deployment | Google Cloud Run (europe-west2) | — |
 | Hosting | Firebase Hosting → Cloud Run rewrites | — |
 | Payments | Stripe | ≥10.0 |
@@ -86,7 +90,7 @@ All AI calls are routed exclusively through `app/ai_gateway`. Business code neve
 
 ## API
 
-Base URL: `https://tood-os-api-844874461521.europe-west2.run.app`
+Base URL: `https://tood.uk/v1` for `/v1/**` routes through Firebase Hosting (verify active routing and authorization).
 
 Interactive docs: `/docs`
 
@@ -196,7 +200,7 @@ PPN 02/24 provides guidance to contracting authorities on how to manage and eval
 
 ```bash
 cd apps/api && pytest -q
-# Expected: 51 passed, 0 failed, 0 skipped
+# Verify the actual result and investigate any failures or skips
 ```
 
 ### Lint
@@ -238,7 +242,7 @@ bash scripts/deploy.sh
 
 Service definitions are in `infra/cloudrun/api.yaml` and `infra/cloudrun/web.yaml`.
 
-The CI/CD `deploy` job in `.github/workflows/ci.yml` runs automatically on merge to `main`, using GCP Workload Identity Federation.
+The GitHub Actions configuration contains a production deploy job on pushes to `main`, while `cloudbuild.yaml` also defines Cloud Run deployment. Verify active triggers and choose a single deployment owner before merging deployment changes.
 
 ### Firebase Hosting
 
@@ -260,15 +264,15 @@ firebase deploy --only hosting
 
 ## Known limitations
 
-- **Cloud SQL instance in `us-east4`, not `europe-west2`** — the Vertex AI region is correctly set to `europe-west2` for UK data residency, but the Cloud SQL instance (`tood-os-instance`) is provisioned in `us-east4`. This is a data residency gap that should be reviewed and resolved post-launch.
+- **London region confirmation** — the project owner reports all active infrastructure is now in London (`europe-west2`). The checked-in Cloud Run API manifest references `tood-os:europe-west2:tood-db`. Confirm the live Cloud SQL instance, backups, replicas and active service configuration in Google Cloud before representing residency as independently verified.
 - **No malware scanner on file uploads** — uploaded documents are parsed and stored but no malware scanning step runs. A scanner should be configured before handling sensitive documents at scale.
-- **CI deploy job runs only on merge to `main`; PRs do not auto-deploy** — the `deploy` job in `ci.yml` is gated on `github.ref == 'refs/heads/main'` and `github.event_name == 'push'`.
+- **Deployment triggers need reconciliation** — the GitHub Actions deploy job is configured for pushes to `main`, and Cloud Build also has a deploy configuration. Active triggers have not yet been inspected.
 
 ---
 
 ## Version
 
-v1.0.0 — 2026-10-15 — Production launch
+Repository documentation refresh — 2026-10-25. Application release/version and production readiness require verification.
 
 ---
 
