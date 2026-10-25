@@ -49,3 +49,13 @@ Reviewed: `AGENTS.md`, `README.md`, `cloudbuild.yaml`, `firebase.json`, `.github
 Not yet verified: running CI status, Cloud Build trigger state, live Cloud Run revisions, browser E2E results, production OAuth behavior, actual Cloud SQL region, and test counts.
 
 Agent: ChatGPT GPT-6 — repository static audit.
+
+## Follow-up static inspection — OAuth and deployment manifests (2026-10-25)
+
+- **Residency discrepancy is not resolved:** `infra/cloudrun/api.yaml` refers to Cloud SQL instance `tood-os:europe-west2:tood-db`, while the README names `tood-os-instance` in `us-east4`. The README may be stale. **Verify the live database attachment and actual Cloud SQL region before asserting a residency violation.**
+- **Three API targets appear in code/config:** `cloudbuild.yaml` specifies an older-looking `a.run.app` URL; `infra/cloudrun/web.yaml` uses `https://api.tood.uk`; README documents a different `a.run.app` URL. Confirm the live URL, DNS and actual environment.
+- **Deployment mechanism differs:** `scripts/deploy.sh` uses mutable `:latest` images and `gcloud run services replace` with manifests; `cloudbuild.yaml` deploys commit-tagged images with `gcloud run deploy`. This strengthens the need to inspect active triggers and pick one controlled release path.
+- **OAuth review:** `apps/api/app/routes_oauth.py` returns a raw session token as JSON to a Next.js callback route. The full browser callback and cookie implementation must be inspected before concluding the token handling is safe. The Google account lookup falls back to linking an existing local user by email; verify `email_verified` handling and account-linking policy before release. No exploit is claimed from this static review alone.
+- **Signup:** `apps/api/app/core/config.py` defaults `allow_signup=True`, but `infra/cloudrun/api.yaml` explicitly sets `ALLOW_SIGNUP=false`. Confirm live environment and intended onboarding.
+
+These are additional source findings; no test execution or production inspection has occurred.
