@@ -118,6 +118,16 @@ live database as PostgreSQL 18 or PostgreSQL 16.
 
 The same supplied inventory reported no running Compute Engine VMs and no active GKE clusters.
 
+**Database platform note:** the inspected delivery-branch application uses Psycopg/PostgreSQL and the
+supplied Cloud Run inventory shows Cloud SQL. No Supabase client or Supabase configuration was identified
+in the reviewed project files. This repository snapshot therefore does not evidence Supabase as the active
+database platform.
+
+**Signup configuration warning:** the supplied Cloud Run environment-variable-name listing did not include
+`ALLOW_SIGNUP`, while the application setting defaults to `true` and the checked-in API manifest sets it
+to `false`. Confirm the effective live value before exposing public signup; the manifest alone does not
+prove the running service has that setting.
+
 ### Firebase Hosting
 
 The checked-in `firebase.json` declares a Hosting site named `tood-os` with these intended rewrites:
