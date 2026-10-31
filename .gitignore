@@ -15,3 +15,17 @@ evals/results/*.json
 *.log
 .DS_Store
 data/
+
+# Local credentials and private key material
+*.pem
+*.p12
+*.pfx
+*.key
+*.keystore
+*.jks
+credentials.json
+client_secret*.json
+service-account*.json
+service_account*.json
+.secrets/
+secrets/
