@@ -1,10 +1,22 @@
 """Safe document parsing: sniff the real file type, then extract text blocks with their location."""
 
+import importlib
 import io
 import re
 import zipfile
 
 BLOCK_MIN_CHARS = 3
+
+
+def initialize_parsers() -> None:
+    """Load required codecs on the startup thread before accepting uploads.
+
+    First import can initialize native runtimes. Keep that cost off the first
+    request, and fail startup if a declared document capability is unavailable.
+    PDF parsing stays on its existing single-threaded path.
+    """
+    importlib.import_module("pymupdf")
+    importlib.import_module("docx")
 
 
 def sniff(data: bytes) -> str | None:

@@ -78,34 +78,13 @@ def test_delete_tenant_requires_admin_role(client, accounts):
     assert r.status_code == 403
 
 
-def test_delete_tenant_removes_all_data(client, accounts, admin):
-    """Create an org via signup, delete it via the endpoint, confirm it is gone."""
-
-    # Create a target org through the normal signup flow
-    target = accounts("Delete Me Org")
-    oid = target["org_id"]
-
-    # Promote the target org's owner to admin directly in the DB so we can call
-    # the admin endpoint.  We patch require_admin to impersonate an admin caller
-    # rather than trying to insert an admin user (which has separate constraints).
-    # Instead we test the core deletion logic by calling it with the admin DB conn
-    # and verifying the org is gone, then we also check the 401/403 paths above.
-
-    # Directly verify deletion logic: call the helper that the endpoint uses
-    # (mirrors verify_install.py and conftest._delete_org).
-    from tests.conftest import _delete_org  # noqa: PLC0415
-
-    # Org should exist before deletion
-    row = admin.execute("SELECT id FROM organisations WHERE id = %s", (uuid.UUID(oid),)).fetchone()
-    assert row is not None, "target org should exist before deletion"
-
-    # Delete via conftest helper (same logic as the endpoint)
-    _delete_org(admin, uuid.UUID(oid))
-
-    # Org should be gone
-    row = admin.execute("SELECT id FROM organisations WHERE id = %s", (uuid.UUID(oid),)).fetchone()
-    assert row is None, "target org should be gone after deletion"
-
-    # Remove from accounts tracking so teardown doesn't try to delete it again
-    # The accounts fixture's `created` list is a local variable; we can't reach it,
-    # but _delete_org is idempotent (DELETE WHERE id = ... on a missing row is fine).
+def test_owner_cannot_delete_tenant_and_retains_data(client, accounts, admin):
+    """Exercise the real F17 boundary; an unsafe cleanup helper is not an endpoint test."""
+    caller = accounts("Owner request")
+    target = accounts("Retained target")
+    for tenant in (caller, target):
+        oid = uuid.UUID(tenant["org_id"])
+        assert admin.execute("SELECT id FROM organisations WHERE id=%s", (oid,)).fetchone() is not None
+        response = client.delete(f"/admin/tenant/{oid}", headers=caller["headers"])
+        assert response.status_code == 403
+        assert admin.execute("SELECT id FROM organisations WHERE id=%s", (oid,)).fetchone() is not None

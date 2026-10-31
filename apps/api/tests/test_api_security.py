@@ -4,10 +4,9 @@ import json
 import uuid
 
 import pytest
-from conftest import APP_URL, SAMPLES
-
 from app.core.auth import add_member
 from app.core.tenant import tenant_connection
+from conftest import APP_URL, SAMPLES
 
 TENDER = (SAMPLES / "sample_tender.txt").read_bytes()
 EVIDENCE = json.loads((SAMPLES / "sample_evidence.json").read_text())

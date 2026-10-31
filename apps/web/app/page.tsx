@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useSyncExternalStore } from 'react';
 
 // ── Theme store (module-level for canvas callbacks) ─────────────────────────
 const themeListeners: Array<() => void> = [];
@@ -12,6 +12,39 @@ function notifyThemeChange() {
 const SRC =
   'The Supplier must hold a valid Cyber Essentials Plus certificate at the contract start date. Responses shall not exceed 750 words. The service must ensure no loss of service during core hours. Tenders must remain valid for 90 days. Social value weighting 10%. ';
 const PCOL = ['#2c8bd6', '#d39a1c', '#14b07f', '#d0664a'];
+
+type Theme = 'light' | 'dark';
+let transientTheme: Theme | undefined;
+
+function readTheme(): Theme {
+  if (transientTheme) return transientTheme;
+  try {
+    const stored = localStorage.getItem('theme');
+    if (stored === 'light' || stored === 'dark') return stored;
+  } catch {
+    // Restricted storage still allows an in-memory preference for this tab.
+  }
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function subscribeTheme(listener: () => void) {
+  const media = window.matchMedia('(prefers-color-scheme: dark)');
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === 'theme' || event.key === null) {
+      transientTheme = undefined;
+      listener();
+    }
+  };
+  themeListeners.push(listener);
+  media.addEventListener('change', listener);
+  window.addEventListener('storage', onStorage);
+  return () => {
+    const index = themeListeners.indexOf(listener);
+    if (index !== -1) themeListeners.splice(index, 1);
+    media.removeEventListener('change', listener);
+    window.removeEventListener('storage', onStorage);
+  };
+}
 
 interface GlyphOpts {
   rgb?: string;
@@ -173,16 +206,12 @@ function AnnouncementBar() {
 // ── Header ───────────────────────────────────────────────────────────────────
 function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const theme = useSyncExternalStore(subscribeTheme, readTheme, () => 'light');
 
   useEffect(() => {
-    const stored = localStorage.getItem('theme') as 'light' | 'dark' | null;
-    const initial =
-      stored ??
-      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    setTheme(initial);
-    document.documentElement.setAttribute('data-theme', initial);
-  }, []);
+    document.documentElement.setAttribute('data-theme', theme);
+    notifyThemeChange();
+  }, [theme]);
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 8);
@@ -192,9 +221,13 @@ function Header() {
 
   function toggleTheme() {
     const next = theme === 'dark' ? 'light' : 'dark';
-    setTheme(next);
     document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('theme', next);
+    transientTheme = next;
+    try {
+      localStorage.setItem('theme', next);
+    } catch {
+      // Keep the in-memory preference when browser storage is unavailable.
+    }
     notifyThemeChange();
   }
 
@@ -250,7 +283,7 @@ function PipelineDemo() {
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const startedRef = useRef(false);
 
-  const cycle = useCallback(() => {
+  const cycle = useCallback(function runCycle() {
     const pipe = pipeRef.current;
     if (!pipe) return;
     const cards = pipe.querySelectorAll<HTMLElement>('.pipe__card');
@@ -284,7 +317,7 @@ function PipelineDemo() {
     at(6400, () => cards[2]?.classList.add('is-act'));
     ms.forEach((e, i) => at(6500 + i * 520, () => e.classList.add('on')));
     at(8800, () => { pipe.classList.add('is-sealed'); cards[2]?.classList.remove('is-act'); });
-    at(12500, cycle);
+    at(12500, runCycle);
   }, []);
 
   useEffect(() => {
@@ -1571,7 +1604,7 @@ function useReveal() {
       },
       { threshold: 0.12 }
     );
-    items.forEach((el, i) => {
+    items.forEach((el) => {
       const sib = Array.from(el.parentElement?.children ?? []).indexOf(el);
       el.style.transitionDelay = `${Math.min(sib * 60, 360)}ms`;
       io.observe(el);

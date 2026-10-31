@@ -1,3 +1,9 @@
+"""Configured tests run only through the owned disposable synthetic driver.
+
+No root.env/default URL loading and no row cleanup that bypasses append-only controls.
+"""
+
+import json
 import os
 import pathlib
 import uuid
@@ -5,77 +11,72 @@ import uuid
 import psycopg
 import pytest
 from fastapi.testclient import TestClient
+from fixture_guard import FixtureGuardError, assert_controls, guard_environment, verify_database
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
-env = ROOT / ".env"
-if env.exists():
-    for line in env.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if line and not line.startswith("#") and "=" in line:
-            k, v = line.split("=", 1)
-            os.environ.setdefault(k.strip(), v.strip())
-
-ADMIN_URL = os.environ.get("DATABASE_ADMIN_URL", "postgresql://postgres:tood_dev_admin@localhost:5432/tood")
-APP_URL = os.environ.get("DATABASE_URL", "postgresql://app_user:tood_dev_app@localhost:5432/tood")
+try:
+    RUN_ID = guard_environment(os.environ)
+    if not pathlib.Path("/.dockerenv").is_file() or (ROOT / ".env").exists():
+        raise FixtureGuardError("Use the isolated driver without a repository environment mount")
+except FixtureGuardError as exc:
+    raise pytest.UsageError(str(exc)) from None
+ADMIN_URL = os.environ["DATABASE_ADMIN_URL"]
+APP_URL = os.environ["DATABASE_URL"]
 SAMPLES = ROOT / "samples"
+EVIDENCE = pathlib.Path("/results")
 
-CUSTOMER_TABLES = [
-    "approvals",
-    "draft_claims",
-    "revisions",
-    "drafts",
-    "questions",
-    "requirements",
-    "doc_blocks",
-    "documents",
-    "evidence_chunks",
-    "evidence_items",
-    "export_manifests",
-    "audit_events",
-    "api_tokens",
-    "memberships",
-    "tenders",
-    "company_profiles",
-    "jobs",
-    "certificates",
-]
+
+def _verified_connection():
+    conn = None
+    try:
+        conn = psycopg.connect(
+            ADMIN_URL, autocommit=True, connect_timeout=3, options="-c default_transaction_read_only=on"
+        )
+        proof = verify_database(conn, RUN_ID)
+        # Marker and all mandatory controls were verified before any write can occur.
+        conn.execute("SET default_transaction_read_only = off")
+        return conn, proof
+    except Exception as exc:
+        if conn is not None:
+            conn.close()
+        raise pytest.UsageError("Synthetic database guard failed: " + type(exc).__name__) from None
+
+
+def pytest_sessionstart(session):
+    conn, proof = _verified_connection()
+    conn.close()
+    (EVIDENCE / "fixture-initial-control-proof.json").write_text(json.dumps(proof, indent=2), encoding="utf-8")
 
 
 @pytest.fixture(scope="session")
 def admin():
+    conn, _ = _verified_connection()
     try:
-        conn = psycopg.connect(ADMIN_URL, autocommit=True, connect_timeout=3)
-    except Exception as exc:  # noqa: BLE001
-        pytest.skip(f"database not reachable: {exc}")
-    yield conn
-    conn.close()
+        yield conn
+    finally:
+        conn.close()
 
 
-def _delete_org(admin, org):
-    user_ids = [r[0] for r in admin.execute("SELECT user_id FROM memberships WHERE org_id = %s", (org,))]
-    for trig_table, trig in (("revisions", "revisions_append_only"), ("audit_events", "audit_append_only")):
-        admin.execute(f"ALTER TABLE {trig_table} DISABLE TRIGGER {trig}")
-    for table in CUSTOMER_TABLES:
-        admin.execute(f"DELETE FROM {table} WHERE org_id = %s", (org,))
-    for trig_table, trig in (("revisions", "revisions_append_only"), ("audit_events", "audit_append_only")):
-        admin.execute(f"ALTER TABLE {trig_table} ENABLE TRIGGER {trig}")
-    for u in user_ids:
-        admin.execute("DELETE FROM users WHERE id = %s", (u,))
-    admin.execute("DELETE FROM organisations WHERE id = %s", (org,))
+@pytest.fixture(autouse=True)
+def preserve_controls(admin, request):
+    for phase in ("before", "after"):
+        proof = assert_controls(admin)
+        with (EVIDENCE / "fixture-control-checks.jsonl").open("a", encoding="utf-8") as log:
+            log.write(json.dumps({"test": request.node.nodeid, "phase": phase, **proof}) + "\n")
+        if phase == "before":
+            yield
 
 
 @pytest.fixture()
 def two_orgs(admin):
-    """Two organisations, each with one tender, created through the admin role."""
+    """Retain UUID-isolated tenants until the whole labelled tmpfs database is removed."""
     ids = {}
     for key in ("a", "b"):
         org = uuid.uuid4()
-        admin.execute("INSERT INTO organisations (id, name) VALUES (%s, %s)", (org, f"test-{key}"))
-        admin.execute("INSERT INTO tenders (org_id, title) VALUES (%s, %s)", (org, f"tender-{key}"))
+        admin.execute("INSERT INTO organisations (id,name) VALUES (%s,%s)", (org, f"test-{key}"))
+        admin.execute("INSERT INTO tenders (org_id,title) VALUES (%s,%s)", (org, f"tender-{key}"))
         ids[key] = org
-    yield ids
-    for org in ids.values():
-        _delete_org(admin, org)
+    return ids
 
 
 @pytest.fixture()
@@ -84,20 +85,20 @@ def client(tmp_path, monkeypatch):
     from app.main import app
 
     monkeypatch.setattr(settings, "storage_dir", str(tmp_path / "uploads"))
-    return TestClient(app)
+    # Enter the lifespan so declared parsers/startup controls really execute.
+    with TestClient(app) as client:
+        yield client
 
 
 @pytest.fixture()
 def accounts(admin, client):
-    """Factory: create a fresh organisation and return its token headers. Everything is deleted afterwards."""
-    created = []
+    """Create isolated fictional tenants; preserve their immutable history for the run."""
 
     def make(name="Acme Bids Ltd"):
         email = f"{uuid.uuid4().hex[:10]}@example.test"
-        r = client.post("/v1/signup", json={"org_name": name, "email": email})
-        assert r.status_code == 201, r.text
-        data = r.json()
-        created.append(data["org_id"])
+        response = client.post("/v1/signup", json={"org_name": name, "email": email})
+        assert response.status_code == 201, response.text
+        data = response.json()
         return {
             "headers": {"Authorization": f"Bearer {data['token']}"},
             "org_id": data["org_id"],
@@ -105,6 +106,4 @@ def accounts(admin, client):
             "email": email,
         }
 
-    yield make
-    for org in created:
-        _delete_org(admin, org)
+    return make

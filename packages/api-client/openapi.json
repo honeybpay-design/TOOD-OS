@@ -61,6 +61,22 @@
               ],
               "title": "Authorization"
             }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
+            }
           }
         ],
         "responses": {
@@ -91,6 +107,23 @@
         "operationId": "create_tender_v1_tenders_post",
         "parameters": [
           {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
             "name": "authorization",
             "in": "header",
             "required": false,
@@ -104,6 +137,22 @@
                 }
               ],
               "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
             }
           }
         ],
@@ -157,6 +206,22 @@
               ],
               "title": "Authorization"
             }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
+            }
           }
         ],
         "responses": {
@@ -196,6 +261,23 @@
             }
           },
           {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
             "name": "authorization",
             "in": "header",
             "required": false,
@@ -209,6 +291,22 @@
                 }
               ],
               "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
             }
           }
         ],
@@ -273,6 +371,22 @@
               ],
               "title": "Authorization"
             }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
+            }
           }
         ],
         "responses": {
@@ -326,6 +440,22 @@
               ],
               "title": "Authorization"
             }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
+            }
           }
         ],
         "responses": {
@@ -356,6 +486,23 @@
         "operationId": "add_evidence_v1_evidence_post",
         "parameters": [
           {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
             "name": "authorization",
             "in": "header",
             "required": false,
@@ -369,6 +516,22 @@
                 }
               ],
               "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
             }
           }
         ],
@@ -422,6 +585,22 @@
               ],
               "title": "Authorization"
             }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
+            }
           }
         ],
         "responses": {
@@ -461,6 +640,23 @@
             }
           },
           {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
             "name": "authorization",
             "in": "header",
             "required": false,
@@ -474,6 +670,22 @@
                 }
               ],
               "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
             }
           }
         ],
@@ -514,6 +726,23 @@
             }
           },
           {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
             "name": "authorization",
             "in": "header",
             "required": false,
@@ -527,6 +756,22 @@
                 }
               ],
               "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
             }
           }
         ],
@@ -581,6 +826,22 @@
               ],
               "title": "Authorization"
             }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
+            }
           }
         ],
         "responses": {
@@ -618,6 +879,23 @@
             }
           },
           {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
             "name": "authorization",
             "in": "header",
             "required": false,
@@ -631,6 +909,22 @@
                 }
               ],
               "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
             }
           }
         ],
@@ -681,6 +975,23 @@
             }
           },
           {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
             "name": "authorization",
             "in": "header",
             "required": false,
@@ -694,6 +1005,22 @@
                 }
               ],
               "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
             }
           }
         ],
@@ -734,6 +1061,23 @@
             }
           },
           {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
             "name": "authorization",
             "in": "header",
             "required": false,
@@ -747,6 +1091,22 @@
                 }
               ],
               "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
             }
           }
         ],
@@ -801,6 +1161,22 @@
               ],
               "title": "Authorization"
             }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
+            }
           }
         ],
         "responses": {
@@ -854,6 +1230,22 @@
               ],
               "title": "Authorization"
             }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
+            }
           }
         ],
         "responses": {
@@ -893,6 +1285,867 @@
             }
           },
           {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            },
+            "headers": {
+              "X-Export-SHA256": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Idempotency-Replayed": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Audit-Assurance-Schema": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Audit-Artifact-Snapshot": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Audit-Artifact-Sequence": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Audit-Assessment-Sequence": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Audit-Assessment-Status": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Audit-Checkpoint-State": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/audit": {
+      "get": {
+        "summary": "Audit Log",
+        "operationId": "audit_log_v1_audit_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditLogResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/billing/checkout": {
+      "post": {
+        "summary": "Billing Checkout",
+        "description": "Create a Stripe Checkout session for the authenticated org.",
+        "operationId": "billing_checkout_v1_billing_checkout_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckoutIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/billing/webhook": {
+      "post": {
+        "summary": "Billing Webhook",
+        "description": "Stripe webhook endpoint \u2014 no auth, verifies Stripe signature.",
+        "operationId": "billing_webhook_v1_billing_webhook_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/billing/status": {
+      "get": {
+        "summary": "Billing Status",
+        "description": "Return current plan, subscription status, and plan limits.",
+        "operationId": "billing_status_v1_billing_status_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/metrics": {
+      "get": {
+        "summary": "Admin Metrics",
+        "operationId": "admin_metrics_admin_metrics_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/tenants": {
+      "get": {
+        "summary": "Admin Tenants",
+        "operationId": "admin_tenants_admin_tenants_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/health": {
+      "get": {
+        "summary": "Admin Health",
+        "operationId": "admin_health_admin_health_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/report": {
+      "get": {
+        "summary": "Admin Report",
+        "operationId": "admin_report_admin_report_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/tenant/{org_id}/plan": {
+      "post": {
+        "summary": "Admin Force Plan",
+        "operationId": "admin_force_plan_admin_tenant__org_id__plan_post",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanChangeIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/tenant/{org_id}": {
+      "delete": {
+        "summary": "Admin Delete Tenant",
+        "description": "Tenant roles never grant platform-wide deletion authority.",
+        "operationId": "admin_delete_tenant_admin_tenant__org_id__delete",
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Org Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "x-session-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Session-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/google": {
+      "get": {
+        "summary": "Google Login",
+        "description": "Initiate Google OAuth: return the auth URL for the frontend to redirect to.",
+        "operationId": "google_login_v1_auth_google_get",
+        "parameters": [
+          {
+            "name": "x-oauth-verifier",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Oauth-Verifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/google/callback": {
+      "get": {
+        "summary": "Google Callback",
+        "description": "Handle Google redirect. Upsert user and issue a session token.",
+        "operationId": "google_callback_v1_auth_google_callback_get",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Code"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "name": "error",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Error"
+            }
+          },
+          {
+            "name": "x-oauth-verifier",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Oauth-Verifier"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/session": {
+      "get": {
+        "summary": "Get Session",
+        "description": "Validate a session token. Returns user/org/role if valid and not expired.",
+        "operationId": "get_session_v1_auth_session_get",
+        "parameters": [
+          {
             "name": "authorization",
             "in": "header",
             "required": false,
@@ -931,10 +2184,11 @@
         }
       }
     },
-    "/v1/audit": {
-      "get": {
-        "summary": "Audit Log",
-        "operationId": "audit_log_v1_audit_get",
+    "/v1/auth/logout": {
+      "post": {
+        "summary": "Logout",
+        "description": "Invalidate a session token.",
+        "operationId": "logout_v1_auth_logout_post",
         "parameters": [
           {
             "name": "authorization",
@@ -995,6 +2249,26 @@
         }
       }
     },
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Health Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/readyz": {
       "get": {
         "summary": "Readyz",
@@ -1018,6 +2292,217 @@
   },
   "components": {
     "schemas": {
+      "AuditAssurance": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 2,
+            "title": "Schema Version",
+            "default": 2
+          },
+          "org_id": {
+            "type": "string",
+            "title": "Org Id"
+          },
+          "active_version": {
+            "type": "integer",
+            "enum": [
+              1,
+              2
+            ],
+            "title": "Active Version"
+          },
+          "snapshot_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Snapshot At"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "legacy_only",
+              "v2_unavailable",
+              "v2_integrity_failed",
+              "legacy_manifest_changed",
+              "legacy_broken",
+              "legacy_unverified",
+              "checkpoint_invalid",
+              "v2_internal_only_uncheckpointed",
+              "checkpointed_prefix_only",
+              "checkpointed_internal_integrity"
+            ],
+            "title": "Status"
+          },
+          "legacy": {
+            "$ref": "#/components/schemas/LegacyAuditState"
+          },
+          "v2": {
+            "$ref": "#/components/schemas/V2AuditState"
+          },
+          "checkpoint": {
+            "$ref": "#/components/schemas/AuditCheckpointState"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Limitations"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "org_id",
+          "active_version",
+          "snapshot_at",
+          "status",
+          "legacy",
+          "v2",
+          "checkpoint",
+          "limitations"
+        ],
+        "title": "AuditAssurance"
+      },
+      "AuditCheckpointState": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "unconfigured",
+              "verified",
+              "invalid"
+            ],
+            "title": "Status"
+          },
+          "verified_through_sequence": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 19,
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified Through Sequence"
+          },
+          "uncheckpointed_events": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 19,
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uncheckpointed Events"
+          },
+          "receipt_digest": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Receipt Digest"
+          },
+          "issued_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issued At"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "reason"
+        ],
+        "title": "AuditCheckpointState"
+      },
+      "AuditLogResponse": {
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "const": 2,
+            "title": "Schema Version",
+            "default": 2
+          },
+          "chain_ok": {
+            "type": "boolean",
+            "title": "Chain Ok",
+            "description": "Deprecated compatibility field: legacy v1 internal hashes only.",
+            "deprecated": true
+          },
+          "chain_ok_scope": {
+            "type": "string",
+            "const": "legacy_v1_internal_only",
+            "title": "Chain Ok Scope",
+            "default": "legacy_v1_internal_only"
+          },
+          "first_bad_event": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Bad Event"
+          },
+          "events_total": {
+            "type": "integer",
+            "title": "Events Total"
+          },
+          "recent": {
+            "items": {
+              "$ref": "#/components/schemas/LegacyAuditEvent"
+            },
+            "type": "array",
+            "title": "Recent"
+          },
+          "assurance": {
+            "$ref": "#/components/schemas/AuditAssurance"
+          },
+          "recent_v2": {
+            "items": {
+              "$ref": "#/components/schemas/V2AuditEvent"
+            },
+            "type": "array",
+            "title": "Recent V2"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "chain_ok",
+          "first_bad_event",
+          "events_total",
+          "recent",
+          "assurance",
+          "recent_v2"
+        ],
+        "title": "AuditLogResponse"
+      },
       "Body_upload_document_v1_tenders__tender_id__documents_post": {
         "properties": {
           "file": {
@@ -1031,6 +2516,29 @@
           "file"
         ],
         "title": "Body_upload_document_v1_tenders__tender_id__documents_post"
+      },
+      "CheckoutIn": {
+        "properties": {
+          "plan": {
+            "type": "string",
+            "title": "Plan"
+          },
+          "success_url": {
+            "type": "string",
+            "title": "Success Url"
+          },
+          "cancel_url": {
+            "type": "string",
+            "title": "Cancel Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plan",
+          "success_url",
+          "cancel_url"
+        ],
+        "title": "CheckoutIn"
       },
       "DraftEdit": {
         "properties": {
@@ -1092,6 +2600,251 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "LegacyAuditEvent": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          },
+          "at": {
+            "type": "string",
+            "title": "At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "action",
+          "target",
+          "at"
+        ],
+        "title": "LegacyAuditEvent"
+      },
+      "LegacyAuditState": {
+        "properties": {
+          "event_count": {
+            "type": "string",
+            "maxLength": 19,
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "title": "Event Count"
+          },
+          "min_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20,
+                "pattern": "^-?(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Id"
+          },
+          "max_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20,
+                "pattern": "^-?(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Id"
+          },
+          "current_internal_valid": {
+            "type": "boolean",
+            "title": "Current Internal Valid"
+          },
+          "first_bad_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20,
+                "pattern": "^-?(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Bad Id"
+          },
+          "history_state": {
+            "type": "string",
+            "enum": [
+              "internally_valid",
+              "broken",
+              "unverified"
+            ],
+            "title": "History State"
+          },
+          "declared_status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "verified",
+                  "broken",
+                  "unverified"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Declared Status"
+          },
+          "declared_first_bad_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20,
+                "pattern": "^-?(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Declared First Bad Id"
+          },
+          "incident_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Incident Ref"
+          },
+          "manifest_version": {
+            "type": "integer",
+            "const": 1,
+            "title": "Manifest Version",
+            "default": 1
+          },
+          "observed_manifest_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Observed Manifest Sha256"
+          },
+          "committed_manifest_sha256": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Committed Manifest Sha256"
+          },
+          "manifest_matches": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manifest Matches"
+          },
+          "declaration_consistent": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Declaration Consistent"
+          },
+          "hash_envelope_scope": {
+            "type": "string",
+            "const": "v1-org-actor-action-target-prev",
+            "title": "Hash Envelope Scope",
+            "default": "v1-org-actor-action-target-prev"
+          },
+          "historically_unbound_fields": {
+            "prefixItems": [
+              {
+                "type": "string",
+                "const": "id"
+              },
+              {
+                "type": "string",
+                "const": "at"
+              },
+              {
+                "type": "string",
+                "const": "ip"
+              }
+            ],
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 3,
+            "title": "Historically Unbound Fields",
+            "default": [
+              "id",
+              "at",
+              "ip"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "event_count",
+          "min_id",
+          "max_id",
+          "current_internal_valid",
+          "first_bad_id",
+          "history_state",
+          "declared_status",
+          "declared_first_bad_id",
+          "incident_ref",
+          "observed_manifest_sha256",
+          "committed_manifest_sha256",
+          "manifest_matches",
+          "declaration_consistent"
+        ],
+        "title": "LegacyAuditState"
+      },
+      "PlanChangeIn": {
+        "properties": {
+          "plan": {
+            "type": "string",
+            "title": "Plan"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plan"
+        ],
+        "title": "PlanChangeIn"
+      },
       "SignupIn": {
         "properties": {
           "org_name": {
@@ -1127,6 +2880,177 @@
           "title"
         ],
         "title": "TenderIn"
+      },
+      "V2AuditEvent": {
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "title": "Event Id"
+          },
+          "sequence": {
+            "type": "string",
+            "maxLength": 19,
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "title": "Sequence"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          },
+          "recorded_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Recorded At"
+          },
+          "event_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Event Hash"
+          },
+          "payload_schema": {
+            "type": "string",
+            "title": "Payload Schema"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "event_id",
+          "sequence",
+          "action",
+          "target",
+          "recorded_at",
+          "event_hash",
+          "payload_schema"
+        ],
+        "title": "V2AuditEvent"
+      },
+      "V2AuditState": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "not_active",
+              "prepared_not_active",
+              "valid",
+              "invalid",
+              "unavailable"
+            ],
+            "title": "Status"
+          },
+          "ledger_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ledger Id"
+          },
+          "epoch_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Epoch Id"
+          },
+          "format_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Format Version"
+          },
+          "sequence": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 19,
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sequence"
+          },
+          "event_count": {
+            "type": "string",
+            "maxLength": 19,
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "title": "Event Count",
+            "default": "0"
+          },
+          "head_hash": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Head Hash"
+          },
+          "genesis_hash": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Genesis Hash"
+          },
+          "first_bad_sequence": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 19,
+                "pattern": "^(0|[1-9][0-9]*)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Bad Sequence"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "reason"
+        ],
+        "title": "V2AuditState"
       },
       "ValidationError": {
         "properties": {
