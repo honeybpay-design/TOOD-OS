@@ -162,7 +162,7 @@ The `/v1/:path*` rewrite is also problematic — it double-proxies `/v1/` traffi
 **STATUS: PASS**
 
 Per `docs/TODO.md` (17 Oct, confirmed by audit):
-- `STRIPE_WEBHOOK_SECRET` in Secret Manager: `whsec_vHpKIqbbXcTMxdQEuxZH1rB1WNV49yFK` — real `whsec_` prefix, not a placeholder
+- `STRIPE_WEBHOOK_SECRET` in Secret Manager: `[REDACTED_WEBHOOK_SECRET_ROTATE_IF_ACTIVE]` — real `whsec_` prefix, not a placeholder
 - `STRIPE_PUBLISHABLE_KEY`: confirmed as `pk_live_` (live key, as stated in TODO)
 - All Stripe secrets are loaded from Secret Manager via `secretKeyRef` in `infra/cloudrun/api.yaml` — not hardcoded
 
@@ -236,7 +236,7 @@ The old bug (callback going directly to FastAPI) was caused by a prior Firebase 
 |----------|--------|----------|
 | **P0** | **Fix `next.config.ts`**: Delete the `/api/:path*` rewrite. It bypasses all Next.js route handlers. The route files in `app/api/` must handle these requests to attach the session cookie as a header. | BLOCKER |
 | **P0** | **Deploy to production**: After fixing P0-rewrite, push to `main`, confirm CI passes all 3 required jobs (`api`, `web`, `secrets`) and the `deploy` job runs. Smoke test `/dashboard`. | BLOCKER |
-| **P1** | **Rotate Stripe webhook secret**: `whsec_vHpKIqbbXcTMxdQEuxZH1rB1WNV49yFK` appears in `docs/TODO.md` which is in git history (`53ca75c`). Go to Stripe Dashboard → Webhooks → Roll secret. Update Secret Manager. | RISK |
+| **P1** | **Rotate Stripe webhook secret**: `[REDACTED_WEBHOOK_SECRET_ROTATE_IF_ACTIVE]` appears in `docs/TODO.md` which is in git history (`53ca75c`). Go to Stripe Dashboard → Webhooks → Roll secret. Update Secret Manager. | RISK |
 | **P1** | **Verify CI deploy job has GCP credentials**: Confirm `GCP_WORKLOAD_IDENTITY_PROVIDER` and `GCP_SERVICE_ACCOUNT` are in the `production` GitHub environment, or the deploy step silently fails and production never updates. | RISK |
 | **P1** | **Run `pytest -q` locally** to confirm 51/51 pass with the oauth changes. Stage `apps/api/tests/test_cloudrun_config.py` if it belongs to the suite. | RISK |
 | **P2** | Confirm `npm run build` passes (run in CI — timeout prevented local verification). | LOW |
