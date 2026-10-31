@@ -14,10 +14,19 @@ from app.core.config import settings
 SENTENCE = re.compile(r"(?<=[.!?])\s+")
 
 
-@dataclass
+@dataclass(frozen=True)
 class Segment:
     text: str
     origin: str  # 'ai' | 'evidence'
+
+
+@dataclass(frozen=True)
+class GenerationResult:
+    segments: tuple[Segment, ...]
+    requested_model_id: str
+    model_id: str
+    prompt_version: str
+    admission_digest: str | None = None
 
 
 class TemplateProvider:
@@ -38,6 +47,22 @@ class TemplateProvider:
             while len(segments) > 2 and sum(len(s.text.split()) for s in segments) > word_limit:
                 del segments[-2]  # drop the last evidence sentence, keep the closing line
         return segments
+
+    def generate(self, prompt: str, evidence: list[dict], word_limit: int | None) -> GenerationResult:
+        return GenerationResult(
+            tuple(self.draft(prompt, evidence, word_limit)), self.model_id, self.model_id, self.prompt_version
+        )
+
+    def validate_result(self, result: GenerationResult) -> None:
+        if (
+            result.requested_model_id != self.model_id
+            or result.model_id != self.model_id
+            or result.prompt_version != self.prompt_version
+            or result.admission_digest is not None
+        ):
+            from app.ai_gateway.errors import AIProviderUnavailable
+
+            raise AIProviderUnavailable("AI generation is unavailable")
 
 
 def get_provider():

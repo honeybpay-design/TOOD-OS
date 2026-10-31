@@ -70,6 +70,10 @@ def split_sentences(text: str) -> list[str]:
     return [x.strip() for x in found if x.strip()]
 
 
+def _normalise_assertion(value: str) -> str:
+    return re.sub(r"\s+", " ", value).strip().casefold()
+
+
 def verify_claims(text: str, evidence_by_id: dict[str, dict]) -> list[dict]:
     """Every sentence that states a fact needs a valid, approved evidence tag that supports it."""
     results = []
@@ -90,9 +94,13 @@ def verify_claims(text: str, evidence_by_id: dict[str, dict]) -> list[dict]:
                 if ev["status"] != "approved":
                     status, reason = "unsupported", f"evidence '{ev['title']}' is not approved"
                     break
-                missing = [n for n in NUMBER.findall(bare) if n not in ev["body"]]
-                if missing:
-                    status, reason = "unsupported", f"figure {missing[0]} is not in the cited evidence"
+                # A matching number or certification keyword is not proof of an
+                # assertion. Without a trusted semantic verdict, accept only a
+                # complete evidence sentence, preserving negation and context.
+                assertion = _normalise_assertion(bare)
+                source_sentences = [_normalise_assertion(s) for s in split_sentences(ev["body"])]
+                if assertion not in source_sentences:
+                    status, reason = "unsupported", "claim is not directly supported by a complete cited evidence sentence"
                     break
         results.append({"sentence_span": sentence, "evidence_ids": ids, "status": status, "reason": reason})
     return results

@@ -4,14 +4,24 @@ import time
 import psycopg
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
+from app.ai_gateway.errors import AIProviderUnavailable
 from app.core.config import settings
 from app.routes import admin_router, router
 from app.routes_oauth import oauth_router
+from app.services.parsing import initialize_parsers
 
 app = FastAPI(title="TOOD-OS API", version="0.2.0")
+
+
+@app.exception_handler(AIProviderUnavailable)
+async def ai_provider_unavailable_handler(request: Request, exc: AIProviderUnavailable):
+    return JSONResponse(
+        status_code=503, content={"detail": "AI generation is temporarily unavailable"}
+    )
+
 
 # CORS — allow requests from tood.uk and api.tood.uk (browser-side fetch)
 app.add_middleware(
@@ -56,6 +66,7 @@ async def record_request_latency(request: Request, call_next) -> Response:
 
 @app.on_event("startup")
 async def startup_event() -> None:
+    initialize_parsers()
     try:
         from app.core.monitoring import get_monitor
 
