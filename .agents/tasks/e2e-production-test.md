@@ -35,7 +35,7 @@ Duration: 2531ms
 POST /v1/signup
 {"org_name": "E2E Test Org", "email": "e2e-test-1792069210@tood-test.uk"}
 → 201
-{"token":"tood_Irr-QBFSS5O6I3JQyUz346FR36X07skgwJXQ0bjTRts",
+{"token":"[REDACTED_TOKEN_REVOKE_IF_ACTIVE]",
  "org_id":"ecb1f7f0-60db-4513-a9f2-6a3218edefe3",
  "user_id":"7c19d466-3216-442f-ac95-088df2505e68",
  "role":"owner"}
