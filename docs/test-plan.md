@@ -21,5 +21,5 @@
 | D17 | End-to-end workflow | `pytest tests/test_workflow.py` | 15 pass: upload, extraction, evidence, draft, claims, approval, gated export, tampering detected | 13, 14, 17, 18 |
 | D18 | Access control | `pytest tests/test_api_security.py` | 11 pass: other organisations see and change nothing, roles enforced, no credentials refused | 19, 22 |
 | D19 | Web page | Run the API, open http://localhost:8000, follow README "Run it" with the sample files | Every step works; the export opens in Word; flags block export until acknowledged | 7 |
-
+| D20 | Browser E2E | `cd apps/web && npm run test:e2e` | Landing-to-login, plan context, and unauthenticated dashboard flows pass with no browser errors | 7, 19 |
 Sign-off: tester ____________  date ________  result ________
