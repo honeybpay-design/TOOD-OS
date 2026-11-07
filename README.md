@@ -1,275 +1,264 @@
 # TOOD — Trusted Operations & Organised Documents
 
-> AI-assisted bid writing · Built for UK Public Sector Procurement
+AI-assisted tender-workflow software for UK public-sector suppliers.
 
-![Tests](https://img.shields.io/badge/tests-51%20passed-brightgreen)
-![Python](https://img.shields.io/badge/python-3.12-blue)
-![Next.js](https://img.shields.io/badge/next.js-15-black)
-![Cloud Run](https://img.shields.io/badge/cloud-run-europe--west2-4285F4)
-![License](https://img.shields.io/badge/license-MIT-green)
+> **Current status: engineering / pre-production. Production readiness has not been established.**
+>
+> This README describes the source tree at commit `226cbdc013060e67b43304c8336e368a25f68aab` on branch
+> `delivery-2026-10-31`, plus a separately labelled Google Cloud inventory snapshot supplied from Cloud Shell
+> on 31 October 2026. A component existing in source code does not prove that it is deployed, configured,
+> migrated, secure in the live environment, or has passed an end-to-end test.
 
-TOOD is a multi-tenant SaaS platform that helps UK public-sector suppliers write compliant tender responses. It extracts requirements verbatim from tender documents, generates AI-drafted answers grounded in an approved evidence library, and enforces a named human approval step before any export — no bid is ever submitted automatically. The platform is aligned with the Procurement Act 2023, PPN 017, and PPN 02/24.
+## Repository and release state
 
----
-
-## Live
-
-| Service | URL |
+| Item | Observed value |
 |---|---|
-| Website | https://tood.uk |
-| API (Cloud Run) | https://tood-os-api-844874461521.europe-west2.run.app |
-| API docs (Swagger) | https://tood-os-api-844874461521.europe-west2.run.app/docs |
-| Web app (Cloud Run) | https://tood-os-web-844874461521.europe-west2.run.app |
+| Repository | [honeybpay-design/TOOD-OS](https://github.com/honeybpay-design/TOOD-OS) |
+| Default branch | `main` |
+| Working delivery branch | `delivery-2026-10-31` |
+| Delivery commit reviewed | `226cbdc013060e67b43304c8336e368a25f68aab` |
+| README status | Updated on the delivery branch; not yet merged to `main` |
+| Release status | Not certified production-ready |
 
-**Compliance frame:** Procurement Act 2023 · PPN 017 · PPN 02/24
+Do not treat this branch as deployed. The configured Cloud Build trigger described below listens for pushes to
+`main`, not this delivery branch.
 
----
+## What is in this repository
 
-## What it does
+### Application
 
-- **Requirement extraction (verbatim, source-referenced)** — parses uploaded tender documents (PDF, DOCX, plain text up to 20 MB) and extracts requirements word-for-word, each with a reference to its source document, page, and block. A verbatim check discards any candidate whose text cannot be confirmed in the source block.
-- **Evidence-based AI drafting (Gemini 2.5 Pro via Vertex AI)** — draft answers are generated using only items from the organisation's approved evidence library. Every AI-generated segment is tagged with the evidence it drew from. Evidence not explicitly approved by a bid manager cannot be used.
-- **Claim verification against approved evidence library** — after drafting or editing, every factual claim (numbers, certifications, statistics) is checked against approved evidence. Unsupported claims are flagged and block export until acknowledged by a named bid manager or removed.
-- **Named human approval workflow (no auto-submit)** — no draft can be included in an export until a named person with `bid_manager` role or above explicitly approves it. Approvals are tied to a specific revision hash.
-- **Gated Word (.docx) export** — export is blocked unless every question has a latest approved draft, every unsupported claim is acknowledged, and no draft exceeds its word limit. The export file's SHA-256 hash is recorded.
-- **Hash-chained audit trail (append-only)** — every draft revision and user action is stored with a hash chain. Database triggers enforce that audit records can never be updated or deleted.
-- **Multi-tenant with forced Row-Level Security** — all tenant queries run through `tenant_connection()`, which sets tenant context locally to the transaction. The database enforces RLS on all tenant tables — a bug in application code cannot return cross-tenant data.
-- **Stripe billing (3 plans)** — Starter £99/mo, Professional £299/mo, Enterprise £799/mo. Subscription lifecycle is managed via Stripe Checkout and webhooks.
-- **Google OAuth login** — server-side OAuth 2.0 flow live in production. Google sign-in tested and working at https://tood.uk/login. Session tokens stored as SHA-256 hashes.
+- **API:** FastAPI, Python 3.12+, using Psycopg to access PostgreSQL.
+- **Web application:** Next.js 16.4.3, React 19.3.0.
+- **Local database:** Docker Compose starts `pgvector/pgvector:pg16` for local development.
+- **API client:** generated OpenAPI JSON and TypeScript declarations under `packages/api-client`.
+- **Infrastructure/configuration:** Cloud Run service manifests under `infra/cloudrun/`, Firebase Hosting rewrites
+  in `firebase.json`, and a Cloud Build pipeline in `cloudbuild.yaml`.
 
----
+The API source contains routes and services for organisation/user access, tenders and document ingestion,
+requirements and questions, evidence, draft generation and editing, review/approval, export, billing,
+Google OAuth, audit, and health checks. The presence of these routes is not evidence that every journey
+currently works end-to-end in the deployed environment.
 
-## Quick start (local)
+### AI gateway
 
-**Prerequisites:** Docker Desktop, Python 3.12, Node 20
+- Business logic obtains a provider through `apps/api/app/ai_gateway`.
+- The local default provider is `template`; it is not a hosted language model.
+- A Gemini adapter using the Google Gen AI SDK is present. It requires an explicit model selection and a
+  valid signed model-admission receipt before model access. The adapter is configured for Vertex AI in
+  `europe-west2` and rejects implicit Developer API / global-key routing.
+- The deployed Cloud Run service showed an `AI_PROVIDER` environment-variable name in the supplied
+  inventory, but its value and the active model-admission receipt were not provided. **Do not assume Gemini
+  is currently active in production.**
+- Google ADK is not listed as a dependency in the checked-in API project manifest. The current Gemini
+  adapter uses `google-genai`; this repository snapshot does not establish an ADK-based agent runtime.
 
-```bash
-git clone <repo>
-cd tood.com
+### Document storage
 
-# Start database
-docker compose up -d --wait
+The API defines a local-disk backend and an opt-in Google Cloud Storage backend. The GCS implementation
+checks the configured bucket's London location, project identity, uniform bucket-level access, public
+access prevention, object generation, and content hashes.
 
-# Apply migrations
-python scripts/migrate.py
+The code supports GCS, but the supplied Cloud Run inventory does not establish the active
+`STORAGE_BACKEND`, bucket name, or whether a production bucket is configured. Do not assume durable GCS
+storage is active without checking the live service configuration and bucket.
 
-# Verify installation (must print 17/17 checks passed)
-python scripts/verify_install.py
+### Database and migrations
 
-# Run API tests (must print 44 passed)
-cd apps/api && pytest -q
-```
+- Local development uses PostgreSQL 16 with pgvector through `docker-compose.yml`.
+- SQL migration files `0001` through `0016` are present.
+- The API uses separate database URLs for application and authentication access.
+- Tenant-scoped connection helpers set `app.org_id` transaction-locally.
+- The migration files contain RLS and append-only controls. Their presence does not prove that the same
+  schema, policies, grants, or triggers have been applied and verified in the live database.
+- Audit V2 source and migrations are present. The V2 adapter explicitly states that it is not activated by
+  import and requires a coordinated cutover. Migration `0016_revision_hash_scope.sql` labels itself
+  **proposal-only** and contains guards. Do not treat Audit V2 as live or run that migration as a routine
+  deployment step.
 
----
+**Migration safety:** `scripts/migrate.py` loads environment configuration and applies every unapplied SQL
+file in order. The runbooks record a warning that this legacy CLI is not a harmless inspection command and
+can attempt database role/schema writes. Do not run it against production, and do not use
+`python scripts/migrate.py --help` as a probe. A reviewed, target-locked migration procedure is required
+before any real database change.
 
-## Architecture
+## Google Cloud inventory snapshot
 
-| Layer | Technology | Version |
-|---|---|---|
-| API | FastAPI (Python), modular monolith | ≥0.115 |
-| Runtime | Python | 3.12 |
-| Frontend | Next.js (standalone output) | 16.4.0 |
-| UI runtime | React | 19.3.0 |
-| Database | PostgreSQL 16 with pgvector | pg16 |
-| AI | Gemini 2.5 Pro via Vertex AI (europe-west2) | — |
-| AI fallback | Gemini 2.0 Flash, then local template provider | — |
-| Containerisation | Docker / Docker Compose | — |
-| CI/CD | GitHub Actions | — |
-| Deployment | Google Cloud Run (europe-west2) | — |
-| Hosting | Firebase Hosting → Cloud Run rewrites | — |
-| Payments | Stripe | ≥10.0 |
-| GCP Project | `tood-os` | — |
-
-All AI calls are routed exclusively through `app/ai_gateway`. Business code never imports a vendor AI SDK directly. A residency guard (`app/ai_gateway/residency.py`) enforces that AI calls are only made to approved European regions.
-
----
-
-## API
-
-Base URL: `https://tood-os-api-844874461521.europe-west2.run.app`
-
-Interactive docs: `/docs`
-
-All endpoints except `/v1/signup`, `/healthz`, `/readyz`, and `/v1/billing/webhook` require a `Bearer <token>` header or `X-Session-Token` header.
-
-### Accounts
-
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/v1/signup` | Create organisation and first user; returns API token |
-| `GET` | `/v1/me` | Current user, org, role, and active AI provider |
-
-### Tenders
-
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/v1/tenders` | Create a tender (bid_manager+) |
-| `GET` | `/v1/tenders` | List tenders with requirement and question counts |
-| `POST` | `/v1/tenders/{id}/documents` | Upload and parse a tender document |
-| `GET` | `/v1/tenders/{id}/requirements` | List verbatim extracted requirements |
-| `GET` | `/v1/tenders/{id}/questions` | List questions derived from requirements |
-| `GET` | `/v1/tenders/{id}/readiness` | Export readiness check — lists all blocking problems |
-| `GET` | `/v1/tenders/{id}/export` | Export approved answers as a Word .docx (bid_manager+) |
-
-### Evidence
-
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/v1/evidence` | Add an evidence item (contributor+) |
-| `GET` | `/v1/evidence` | List evidence items |
-
-### Drafts
-
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/v1/questions/{id}/drafts` | Generate an AI draft for a question (contributor+) |
-| `GET` | `/v1/drafts/{id}` | Get a draft with claims, word count, approval status |
-| `PATCH` | `/v1/drafts/{id}` | Edit a draft (creates a new version) |
-| `POST` | `/v1/drafts/{id}/approve` | Approve a draft (bid_manager+; named person only) |
-| `GET` | `/v1/drafts/{id}/provenance` | Hash chain, revision list, AI-retained ratio |
-
-### Audit
-
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/v1/audit` | Audit log with hash chain verification (admin+) |
-
-### Billing
-
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/v1/billing/checkout` | Create a Stripe Checkout session |
-| `GET` | `/v1/billing/status` | Current plan, subscription status, usage vs limits |
-
-### Authentication
-
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/auth/google/login` | Initiate Google OAuth — returns redirect URL |
-| `GET` | `/v1/auth/google/callback` | Google OAuth callback; creates session token |
-| `GET` | `/v1/auth/session` | Validate a session token |
-| `POST` | `/v1/auth/logout` | Invalidate a session token |
-
-### Health
-
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/healthz` | Liveness check |
-| `GET` | `/readyz` | Readiness check (database ping) |
-
----
-
-## Pricing
-
-| Plan | Price | Tenders | Users | AI provider |
-|---|---|---|---|---|
-| Starter | £99/mo | 3 | 2 | Template (local, no external AI) |
-| Professional | £299/mo | 20 | 10 | Gemini 2.5 Pro |
-| Enterprise | £799/mo | Unlimited | Unlimited | Gemini 2.5 Pro |
-
-Subscription billing is managed via Stripe Checkout. Plan limits are enforced in `app/services/billing.py`.
-
----
-
-## Compliance
-
-### Procurement Act 2023
-The Procurement Act 2023 replaces the Public Contracts Regulations 2015 as the primary framework for UK public procurement. TOOD helps suppliers structure responses that meet the updated evaluation criteria and transparency obligations. Requirement extraction ensures that tender questions are addressed verbatim, and the gated export ensures that every submitted answer has been explicitly reviewed and approved.
-
-### PPN 017 — Improving Transparency of AI Use in Procurement
-Policy Procurement Note 017 (PPN 017), published by the Cabinet Office, sets out how contracting authorities and suppliers should approach AI use in public procurement. It does not prohibit AI-assisted bid writing, but requires suppliers to be able to disclose where AI was used and to confirm that outputs were checked and verified for accuracy. TOOD addresses this directly: every sentence in a draft records whether it originated from a person, an AI model, the tender document, or the evidence library. The AI use and verification record is generated automatically from the revision ledger — not written by a model — and can be provided to a contracting authority on request.
-
-### PPN 02/24 — Use of Artificial Intelligence in Public Procurement
-PPN 02/24 provides guidance to contracting authorities on how to manage and evaluate AI use by suppliers in the procurement process. It requires that AI use is transparent, that outputs are human-supervised, and that a clear audit trail exists. TOOD addresses this through three mechanisms: (1) named approval — a human with bid_manager role must explicitly approve every draft before export; (2) a hash-chained audit log recording every action, every draft revision, and every model call; and (3) a hard architectural rule that no bid is ever submitted automatically under any circumstances.
-
----
-
-## Development
-
-### Prerequisites
-
-- Python 3.12+
-- Node 20+
-- Docker Desktop
-
-### Run tests
-
-```bash
-cd apps/api && pytest -q
-# Expected: 51 passed, 0 failed, 0 skipped
-```
-
-### Lint
-
-```bash
-cd apps/api && ruff check .
-# Expected: All checks passed! (0 violations)
-```
-
-### Apply migrations
-
-```bash
-python scripts/migrate.py
-```
-
-### Run API locally
-
-```bash
-cd apps/api && uvicorn app.main:app --reload --port 8000
-```
-
-### Run frontend locally
-
-```bash
-cd apps/web && npm run dev
-```
-
----
-
-## Deployment
+The following is a transcription of the owner-supplied Cloud Shell output for project `tood-os` on
+31 October 2026. It is an inventory snapshot, not a fresh live query performed by this README update.
 
 ### Cloud Run
 
-Both the API and the web app are deployed to Google Cloud Run in `europe-west2`. The deploy script handles building and pushing container images via Artifact Registry and deploying the Cloud Run services.
+All three listed services were in `europe-west2`:
 
-```bash
-bash scripts/deploy.sh
-```
+| Service | Latest ready revision in supplied output | Service URL |
+|---|---|---|
+| `tood-os-api` | `tood-os-api-00036-gcq` | [API](https://tood-os-api-iiwda4phia-nw.a.run.app) |
+| `tood-os-web` | `tood-os-web-00046-hp2` | [Web](https://tood-os-web-iiwda4phia-nw.a.run.app) |
+| `genai-app-agentdocumentukpublicproc-1-17926831704` | `genai-app-agentdocumentukpublicproc-1-17926831704-00002-cw5` | [Agent service](https://genai-app-agentdocumentukpublicproc-1-17926831704-iiwda4phia-nw.a.run.app) |
 
-Service definitions are in `infra/cloudrun/api.yaml` and `infra/cloudrun/web.yaml`.
+The third service was present in the project inventory; its ownership and integration with the TOOD application
+were not established by the inspected repository.
 
-The CI/CD `deploy` job in `.github/workflows/ci.yml` runs automatically on merge to `main`, using GCP Workload Identity Federation.
+### Cloud SQL
+
+The supplied inventory showed two RUNNABLE instances in `europe-west2`:
+
+| Instance | Engine | State |
+|---|---|---|
+| `tood-os-db-london` | PostgreSQL 18 | RUNNABLE |
+| `tood-os-db-pg16-london` | PostgreSQL 16 | RUNNABLE |
+
+The supplied Cloud Run description showed the API service attached to the Cloud SQL connection
+`tood-os:europe-west2:tood-os-db-london` (PostgreSQL 18 instance).
+
+This attachment annotation does **not**, by itself, prove which database host the secret-backed
+`DATABASE_URL` and `AUTH_DATABASE_URL` actually select. Their secret values were not exposed and must
+not be printed. Confirm the target database using a safe, read-only runtime check before describing the
+live database as PostgreSQL 18 or PostgreSQL 16.
+
+The same supplied inventory reported no running Compute Engine VMs and no active GKE clusters.
+
+**Database platform note:** the inspected delivery-branch application uses Psycopg/PostgreSQL and the
+supplied Cloud Run inventory shows Cloud SQL. No Supabase client or Supabase configuration was identified
+in the reviewed project files. This repository snapshot therefore does not evidence Supabase as the active
+database platform.
+
+**Signup configuration warning:** the supplied Cloud Run environment-variable-name listing did not include
+`ALLOW_SIGNUP`, while the application setting defaults to `true` and the checked-in API manifest sets it
+to `false`. Confirm the effective live value before exposing public signup; the manifest alone does not
+prove the running service has that setting.
 
 ### Firebase Hosting
 
-The `tood.uk` domain is served via Firebase Hosting, which rewrites `/v1/**` and `/healthz` to the API Cloud Run service and all other traffic to the web Cloud Run service.
+The checked-in `firebase.json` declares a Hosting site named `tood-os` with these intended rewrites:
 
-```bash
-firebase deploy --only hosting
+- `/v1/**`, `/healthz`, `/health`, `/readyz`, and `/docs` to Cloud Run service `tood-os-api`.
+- All remaining paths to Cloud Run service `tood-os-web`.
+
+This describes the repository configuration. The deployed Firebase Hosting configuration and current
+custom-domain reachability were not independently verified during this review.
+
+## Build and deployment paths
+
+### Cloud Build — configured production trigger
+
+The owner-supplied Cloud Shell output showed a Cloud Build trigger:
+
+- Name: `deploy-main`
+- Region: `europe-west2`
+- Connected repository: `honeybpay-design/TOOD-OS`
+- Event: push to branch matching `^main$`
+- Build configuration: `cloudbuild.yaml`
+
+The checked-in `cloudbuild.yaml` builds and pushes API and Web images to Artifact Registry in
+`europe-west2`, then deploys `tood-os-api` and `tood-os-web` to Cloud Run. Therefore, a push to
+`delivery-2026-10-31` does not match this trigger. A merge/push to `main` can initiate deployment.
+
+The Cloud Shell build listing supplied for this review showed successful builds through 23 October 2026;
+it did not establish a successful build for the 31 October delivery commit.
+
+### GitHub Actions — quality workflow, not deployment
+
+`.github/workflows/ci.yml` defines secret-scan, API, Web, and quality-gate jobs. Its final quality job
+explicitly says that the workflow performs no deployment.
+
+**Current repository blocker:** the delivery commit's Git tree does not contain the paths invoked by this
+workflow:
+
+- `scripts/test_suites/scan_secrets.py`
+- `scripts/test_suites/ci_api.py`
+- `scripts/test_suites/test_runner_identity.py`
+- `scripts/test_suites/test_ci_policy.py`
+- `security-tests/test_secret_provisioning.py`
+
+The workflow references these paths, so the current checked-in CI definition is incomplete and cannot be
+reported as passing. The delivery commit also had no GitHub Actions run or check-run result when inspected.
+Do not publish a current test-pass badge or a numeric passing-test count until CI has been repaired and run.
+
+### Deployment configuration drift — review before using legacy scripts
+
+The checked-in `cloudbuild.yaml` deploys images using `gcloud run deploy`. The separate
+`scripts/deploy.sh` uses `gcloud run services replace` with the manifests under `infra/cloudrun/`.
+
+Those manifests do not match the supplied Cloud Run inventory:
+
+- `infra/cloudrun/api.yaml` references Cloud SQL connection `tood-os:europe-west2:tood-db`,
+  while the supplied live API annotation names `tood-os-db-london`.
+- `infra/cloudrun/web.yaml` sets `API_URL=https://api.tood.uk`, while the supplied
+  `cloudbuild.yaml` sets the Web service's API URL to the API's `run.app` URL.
+
+Do not use `scripts/deploy.sh` or replace the live Cloud Run services from these manifests until the
+configuration drift has been reconciled and reviewed. A service replacement can change live settings.
+
+## Verification status and release gates
+
+### What is evidenced
+
+- Source files for API, Web, AI gateway, GCS storage, audit controls, and SQL migrations are present.
+- API test files are present, including tests for tenant isolation, append-only behaviour, audit V2,
+  provider failure, GCS storage, and Cloud Run configuration.
+- A historical install report records 44 API tests passed on 13 October 2026. Other historical documents
+  mention different counts. These are not current results for this delivery commit.
+- The supplied Cloud Run inventory identifies ready revisions and RUNNABLE Cloud SQL instances, but does
+  not prove successful user journeys or database correctness.
+
+### Not verified for this delivery commit
+
+- A clean installation and current complete API test run.
+- GitHub Actions CI success (the referenced harness files are missing).
+- Current Web lint, type-check, dependency audit, and production build results.
+- Live OAuth sign-in and session lifecycle.
+- Live database target, migration level, RLS policies/grants, and append-only triggers.
+- Live Gemini model selection, signed admission receipt, and generation behaviour.
+- GCS bucket configuration and document upload/download in the live environment.
+- Billing checkout and webhook lifecycle.
+- Full user journey from tender upload through extraction, evidence, drafting, approval, readiness, and export.
+- Production deployment of the delivery commit.
+
+**Release rule:** do not describe TOOD as production-ready until the missing CI harness is restored, all
+required gates pass, live configuration drift is resolved, migrations are reviewed and applied through an
+approved procedure, and the core user journeys pass end-to-end in a controlled staging environment.
+
+## Developer checks
+
+The repository contains these application-level checks; run them in a disposable local environment and
+record the actual output. No result is implied by listing a command.
+
+```powershell
+# Web checks
+Set-Location apps/web
+npm ci
+npm run lint
+npx tsc --noEmit --incremental false
+npm audit --audit-level=high
+npm run build
+
+# API tests (from repository root)
+Set-Location ../..
+Set-Location apps/api
+python -m pytest -q
 ```
 
----
+Do not point local verification or migration commands at production credentials or production data.
+The current CI workflow must be repaired before these checks can be treated as the repository's release gate.
 
 ## Documentation
 
-- [System Overview](docs/SYSTEM_OVERVIEW.md)
-- [User Guide](docs/USER_GUIDE.md)
-- [Technical Handover](docs/TECHNICAL_HANDOVER.md)
+- [System overview](docs/SYSTEM_OVERVIEW.md)
+- [Technical handover](docs/TECHNICAL_HANDOVER.md) — historical handover; check its date and branch assumptions.
+- [User guide](docs/USER_GUIDE.md) — contains explicitly unverified production steps; do not treat it as proof of live behaviour.
+- [Installation report](docs/install-report.md) — historical results, not a current delivery-commit test report.
+- [Production readiness reports](docs/production-readiness.md) and [round 2](docs/production-readiness-2.md) — dated historical audits; their findings may be superseded.
+
+## Accuracy and maintenance policy
+
+1. Record the commit SHA and review date whenever this README is reconciled.
+2. Separate **source present**, **configured in cloud**, **deployed**, and **verified by test**. They are different states.
+3. Never infer secret values, active model IDs, database targets, successful migrations, or passing tests from variable names or configuration files alone.
+4. Update the Cloud inventory only from a dated, redacted Cloud Shell export. Never include secret values, passwords, tokens, private keys, or customer data.
+5. Remove obsolete claims, pricing, badges, and launch dates rather than carrying them forward without evidence.
+6. Keep production changes behind a reviewed pull request and explicit human approval.
 
 ---
 
-## Known limitations
-
-- **Cloud SQL instance in `us-east4`, not `europe-west2`** — the Vertex AI region is correctly set to `europe-west2` for UK data residency, but the Cloud SQL instance (`tood-os-instance`) is provisioned in `us-east4`. This is a data residency gap that should be reviewed and resolved post-launch.
-- **No malware scanner on file uploads** — uploaded documents are parsed and stored but no malware scanning step runs. A scanner should be configured before handling sensitive documents at scale.
-- **CI deploy job runs only on merge to `main`; PRs do not auto-deploy** — the `deploy` job in `ci.yml` is gated on `github.ref == 'refs/heads/main'` and `github.event_name == 'push'`.
-
----
-
-## Version
-
-v1.0.0 — 2026-10-15 — Production launch
-
----
-
-© 2026 Honey B2024 Ltd — Registered in England
+© 2026 Honey-B2024 Ltd

@@ -7,7 +7,7 @@ import json
 
 import docx
 import pytest
-from conftest import ADMIN_URL, SAMPLES
+from conftest import SAMPLES
 
 TENDER = (SAMPLES / "sample_tender.txt").read_bytes()
 EVIDENCE = json.loads((SAMPLES / "sample_evidence.json").read_text())
@@ -132,19 +132,35 @@ def test_provenance_tracks_origin_and_the_chain_detects_tampering(client, accoun
     assert {"ai", "evidence", "human"} <= origins
     assert 0 < prov["ai_retained_ratio"] < 1
     assert prov["chain"] == {"ok": True, "first_bad_revision": None, "revisions": 2}
-    # tamper with history as the most privileged role: the chain must expose it
-    import psycopg
+    # Prove privileged mutation is blocked with the actual append-only trigger enabled.
+    import copy
+    import uuid
 
-    with psycopg.connect(ADMIN_URL, autocommit=True) as conn:
-        conn.execute("ALTER TABLE revisions DISABLE TRIGGER revisions_append_only")
-        conn.execute(
-            "UPDATE revisions SET content_snapshot = jsonb_set(content_snapshot, '{text}', '\"rewritten\"') "
-            "WHERE org_id = %s AND seq = 1",
+    import psycopg
+    from app.provenance.hashchain import Revision, verify_chain
+
+    thread = uuid.UUID(d2["content"]["thread_id"]) if "content" in d2 else None
+    if thread is None:
+        content = admin.execute("SELECT content FROM drafts WHERE id=%s", (uuid.UUID(d2["id"]),)).fetchone()[0]
+        thread = uuid.UUID(content["thread_id"])
+    rows = admin.execute(
+        "SELECT seq,prev_hash,hash,content_snapshot,actor_id FROM revisions WHERE draft_id=%s ORDER BY seq",
+        (thread,),
+    ).fetchall()
+    captured = [Revision(copy.deepcopy(r[3]), {"actor": str(r[4]), "seq": r[0]}, r[1], r[2]) for r in rows]
+    assert verify_chain(captured) == (True, None)
+    with pytest.raises(psycopg.errors.RaiseException):
+        admin.execute(
+            "UPDATE revisions SET content_snapshot=jsonb_set(content_snapshot,'{text}','\"rewritten\"') "
+            "WHERE org_id=%s AND seq=1",
             (acct["org_id"],),
         )
-        conn.execute("ALTER TABLE revisions ENABLE TRIGGER revisions_append_only")
-    bad = client.get(f"/v1/drafts/{d2['id']}/provenance", headers=h).json()["chain"]
-    assert bad["ok"] is False and bad["first_bad_revision"] == 0
+    # Verify a tampered immutable copy with the real verifier; never rewrite database evidence.
+    changed = copy.deepcopy(captured)
+    changed[0].content["text"] = "rewritten"
+    assert verify_chain(changed) == (False, 0)
+    intact = client.get(f"/v1/drafts/{d2['id']}/provenance", headers=h).json()["chain"]
+    assert intact == {"ok": True, "first_bad_revision": None, "revisions": 2}
 
 
 def test_stale_version_cannot_be_edited_or_approved(client, accounts):

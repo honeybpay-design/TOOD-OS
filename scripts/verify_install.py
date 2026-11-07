@@ -63,29 +63,39 @@ def check(name: str, ok: bool, detail: str = "") -> None:
     results.append((name, ok, detail))
 
 
-def load_env() -> None:
-    env = ROOT / ".env"
-    if env.exists():
-        for line in env.read_text().splitlines():
-            line = line.strip()
-            if line and not line.startswith("#") and "=" in line:
-                k, v = line.split("=", 1)
-                os.environ.setdefault(k.strip(), v.strip())
+def guarded_admin():
+    """Never inspect a real project environment or choose a default database."""
+    if ROOT != pathlib.Path("/tmp/install") or not pathlib.Path("/.dockerenv").is_file():
+        raise RuntimeError("Use the owned disposable install-verification driver")
+    from fixture_guard import guard_environment, verify_database
+
+    nonce = guard_environment(os.environ)
+    conn = psycopg.connect(
+        os.environ["DATABASE_ADMIN_URL"],
+        autocommit=True,
+        connect_timeout=3,
+        options="-c default_transaction_read_only=on",
+    )
+    try:
+        verify_database(conn, nonce)
+        conn.execute("SET default_transaction_read_only = off")
+        return conn
+    except Exception:
+        conn.close()
+        raise
 
 
 def main() -> int:
-    load_env()
+    try:
+        admin = guarded_admin()
+    except Exception as exc:
+        print("FAIL isolated synthetic database guard: " + type(exc).__name__)
+        return 2
     check("Python >= 3.12", sys.version_info >= (3, 12), sys.version.split()[0])
     check(".env present", (ROOT / ".env").exists(), "copy .env.example to .env")
 
-    admin_url = os.environ.get("DATABASE_ADMIN_URL", "")
     app_url = os.environ.get("DATABASE_URL", "")
-    try:
-        admin = psycopg.connect(admin_url, autocommit=True, connect_timeout=3)
-        check("Database reachable (admin)", True)
-    except Exception as exc:  # noqa: BLE001
-        check("Database reachable (admin)", False, str(exc).splitlines()[0])
-        return report()
+    check("Database reachable (admin)", True)
 
     exts = {r[0] for r in admin.execute("SELECT extname FROM pg_extension")}
     for ext in ("vector", "pg_trgm", "pgcrypto"):
@@ -110,9 +120,9 @@ def main() -> int:
         row = admin.execute("SELECT rolsuper, rolbypassrls FROM pg_roles WHERE rolname=%s", (role,)).fetchone()
         check(f"Role {role} is unprivileged", row == (False, False), str(row))
 
-    trig = {r[0] for r in admin.execute("SELECT tgname FROM pg_trigger WHERE NOT tgisinternal")}
+    trig = dict(admin.execute("SELECT tgname,tgenabled FROM pg_trigger WHERE NOT tgisinternal").fetchall())
     for t in ("revisions_append_only", "audit_append_only", "anchors_append_only"):
-        check(f"Trigger {t}", t in trig)
+        check(f"Trigger {t}", trig.get(t) == "O")
 
     try:
         with psycopg.connect(app_url, connect_timeout=3) as conn:
@@ -125,9 +135,10 @@ def main() -> int:
         from fastapi.testclient import TestClient
 
         app = importlib.import_module("app.main").app
-        check("API /healthz", TestClient(app).get("/healthz").status_code == 200)
-        check("API /readyz (database)", TestClient(app).get("/readyz").status_code == 200)
-        workflow(admin, TestClient(app))
+        with TestClient(app) as client:
+            check("API /healthz", client.get("/healthz").status_code == 200)
+            check("API /readyz (database)", client.get("/readyz").status_code == 200)
+            workflow(admin, client)
     except Exception as exc:  # noqa: BLE001
         check("API importable", False, str(exc).splitlines()[0])
 
@@ -135,7 +146,7 @@ def main() -> int:
 
 
 def workflow(admin, client) -> None:
-    """Sign up, upload the sample tender, add evidence, draft, approve and export, then remove the test data."""
+    """Sign up, upload the sample tender, add evidence, draft, approve and export, retain its history until owned database disposal."""
     import io
     import json
     import uuid
@@ -174,33 +185,14 @@ def workflow(admin, client) -> None:
     except Exception as exc:  # noqa: BLE001
         check("Workflow: upload, extract, draft, approve, gated export", False, str(exc)[:120])
     finally:
-        if org_id:
-            users = [r[0] for r in admin.execute("SELECT user_id FROM memberships WHERE org_id = %s", (org_id,))]
-            for tbl, trg in (("revisions", "revisions_append_only"), ("audit_events", "audit_append_only")):
-                admin.execute(f"ALTER TABLE {tbl} DISABLE TRIGGER {trg}")
-            for tbl in (
-                "approvals",
-                "draft_claims",
-                "revisions",
-                "drafts",
-                "questions",
-                "requirements",
-                "doc_blocks",
-                "documents",
-                "evidence_chunks",
-                "evidence_items",
-                "export_manifests",
-                "audit_events",
-                "api_tokens",
-                "memberships",
-                "tenders",
-            ):
-                admin.execute(f"DELETE FROM {tbl} WHERE org_id = %s", (org_id,))
-            for tbl, trg in (("revisions", "revisions_append_only"), ("audit_events", "audit_append_only")):
-                admin.execute(f"ALTER TABLE {tbl} ENABLE TRIGGER {trg}")
-            for u in users:
-                admin.execute("DELETE FROM users WHERE id = %s", (u,))
-            admin.execute("DELETE FROM organisations WHERE id = %s", (org_id,))
+        # Keep the complete synthetic tenant/history until the labelled tmpfs database is removed.
+        from fixture_guard import assert_controls
+
+        assert_controls(admin)
+        if org_id and not admin.execute(
+            "SELECT EXISTS(SELECT 1 FROM organisations WHERE id=%s)", (org_id,)
+        ).fetchone()[0]:
+            raise RuntimeError("Synthetic installation history must be retained")
 
 
 def report() -> int:

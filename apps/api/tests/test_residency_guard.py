@@ -1,5 +1,4 @@
 import pytest
-
 from app.ai_gateway.residency import ResidencyError, check_endpoint
 
 

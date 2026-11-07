@@ -2,9 +2,10 @@ import uuid
 
 import psycopg
 import pytest
-from conftest import APP_URL
-
 from app.core.tenant import tenant_connection
+from app.provenance.hashchain import compute_hash
+from conftest import APP_URL
+from psycopg.types.json import Jsonb
 
 
 def _make_revision(admin, org):
@@ -18,10 +19,13 @@ def _make_revision(admin, org):
     admin.execute(
         "INSERT INTO drafts (id, org_id, question_id, version, content) VALUES (%s, %s, %s, 1, '{}')", (did, org, qid)
     )
+    # Retained fixtures must not reuse a globally unique hash from a prior test.
+    content = {"text": f"append-only fixture {did}"}
+    digest = compute_hash(content, {"actor": "None", "seq": 1}, None)
     admin.execute(
         "INSERT INTO revisions (org_id, draft_id, seq, hash, content_snapshot, origin_spans) "
-        "VALUES (%s, %s, 1, %s, '{}', '[]')",
-        (org, did, "a" * 64),
+        "VALUES (%s, %s, 1, %s, %s, '[]')",
+        (org, did, digest, Jsonb(content)),
     )
     return did
 

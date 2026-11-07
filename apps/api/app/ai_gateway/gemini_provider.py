@@ -1,42 +1,145 @@
-"""Gemini provider via Vertex AI. Passes data only within europe-west2 (residency guard enforces this)."""
+"""Google Cloud Gen AI adapter; admission before SDK access, no implicit fallback."""
 
 from __future__ import annotations
 
-import logging
+import os
 import re
 import time
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    pass
+from app.ai_gateway.admission import ModelNotAdmitted, require_admission
+from app.ai_gateway.errors import AIProviderUnavailable
+from app.ai_gateway.provider import GenerationResult, Segment
+from app.core.config import settings
 
-from app.ai_gateway.provider import Segment
 
-logger = logging.getLogger(__name__)
+def _create_client(project, region):
+    # Explicit Cloud route: never inherit Developer API/global/proxy defaults.
+    if any(key in os.environ for key in ("GOOGLE_API_KEY", "GEMINI_API_KEY")):
+        raise AIProviderUnavailable("AI generation is unavailable")
+    from google import genai
+    from google.genai import types
 
-EV_TAG = re.compile(r"\[EV:([0-9a-fA-F-]{36})\]")
+    return genai.Client(
+        enterprise=True,
+        project=project,
+        location=region,
+        http_options=types.HttpOptions(
+            api_version="v1",
+            base_url="https://europe-west2-aiplatform.googleapis.com",
+            timeout=30000,
+            retry_options=types.HttpRetryOptions(attempts=1),
+            client_args={"trust_env": False},
+        ),
+    )
+
+
+def _record_failure(model_id):
+    try:
+        from app.core.monitoring import get_monitor
+
+        get_monitor().record_ai_call(model_id, 0.0, 0, False)
+    except Exception:
+        pass
 
 
 class GeminiProvider:
-    model_id = "gemini-2.5-pro"
+    model_id = ""  # selected explicitly only after signed admission; no retired default
     prompt_version = "gemini-draft-1"
     region = "europe-west2"
     is_local = False
 
     def __init__(self):
-        # Lazy import so tests (which mock/skip the provider) can import this module
+        self._config = settings
+        self.model_id = settings.ai_model_id
+        self.project = settings.gcp_project
+        self.region = settings.gcp_region
+        self._validate()
         try:
-            import vertexai
-            from vertexai.generative_models import GenerationConfig, GenerativeModel
+            from google.genai import Client, types
 
-            from app.core.config import settings as _settings
-
-            vertexai.init(project=_settings.gcp_project, location=self.region)
-            self._GenerativeModel = GenerativeModel
-            self._GenerationConfig = GenerationConfig
-            self._available = True
+            self._available = callable(Client) and hasattr(types, "GenerateContentConfig")
         except ImportError:
             self._available = False
+
+    def _validate(self):
+        receipt = require_admission(self._config, self.prompt_version)
+        if (receipt.model_id, receipt.project, receipt.region) != (self.model_id, self.project, self.region):
+            raise ModelNotAdmitted("AI model is not admitted")
+        return receipt
+
+    def validate_result(self, result: GenerationResult) -> None:
+        receipt = self._validate()
+        if (
+            result.admission_digest != receipt.digest
+            or result.requested_model_id != self.model_id
+            or result.model_id not in receipt.model_versions
+            or result.prompt_version != self.prompt_version
+        ):
+            raise ModelNotAdmitted("AI model is not admitted")
+
+    def draft(self, prompt: str, evidence: list[dict], word_limit: int | None) -> list[Segment]:
+        return list(self.generate(prompt, evidence, word_limit).segments)
+
+    def generate(self, prompt: str, evidence: list[dict], word_limit: int | None) -> GenerationResult:
+        receipt = self._validate()
+        if not self._available:
+            raise AIProviderUnavailable("AI generation is unavailable")
+        client = None
+        try:
+            from google.genai import types
+
+            client = _create_client(self.project, self.region)
+            response = client.models.generate_content(
+                model=self.model_id,
+                contents=self._build_prompt(prompt, evidence, word_limit),
+                config=types.GenerateContentConfig(
+                    max_output_tokens=2048,
+                    response_mime_type="text/plain",
+                    automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+                ),
+            )
+            candidates = response.candidates
+            if not candidates or len(candidates) != 1:
+                raise AIProviderUnavailable("AI generation is unavailable")
+            candidate = candidates[0]
+            finish = getattr(candidate.finish_reason, "value", candidate.finish_reason)
+            if finish != "STOP" or any(
+                getattr(rating, "blocked", False) for rating in (candidate.safety_ratings or [])
+            ):
+                raise AIProviderUnavailable("AI generation is unavailable")
+            parts = candidate.content.parts if candidate.content else None
+            if not parts or any(
+                getattr(part, name, None) is not None
+                for part in parts
+                for name in ("function_call", "executable_code", "code_execution_result", "inline_data", "file_data")
+            ):
+                raise AIProviderUnavailable("AI generation is unavailable")
+            raw_text = response.text
+            if not isinstance(raw_text, str) or not raw_text.strip() or len(raw_text) > 80000:
+                raise AIProviderUnavailable("AI generation is unavailable")
+            version = response.model_version
+            fresh = self._validate()
+            if fresh.digest != receipt.digest or not isinstance(version, str) or version not in fresh.model_versions:
+                raise ModelNotAdmitted("AI model is not admitted")
+            result = GenerationResult(
+                tuple(self._parse_response(raw_text)), self.model_id, version, self.prompt_version, fresh.digest
+            )
+            self.validate_result(result)
+            return result
+        except ModelNotAdmitted:
+            raise
+        except AIProviderUnavailable:
+            _record_failure(self.model_id)
+            raise
+        except Exception:
+            _record_failure(self.model_id)
+            raise AIProviderUnavailable("AI generation is unavailable") from None
+        finally:
+            if client is not None:
+                try:
+                    client.close()
+                except Exception:
+                    pass
 
     def _build_prompt(self, prompt: str, evidence: list[dict], word_limit: int | None) -> str:
         limit_instruction = f"Your response MUST be within {word_limit} words." if word_limit else ""
@@ -53,57 +156,6 @@ class GeminiProvider:
             f"{limit_instruction}\n"
             f"Return only the response text with inline citations."
         )
-
-    def draft(self, prompt: str, evidence: list[dict], word_limit: int | None) -> list[Segment]:
-        if not self._available:
-            from app.ai_gateway.provider import TemplateProvider
-
-            return TemplateProvider().draft(prompt, evidence, word_limit)
-
-        full_prompt = self._build_prompt(prompt, evidence, word_limit)
-        try:
-            model = self._GenerativeModel(
-                self.model_id,
-                generation_config=self._GenerationConfig(temperature=0.2, max_output_tokens=2048),
-            )
-            response = model.generate_content(full_prompt)
-            raw_text = response.text
-        except Exception as primary_exc:
-            logger.warning(
-                "GeminiProvider primary model %s failed, retrying with gemini-2.0-flash: %s",
-                self.model_id,
-                primary_exc,
-            )
-            try:
-                from app.core.monitoring import get_monitor
-
-                get_monitor().record_ai_call(self.model_id, 0.0, 0, False)
-            except Exception:
-                pass
-            # Fallback to gemini-2.0-flash
-            try:
-                model = self._GenerativeModel(
-                    "gemini-2.0-flash",
-                    generation_config=self._GenerationConfig(temperature=0.2, max_output_tokens=2048),
-                )
-                response = model.generate_content(full_prompt)
-                raw_text = response.text
-            except Exception as flash_exc:
-                logger.warning(
-                    "GeminiProvider fallback model gemini-2.0-flash also failed, using TemplateProvider: %s",
-                    flash_exc,
-                )
-                try:
-                    from app.core.monitoring import get_monitor
-
-                    get_monitor().record_ai_call("gemini-2.0-flash", 0.0, 0, False)
-                except Exception:
-                    pass
-                from app.ai_gateway.provider import TemplateProvider
-
-                return TemplateProvider().draft(prompt, evidence, word_limit)
-
-        return self._parse_response(raw_text)
 
     def _parse_response(self, text: str) -> list[Segment]:
         """Split model output into Segment list, classifying evidence-cited sentences.
@@ -134,18 +186,17 @@ class GeminiProvider:
 
     def health_check(self) -> dict:
         if not self._available:
-            return {"status": "unavailable", "reason": "vertexai SDK not installed", "region": self.region}
+            return {"status": "unavailable", "reason": "Google Gen AI SDK unavailable", "region": self.region}
         start = time.monotonic()
         try:
-            model = self._GenerativeModel("gemini-2.0-flash")
-            model.generate_content("ping")
-            latency_ms = round((time.monotonic() - start) * 1000)
+            result = self.generate("ping", [], 10)
             return {
                 "status": "ok",
-                "model_id": self.model_id,
+                "model_id": result.model_id,
+                "requested_model_id": self.model_id,
                 "region": self.region,
-                "latency_ms": latency_ms,
+                "latency_ms": round((time.monotonic() - start) * 1000),
                 "region_compliant": True,
             }
-        except Exception as e:
-            return {"status": "error", "reason": str(e), "region": self.region, "region_compliant": True}
+        except AIProviderUnavailable:
+            return {"status": "error", "reason": "AI provider health request failed", "region": self.region}

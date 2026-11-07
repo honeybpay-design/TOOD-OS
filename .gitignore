@@ -15,3 +15,28 @@ evals/results/*.json
 *.log
 .DS_Store
 data/
+
+# Private synthetic document suites and reusable evaluation oracles
+/test-suites/
+
+# Private remediation packs contain synthetic evaluation documents and oracles
+/audit/evidence/2026-10-25/backend-remediation-16/*.zip
+
+/audit/implementations/2026-10-26/F29-safe-pytest-17/pytest-support/
+/audit/implementations/2026-10-26/F29-safe-pytest-17/image-context/
+/audit/implementations/2026-10-26/F29-safe-pytest-17/whitelist/
+
+/audit/implementations/2026-10-26/F29-safe-pytest-17/*.zip
+/audit/implementations/2026-10-26/F29-safe-pytest-17/attempt-*/
+/audit/implementations/2026-10-26/F29-safe-pytest-17/*cache/
+
+# Private CI rehearsal fixtures and reports
+/audit/implementations/ci/
+
+# Private review evidence bundle
+/audit/implementations/2026-10-27/ci-readiness-22/*.zip
+
+# Owned F31-A image build staging copy
+/audit/implementations/2026-10-27/F31-A-local-26/image-context/
+
+/audit/implementations/2026-10-27/F31-A-local-26/*.zip

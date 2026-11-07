@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 
 function LoginContent() {
   const router = useRouter();
@@ -35,7 +36,7 @@ function LoginContent() {
     setLoading(true);
     setError(null);
     try {
-      const url = plan ? `/v1/auth/google?plan=${encodeURIComponent(plan)}` : '/v1/auth/google';
+      const url = '/api/auth/google/start';
       const res = await fetch(url);
       if (!res.ok) throw new Error(`${res.status}`);
       const data = (await res.json()) as { auth_url: string };
@@ -135,7 +136,7 @@ function LoginContent() {
                   fontSize: 'var(--text-sm)',
                   fontWeight: 600
                 }}>
-                  You're starting the <span style={{ fontWeight: 800 }}>{planDisplayName}</span> plan â€” 14 days free
+                  You&apos;re starting the <span style={{ fontWeight: 800 }}>{planDisplayName}</span> plan â€” 14 days free
                 </div>
               )}
             </div>
@@ -216,7 +217,7 @@ function LoginContent() {
             </div>
 
             {/* Back link */}
-            <a
+            <Link
               href="/"
               style={{
                 color: 'var(--color-text-muted)',
@@ -232,7 +233,7 @@ function LoginContent() {
                 <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               Back to homepage
-            </a>
+            </Link>
           </div>
         </div>
 
@@ -277,7 +278,7 @@ function LoginContent() {
                 letterSpacing: '-.03em',
                 color: 'var(--ink-text)'
               }}>
-                What you'll get with your trial
+                What you&apos;ll get with your trial
               </h2>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 interface Metrics {
   mrr_gbp: number;
@@ -50,7 +51,7 @@ export default function AdminPage() {
     <div className="min-h-screen bg-slate-100">
       <nav className="bg-[#0F172A] px-6 py-4 flex items-center justify-between">
         <span className="text-white font-bold text-lg">TOOD Admin</span>
-        <a href="/" className="text-slate-400 hover:text-white text-sm transition-colors">← Back to site</a>
+        <Link href="/" className="text-slate-400 hover:text-white text-sm transition-colors">← Back to site</Link>
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 py-8">

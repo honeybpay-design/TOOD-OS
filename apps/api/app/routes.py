@@ -4,27 +4,46 @@ import hashlib
 import json
 import re
 import uuid
+from contextlib import contextmanager
+from dataclasses import dataclass
 
-from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
+import psycopg
+from fastapi import APIRouter, Depends, File, Header, HTTPException, Response, UploadFile
 from pydantic import BaseModel, Field
+from starlette.concurrency import run_in_threadpool
 
 from app.ai_gateway.provider import get_provider
-from app.core import audit
+from app.core.audit_export import (
+    EXPORT_SCHEMA,
+    AuditExportBlocked,
+    artifact_snapshot,
+    assurance_headers,
+    ensure_export_allowed,
+)
+from app.core.audit_models import AuditLogResponse
+from app.core.audit_reader import read_audit_snapshot
+from app.core.audit_v2 import GenerationAudit
 from app.core.auth import Ctx, authenticate, create_account
 from app.core.config import settings
-from app.core.tenant import tenant_connection
+from app.core.operations import business_operation
+from app.core.tenant import tenant_connection, tenant_snapshot_connection
 from app.provenance.hashchain import Revision, compute_hash, verify_chain
 from app.services import billing as billing_svc
 from app.services import drafting, parsing, requirements
 from app.services.export import build_docx
-from app.services.storage import get_store
+from app.services.storage import StorageError, get_store
 
 router = APIRouter(prefix="/v1")
 EVIDENCE_KINDS = ("case_study", "policy", "cv", "method", "financial", "company_fact")
 
 
+@contextmanager
 def db(ctx: Ctx):
-    return tenant_connection(ctx.org_id, dict_rows=True)
+    with tenant_connection(ctx.org_id, dict_rows=True) as conn:
+        # Initial cutover must wait for every mediated business/read transaction.
+        # No permission-error fallback or per-tenant illusion of global grants.
+        conn.execute("SELECT audit_v2.locked_version()")
+        yield conn
 
 
 def uid(value: str) -> uuid.UUID:
@@ -44,10 +63,7 @@ class SignupIn(BaseModel):
 def signup(body: SignupIn):
     if not settings.allow_signup:
         raise HTTPException(403, "sign-up is disabled in this environment")
-    acct = create_account(body.org_name.strip(), body.email.strip())
-    with db(Ctx(uuid.UUID(acct["org_id"]), uuid.UUID(acct["user_id"]), "owner")) as conn:
-        audit.record(conn, acct["org_id"], acct["user_id"], "account.created", acct["org_id"])
-    return acct
+    return create_account(body.org_name.strip(), body.email.strip(), audit_creation=True)
 
 
 @router.get("/me")
@@ -64,15 +80,27 @@ class TenderIn(BaseModel):
 
 
 @router.post("/tenders", status_code=201)
-def create_tender(body: TenderIn, ctx: Ctx = Depends(authenticate)):
+def create_tender(
+    body: TenderIn,
+    ctx: Ctx = Depends(authenticate),
+    idempotency_key: uuid.UUID | None = Header(default=None, alias="Idempotency-Key"),
+):
     ctx.require("bid_manager")
     with db(ctx) as conn:
-        row = conn.execute(
-            "INSERT INTO tenders (org_id, title) VALUES (%s, %s) RETURNING id, title, stage",
-            (ctx.org_id, body.title.strip()),
-        ).fetchone()
-        audit.record(conn, ctx.org_id, ctx.user_id, "tender.created", str(row["id"]))
-    return row
+        with business_operation(conn, ctx, "tender.created", {"title": body.title.strip()}, idempotency_key) as op:
+            if op.replayed:
+                row = conn.execute(
+                    "SELECT id, title, stage FROM tenders WHERE id = %s", (op.reference["id"],)
+                ).fetchone()
+                if not row:
+                    raise HTTPException(409, "committed tender is no longer available")
+                return row
+            row = conn.execute(
+                "INSERT INTO tenders (org_id, title) VALUES (%s, %s) RETURNING id, title, stage",
+                (ctx.org_id, body.title.strip()),
+            ).fetchone()
+            op.finish({"kind": "tender", "id": str(row["id"])}, target=row["id"])
+            return row
 
 
 @router.get("/tenders")
@@ -87,7 +115,12 @@ def list_tenders(ctx: Ctx = Depends(authenticate)):
 
 
 @router.post("/tenders/{tender_id}/documents", status_code=201)
-async def upload_document(tender_id: str, file: UploadFile = File(...), ctx: Ctx = Depends(authenticate)):
+async def upload_document(
+    tender_id: str,
+    file: UploadFile = File(...),
+    ctx: Ctx = Depends(authenticate),
+    idempotency_key: uuid.UUID | None = Header(default=None, alias="Idempotency-Key"),
+):
     ctx.require("bid_manager")
     tid = uid(tender_id)
     data = await file.read(settings.max_upload_mb * 1024 * 1024 + 1)
@@ -102,75 +135,148 @@ async def upload_document(tender_id: str, file: UploadFile = File(...), ctx: Ctx
         blocks = parsing.parse(data, kind)
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(422, "the file could not be read; it may be damaged or protected") from exc
-    doc_id = uuid.uuid4()
-    store_key = get_store().put(ctx.org_id, doc_id, data)
+    if not blocks:
+        raise HTTPException(
+            422, "no usable text was found; provide a text-readable document or apply OCR before uploading"
+        )
     name = re.sub(r"[^\w.\- ]", "_", (file.filename or "document"))[:200]
     with db(ctx) as conn:
         if not conn.execute("SELECT 1 FROM tenders WHERE id = %s", (tid,)).fetchone():
             raise HTTPException(404, "tender not found")
-        conn.execute(
-            "INSERT INTO documents (id, org_id, tender_id, file_name, storage_key, mime_type, sha256, parse_status, parser_version)"
-            " VALUES (%s,%s,%s,%s,%s,%s,%s,'parsed','rules-1')",
-            (doc_id, ctx.org_id, tid, name, store_key, kind, hashlib.sha256(data).hexdigest()),
-        )
-        for b in blocks:
-            row = conn.execute(
-                "INSERT INTO doc_blocks (org_id, document_id, page, bbox, kind, text, section_path, block_hash)"
-                " VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id",
+        with business_operation(
+            conn,
+            ctx,
+            "document.uploaded",
+            {
+                "tender_id": str(tid),
+                "file_sha256": hashlib.sha256(data).hexdigest(),
+                "file_size": len(data),
+                "file_name": name,
+                "format": kind,
+            },
+            idempotency_key,
+        ) as op:
+            if op.replayed:
+                original = conn.execute(
+                    "SELECT storage_key, sha256 FROM documents WHERE id = %s", (op.reference["id"],)
+                ).fetchone()
+                if not original:
+                    raise HTTPException(409, "committed document is no longer available")
+                try:
+                    stored = await run_in_threadpool(
+                        lambda: get_store().get(
+                            original["storage_key"], org_id=ctx.org_id, expected_sha256=original["sha256"]
+                        )
+                    )
+                except (StorageError, OSError, ValueError) as exc:
+                    raise HTTPException(503, "the committed original cannot be verified") from exc
+                if stored != data:
+                    raise HTTPException(409, "idempotency key conflicts with original file bytes")
+                return {
+                    "document_id": op.reference["id"],
+                    "kind": op.reference["format"],
+                    **op.reference["counts"],
+                    "scan": "no malware scanner is configured in the local pack; configure one before production",
+                }
+            if not conn.execute("SELECT id FROM tenders WHERE id = %s FOR UPDATE", (tid,)).fetchone():
+                raise HTTPException(404, "tender not found")
+            doc_id = op.new_id("document")
+            try:
+                store_key = await run_in_threadpool(lambda: get_store().put(ctx.org_id, doc_id, data))
+            except (StorageError, OSError) as exc:
+                raise HTTPException(503, "the document could not be stored safely; please try again") from exc
+            conn.execute(
+                "INSERT INTO documents (id, org_id, tender_id, file_name, storage_key, mime_type, sha256, parse_status, parser_version)"
+                " VALUES (%s,%s,%s,%s,%s,%s,%s,'parsed',%s)",
                 (
-                    ctx.org_id,
                     doc_id,
-                    b["page"],
-                    json.dumps(b["bbox"]) if b["bbox"] else None,
-                    b["kind"],
-                    b["text"],
-                    b["section_path"],
-                    hashlib.sha256(b["text"].encode()).hexdigest(),
-                ),
-            ).fetchone()
-            b["id"] = row["id"]
-        existing = {
-            r["text_verbatim"]
-            for r in conn.execute("SELECT text_verbatim FROM requirements WHERE tender_id = %s", (tid,))
-        }
-        found = rejected = duplicates = review = questions = 0
-        question_blocks: set = set()
-        for c in requirements.extract_candidates(blocks):
-            if not requirements.verify_verbatim(c["text_verbatim"], c["block_text"]):
-                rejected += 1  # wording not found in its source block: discard (V2)
-                continue
-            if c["text_verbatim"] in existing:
-                duplicates += 1
-                continue
-            existing.add(c["text_verbatim"])
-            req = conn.execute(
-                "INSERT INTO requirements (org_id, tender_id, type, title, text_verbatim, weighting, word_limit, due_at,"
-                " source_block_id, confidence, status) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id",
-                (
                     ctx.org_id,
                     tid,
-                    c["type"],
-                    c["title"],
-                    c["text_verbatim"],
-                    c["weighting"],
-                    c["word_limit"],
-                    c["due_at"],
-                    c["block_id"],
-                    c["confidence"],
-                    "requires_review" if c["confidence"] < 0.7 else "extracted",
+                    name,
+                    store_key,
+                    kind,
+                    hashlib.sha256(data).hexdigest(),
+                    "rules-1+" + requirements.VERBATIM_VERSION,
                 ),
-            ).fetchone()
-            found += 1
-            review += 1 if c["confidence"] < 0.7 else 0
-            if c["type"] == "scored_question" and c["block_id"] not in question_blocks:
-                question_blocks.add(c["block_id"])
-                conn.execute(
-                    "INSERT INTO questions (org_id, tender_id, requirement_id, prompt, weighting, word_limit)"
-                    " VALUES (%s,%s,%s,%s,%s,%s)",
-                    (ctx.org_id, tid, req["id"], c["prompt"], c["weighting"], c["word_limit"]),
-                )
-                questions += 1
-        audit.record(conn, ctx.org_id, ctx.user_id, "document.uploaded", str(doc_id))
+            )
+            for b in blocks:
+                row = conn.execute(
+                    "INSERT INTO doc_blocks (org_id, document_id, page, bbox, kind, text, section_path, block_hash)"
+                    " VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id",
+                    (
+                        ctx.org_id,
+                        doc_id,
+                        b["page"],
+                        json.dumps(b["bbox"]) if b["bbox"] else None,
+                        b["kind"],
+                        b["text"],
+                        b["section_path"],
+                        hashlib.sha256(b["text"].encode()).hexdigest(),
+                    ),
+                ).fetchone()
+                b["id"] = row["id"]
+            existing = {
+                r["text_verbatim"]
+                for r in conn.execute("SELECT text_verbatim FROM requirements WHERE tender_id = %s", (tid,))
+            }
+            found = rejected = duplicates = review = questions = 0
+            question_blocks: set = set()
+            # Freeze trusted parsed source before invoking a candidate proposer.
+            trusted_sources = {b["id"]: (b["text"], hashlib.sha256(b["text"].encode()).hexdigest()) for b in blocks}
+            for c in requirements.extract_candidates(blocks):
+                source = trusted_sources.get(c.get("block_id"))
+                if source is None or not requirements.verify_verbatim(
+                    c["text_verbatim"], source[0], expected_block_hash=source[1]
+                ):
+                    rejected += 1  # wording not found in its source block: discard (V2)
+                    continue
+                if c["text_verbatim"] in existing:
+                    duplicates += 1
+                    continue
+                existing.add(c["text_verbatim"])
+                req = conn.execute(
+                    "INSERT INTO requirements (org_id, tender_id, type, title, text_verbatim, weighting, word_limit, due_at,"
+                    " source_block_id, confidence, status) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id",
+                    (
+                        ctx.org_id,
+                        tid,
+                        c["type"],
+                        c["title"],
+                        c["text_verbatim"],
+                        c["weighting"],
+                        c["word_limit"],
+                        c["due_at"],
+                        c["block_id"],
+                        c["confidence"],
+                        "requires_review" if c["confidence"] < 0.7 else "extracted",
+                    ),
+                ).fetchone()
+                found += 1
+                review += 1 if c["confidence"] < 0.7 else 0
+                if c["type"] == "scored_question" and c["block_id"] not in question_blocks:
+                    question_blocks.add(c["block_id"])
+                    conn.execute(
+                        "INSERT INTO questions (org_id, tender_id, requirement_id, prompt, weighting, word_limit)"
+                        " VALUES (%s,%s,%s,%s,%s,%s)",
+                        (ctx.org_id, tid, req["id"], c["prompt"], c["weighting"], c["word_limit"]),
+                    )
+                    questions += 1
+            op.finish(
+                {
+                    "kind": "document",
+                    "id": str(doc_id),
+                    "format": kind,
+                    "counts": {
+                        "blocks": len(blocks),
+                        "requirements": found,
+                        "questions": questions,
+                        "needs_review": review,
+                        "duplicates_merged": duplicates,
+                        "rejected_unverifiable": rejected,
+                    },
+                },
+                target=doc_id,
+            )
     return {
         "document_id": str(doc_id),
         "kind": kind,
@@ -226,47 +332,79 @@ def _chunks(body: str) -> list[str]:
 
 
 @router.post("/evidence", status_code=201)
-def add_evidence(body: EvidenceIn, ctx: Ctx = Depends(authenticate)):
+def add_evidence(
+    body: EvidenceIn,
+    ctx: Ctx = Depends(authenticate),
+    idempotency_key: uuid.UUID | None = Header(default=None, alias="Idempotency-Key"),
+):
     ctx.require("contributor")
     if body.kind not in EVIDENCE_KINDS:
         raise HTTPException(422, f"kind must be one of {', '.join(EVIDENCE_KINDS)}")
     if body.approved:
         ctx.require("bid_manager")  # only a bid manager or above can approve evidence
     with db(ctx) as conn:
-        row = conn.execute(
-            "INSERT INTO evidence_items (org_id, kind, title, body, owner_id, status) VALUES (%s,%s,%s,%s,%s,%s)"
-            " RETURNING id, kind, title, status",
-            (
-                ctx.org_id,
-                body.kind,
-                body.title.strip(),
-                body.body.strip(),
-                ctx.user_id,
-                "approved" if body.approved else "draft",
-            ),
-        ).fetchone()
-        for i, chunk in enumerate(_chunks(body.body)):
-            conn.execute(
-                "INSERT INTO evidence_chunks (org_id, evidence_id, chunk_index, content_text, embedding_model)"
-                " VALUES (%s,%s,%s,%s,'none')",
-                (ctx.org_id, row["id"], i, chunk),
-            )
-        audit.record(conn, ctx.org_id, ctx.user_id, "evidence.created", str(row["id"]))
+        with business_operation(
+            conn,
+            ctx,
+            "evidence.created",
+            {
+                "kind": body.kind,
+                "title": body.title.strip(),
+                "body": body.body,
+                "approved": body.approved,
+            },
+            idempotency_key,
+        ) as op:
+            if op.replayed:
+                row = conn.execute(
+                    "SELECT id, kind, title, status FROM evidence_items WHERE id = %s", (op.reference["id"],)
+                ).fetchone()
+                if not row:
+                    raise HTTPException(409, "committed evidence is no longer available")
+                return row
+            row = conn.execute(
+                "INSERT INTO evidence_items (org_id, kind, title, body, owner_id, status) VALUES (%s,%s,%s,%s,%s,%s)"
+                " RETURNING id, kind, title, status",
+                (
+                    ctx.org_id,
+                    body.kind,
+                    body.title.strip(),
+                    body.body.strip(),
+                    ctx.user_id,
+                    "approved" if body.approved else "draft",
+                ),
+            ).fetchone()
+            for i, chunk in enumerate(_chunks(body.body)):
+                conn.execute(
+                    "INSERT INTO evidence_chunks (org_id, evidence_id, chunk_index, content_text, embedding_model)"
+                    " VALUES (%s,%s,%s,%s,'none')",
+                    (ctx.org_id, row["id"], i, chunk),
+                )
+            op.finish({"kind": "evidence", "id": str(row["id"])}, target=row["id"])
     return row
 
 
 @router.post("/evidence/{evidence_id}/approve")
-def approve_evidence(evidence_id: str, ctx: Ctx = Depends(authenticate)):
+def approve_evidence(
+    evidence_id: str,
+    ctx: Ctx = Depends(authenticate),
+    idempotency_key: uuid.UUID | None = Header(default=None, alias="Idempotency-Key"),
+):
     ctx.require("bid_manager")
+    eid = uid(evidence_id)
     with db(ctx) as conn:
-        row = conn.execute(
-            "UPDATE evidence_items SET status = 'approved' WHERE id = %s RETURNING id, title, status",
-            (uid(evidence_id),),
-        ).fetchone()
-        if not row:
+        if not conn.execute("SELECT 1 FROM evidence_items WHERE id = %s", (eid,)).fetchone():
             raise HTTPException(404, "evidence not found")
-        audit.record(conn, ctx.org_id, ctx.user_id, "evidence.approved", str(row["id"]))
-    return row
+        with business_operation(conn, ctx, "evidence.approved", {"evidence_id": str(eid)}, idempotency_key) as op:
+            if op.replayed:
+                return conn.execute(
+                    "SELECT id, title, status FROM evidence_items WHERE id = %s", (op.reference["id"],)
+                ).fetchone()
+            row = conn.execute(
+                "UPDATE evidence_items SET status = 'approved' WHERE id = %s RETURNING id, title, status", (eid,)
+            ).fetchone()
+            op.finish({"kind": "evidence", "id": str(row["id"])}, target=row["id"])
+            return row
 
 
 @router.get("/evidence")
@@ -306,7 +444,14 @@ def _evidence_map(conn) -> dict:
     return {str(r["id"]): r for r in conn.execute("SELECT id, title, body, status FROM evidence_items")}
 
 
-def _save_version(conn, ctx, question_id, text, spans, model_id, prompt_version, thread_id, version) -> dict:
+@dataclass(frozen=True)
+class SavedVersion:
+    draft: dict
+    revision_id: uuid.UUID
+    revision_hash: str
+
+
+def _save_version(conn, ctx, question_id, text, spans, model_id, prompt_version, thread_id, version) -> SavedVersion:
     content = {"text": text, "spans": spans, "model_id": model_id, "prompt_version": prompt_version}
     draft = conn.execute(
         "INSERT INTO drafts (org_id, question_id, version, content, word_count) VALUES (%s,%s,%s,%s,%s) RETURNING *",
@@ -333,9 +478,9 @@ def _save_version(conn, ctx, question_id, text, spans, model_id, prompt_version,
     seq = version
     snapshot = {k: content[k] for k in ("text", "spans", "model_id", "prompt_version")}
     h = compute_hash(snapshot, {"actor": str(ctx.user_id), "seq": seq}, prev["hash"] if prev else None)
-    conn.execute(
+    revision = conn.execute(
         "INSERT INTO revisions (org_id, draft_id, seq, prev_hash, hash, content_snapshot, origin_spans, actor_id)"
-        " VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
+        " VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id",
         (
             ctx.org_id,
             thread,
@@ -346,8 +491,8 @@ def _save_version(conn, ctx, question_id, text, spans, model_id, prompt_version,
             json.dumps(spans),
             ctx.user_id,
         ),
-    )
-    return draft
+    ).fetchone()
+    return SavedVersion(draft=draft, revision_id=revision["id"], revision_hash=h)
 
 
 STOP = {
@@ -397,47 +542,89 @@ def _query_terms(prompt: str) -> str:
 
 
 @router.post("/questions/{question_id}/drafts", status_code=201)
-def generate_draft(question_id: str, ctx: Ctx = Depends(authenticate)):
+def generate_draft(
+    question_id: str,
+    ctx: Ctx = Depends(authenticate),
+    idempotency_key: uuid.UUID | None = Header(default=None, alias="Idempotency-Key"),
+):
     ctx.require("contributor")
     qid = uid(question_id)
-    provider = get_provider()
     with db(ctx) as conn:
         q = conn.execute("SELECT id, prompt, word_limit FROM questions WHERE id = %s", (qid,)).fetchone()
         if not q:
             raise HTTPException(404, "question not found")
-        terms = _query_terms(q["prompt"])
-        evidence = (
-            conn.execute(
-                "SELECT e.id, e.title, e.body, max(ts_rank(c.tsv, to_tsquery('english', %s))) AS rank"
-                " FROM evidence_chunks c JOIN evidence_items e ON e.id = c.evidence_id"
-                " WHERE e.status = 'approved' AND c.tsv @@ to_tsquery('english', %s)"
-                " GROUP BY e.id, e.title, e.body ORDER BY rank DESC LIMIT 3",
-                (terms, terms),
-            ).fetchall()
-            if terms
-            else []
-        )
-        segments = provider.draft(
-            q["prompt"], [{"id": str(e["id"]), "body": e["body"]} for e in evidence], q["word_limit"]
-        )
-        text, spans = drafting.segments_to_text(segments)
-        last = conn.execute(
-            "SELECT version, content FROM drafts WHERE question_id = %s ORDER BY version DESC LIMIT 1", (qid,)
-        ).fetchone()
-        thread = uuid.UUID(last["content"]["thread_id"]) if last else None
-        draft = _save_version(
-            conn,
-            ctx,
-            qid,
-            text,
-            spans,
-            provider.model_id,
-            provider.prompt_version,
-            thread,
-            (last["version"] + 1) if last else 1,
-        )
-        audit.record(conn, ctx.org_id, ctx.user_id, "draft.generated", str(draft["id"]))
-        view = _draft_view(conn, draft)
+        with business_operation(conn, ctx, "draft.generated", {"question_id": str(qid)}, idempotency_key) as op:
+            if op.replayed:
+                draft = conn.execute("SELECT * FROM drafts WHERE id = %s", (op.reference["id"],)).fetchone()
+                if not draft:
+                    raise HTTPException(409, "committed draft is no longer available")
+                view = _draft_view(conn, draft)
+                ids = op.reference["evidence_ids"]
+                titles = {
+                    str(r["id"]): r["title"]
+                    for r in conn.execute("SELECT id, title FROM evidence_items WHERE id = ANY(%s::uuid[])", (ids,))
+                }
+                view["evidence_used"] = [titles[i] for i in ids if i in titles]
+                view["note"] = (
+                    None if ids else "No approved evidence matched this question; add evidence and generate again."
+                )
+                return view
+            q = conn.execute("SELECT id, prompt, word_limit FROM questions WHERE id = %s FOR UPDATE", (qid,)).fetchone()
+            if not q:
+                raise HTTPException(404, "question not found")
+            provider = get_provider()
+            terms = _query_terms(q["prompt"])
+            evidence = (
+                conn.execute(
+                    "SELECT e.id, e.title, e.body, max(ts_rank(c.tsv, to_tsquery('english', %s))) AS rank"
+                    " FROM evidence_chunks c JOIN evidence_items e ON e.id = c.evidence_id"
+                    " WHERE e.status = 'approved' AND c.tsv @@ to_tsquery('english', %s)"
+                    " GROUP BY e.id, e.title, e.body ORDER BY rank DESC LIMIT 3",
+                    (terms, terms),
+                ).fetchall()
+                if terms
+                else []
+            )
+            generation = provider.generate(
+                q["prompt"], [{"id": str(e["id"]), "body": e["body"]} for e in evidence], q["word_limit"]
+            )
+            text, spans = drafting.segments_to_text(generation.segments)
+            last = conn.execute(
+                "SELECT version, content FROM drafts WHERE question_id = %s ORDER BY version DESC LIMIT 1", (qid,)
+            ).fetchone()
+            thread = uuid.UUID(last["content"]["thread_id"]) if last else None
+            provider.validate_result(generation)
+            saved = _save_version(
+                conn,
+                ctx,
+                qid,
+                text,
+                spans,
+                generation.model_id,
+                generation.prompt_version,
+                thread,
+                (last["version"] + 1) if last else 1,
+            )
+            draft = saved.draft
+            payload = None
+            if op.mode == 2:
+                payload = GenerationAudit(
+                    draft["id"],
+                    qid,
+                    saved.revision_id,
+                    bytes.fromhex(saved.revision_hash),
+                    generation.requested_model_id,
+                    generation.model_id,
+                    generation.prompt_version,
+                    bytes.fromhex(generation.admission_digest) if generation.admission_digest is not None else None,
+                ).payload()
+            op.finish(
+                {"kind": "draft", "id": str(draft["id"]), "evidence_ids": [str(e["id"]) for e in evidence]},
+                target=draft["id"],
+                payload=payload,
+                payload_schema="tood.draft-generated.v1",
+            )
+            view = _draft_view(conn, draft)
     view["evidence_used"] = [e["title"] for e in evidence]
     view["note"] = None if evidence else "No approved evidence matched this question; add evidence and generate again."
     return view
@@ -457,71 +644,129 @@ class DraftEdit(BaseModel):
 
 
 @router.patch("/drafts/{draft_id}", status_code=201)
-def edit_draft(draft_id: str, body: DraftEdit, ctx: Ctx = Depends(authenticate)):
+def edit_draft(
+    draft_id: str,
+    body: DraftEdit,
+    ctx: Ctx = Depends(authenticate),
+    idempotency_key: uuid.UUID | None = Header(default=None, alias="Idempotency-Key"),
+):
     ctx.require("contributor")
+    did = uid(draft_id)
     with db(ctx) as conn:
-        old = conn.execute("SELECT * FROM drafts WHERE id = %s", (uid(draft_id),)).fetchone()
+        old = conn.execute("SELECT * FROM drafts WHERE id = %s", (did,)).fetchone()
         if not old:
             raise HTTPException(404, "draft not found")
-        latest = conn.execute(
-            "SELECT max(version) AS v FROM drafts WHERE question_id = %s", (old["question_id"],)
-        ).fetchone()
-        if old["version"] != latest["v"]:
-            raise HTTPException(409, "this is not the latest version; edit the latest draft")
-        spans = drafting.respan(old["content"]["text"], old["content"]["spans"], body.text)
-        draft = _save_version(
-            conn,
-            ctx,
-            old["question_id"],
-            body.text,
-            spans,
-            old["content"]["model_id"],
-            old["content"]["prompt_version"],
-            uuid.UUID(old["content"]["thread_id"]),
-            old["version"] + 1,
-        )
-        audit.record(conn, ctx.org_id, ctx.user_id, "draft.edited", str(draft["id"]))
-        return _draft_view(conn, draft)
+        with business_operation(
+            conn, ctx, "draft.edited", {"draft_id": str(did), "text": body.text}, idempotency_key
+        ) as op:
+            if op.replayed:
+                row = conn.execute("SELECT * FROM drafts WHERE id = %s", (op.reference["id"],)).fetchone()
+                if not row:
+                    raise HTTPException(409, "committed draft is no longer available")
+                return _draft_view(conn, row)
+            conn.execute("SELECT id FROM questions WHERE id = %s FOR UPDATE", (old["question_id"],)).fetchone()
+            latest = conn.execute(
+                "SELECT max(version) AS v FROM drafts WHERE question_id = %s", (old["question_id"],)
+            ).fetchone()
+            if old["version"] != latest["v"]:
+                raise HTTPException(409, "this is not the latest version; edit the latest draft")
+            spans = drafting.respan(old["content"]["text"], old["content"]["spans"], body.text)
+            saved = _save_version(
+                conn,
+                ctx,
+                old["question_id"],
+                body.text,
+                spans,
+                old["content"]["model_id"],
+                old["content"]["prompt_version"],
+                uuid.UUID(old["content"]["thread_id"]),
+                old["version"] + 1,
+            )
+            draft = saved.draft
+            payload = None
+            if op.mode == 2:
+                source = conn.execute(
+                    "SELECT id, hash FROM revisions WHERE draft_id = %s AND seq = %s",
+                    (uuid.UUID(old["content"]["thread_id"]), old["version"]),
+                ).fetchone()
+                if not source:
+                    raise HTTPException(409, "source revision is unavailable")
+                payload = {
+                    "source": "human_edit",
+                    "draft_id": str(draft["id"]),
+                    "question_id": str(old["question_id"]),
+                    "revision_id": str(saved.revision_id),
+                    "revision_hash": saved.revision_hash,
+                    "source_draft_id": str(old["id"]),
+                    "source_revision_id": str(source["id"]),
+                    "source_revision_hash": source["hash"],
+                }
+            op.finish(
+                {"kind": "draft", "id": str(draft["id"])},
+                target=draft["id"],
+                payload=payload,
+                payload_schema="tood.draft-edited.v1",
+            )
+            return _draft_view(conn, draft)
 
 
 @router.post("/claims/{claim_id}/acknowledge")
-def acknowledge_claim(claim_id: str, ctx: Ctx = Depends(authenticate)):
+def acknowledge_claim(
+    claim_id: str,
+    ctx: Ctx = Depends(authenticate),
+    idempotency_key: uuid.UUID | None = Header(default=None, alias="Idempotency-Key"),
+):
     ctx.require("bid_manager")
+    cid = uid(claim_id)
     with db(ctx) as conn:
-        row = conn.execute(
-            "UPDATE draft_claims SET status = 'acknowledged', acknowledged_by = %s WHERE id = %s AND status = 'unsupported'"
-            " RETURNING id, status",
-            (ctx.user_id, uid(claim_id)),
-        ).fetchone()
-        if not row:
+        if not conn.execute("SELECT 1 FROM draft_claims WHERE id = %s", (cid,)).fetchone():
             raise HTTPException(404, "no unsupported claim with that id")
-        audit.record(conn, ctx.org_id, ctx.user_id, "claim.acknowledged", str(row["id"]))
-    return row
+        with business_operation(conn, ctx, "claim.acknowledged", {"claim_id": str(cid)}, idempotency_key) as op:
+            if op.replayed:
+                return {"id": uuid.UUID(op.reference["id"]), "status": "acknowledged"}
+            conn.execute("SELECT q.id FROM questions q JOIN drafts d ON d.question_id = q.id "
+                "JOIN draft_claims c ON c.draft_id = d.id WHERE c.id = %s FOR UPDATE OF q", (cid,)).fetchone()
+            row = conn.execute(
+                "UPDATE draft_claims SET status = 'acknowledged', acknowledged_by = %s WHERE id = %s AND status = 'unsupported' RETURNING id, status",
+                (ctx.user_id, cid),
+            ).fetchone()
+            if not row:
+                raise HTTPException(404, "no unsupported claim with that id")
+            op.finish({"kind": "claim", "id": str(row["id"])}, target=row["id"])
+            return row
 
 
 @router.post("/drafts/{draft_id}/approve")
-def approve_draft(draft_id: str, ctx: Ctx = Depends(authenticate)):
+def approve_draft(
+    draft_id: str,
+    ctx: Ctx = Depends(authenticate),
+    idempotency_key: uuid.UUID | None = Header(default=None, alias="Idempotency-Key"),
+):
     ctx.require("bid_manager")  # a named person approves; the system never approves for them
     with db(ctx) as conn:
         draft = conn.execute("SELECT * FROM drafts WHERE id = %s", (uid(draft_id),)).fetchone()
         if not draft:
             raise HTTPException(404, "draft not found")
-        latest = conn.execute(
-            "SELECT max(version) AS v FROM drafts WHERE question_id = %s", (draft["question_id"],)
-        ).fetchone()
-        if draft["version"] != latest["v"]:
-            raise HTTPException(409, "only the latest version can be approved")
-        rev = conn.execute(
-            "SELECT id FROM revisions WHERE draft_id = %s AND seq = %s",
-            (uuid.UUID(draft["content"]["thread_id"]), draft["version"]),
-        ).fetchone()
-        conn.execute(
-            "INSERT INTO approvals (org_id, draft_id, revision_id, approver_id) VALUES (%s,%s,%s,%s)"
-            " ON CONFLICT DO NOTHING",
-            (ctx.org_id, draft["id"], rev["id"], ctx.user_id),
-        )
-        audit.record(conn, ctx.org_id, ctx.user_id, "draft.approved", str(draft["id"]))
-        return _draft_view(conn, draft)
+        with business_operation(conn, ctx, "draft.approved", {"draft_id": str(draft["id"])}, idempotency_key) as op:
+            if op.replayed:
+                return _draft_view(conn, draft)
+            conn.execute("SELECT id FROM questions WHERE id = %s FOR UPDATE", (draft["question_id"],)).fetchone()
+            latest = conn.execute(
+                "SELECT max(version) AS v FROM drafts WHERE question_id = %s", (draft["question_id"],)
+            ).fetchone()
+            if draft["version"] != latest["v"]:
+                raise HTTPException(409, "only the latest version can be approved")
+            rev = conn.execute(
+                "SELECT id FROM revisions WHERE draft_id = %s AND seq = %s",
+                (uuid.UUID(draft["content"]["thread_id"]), draft["version"]),
+            ).fetchone()
+            conn.execute(
+                "INSERT INTO approvals (org_id, draft_id, revision_id, approver_id) VALUES (%s,%s,%s,%s)"
+                " ON CONFLICT DO NOTHING",
+                (ctx.org_id, draft["id"], rev["id"], ctx.user_id),
+            )
+            op.finish({"kind": "draft", "id": str(draft["id"])}, target=draft["id"])
+            return _draft_view(conn, draft)
 
 
 @router.get("/drafts/{draft_id}/provenance")
@@ -585,87 +830,187 @@ def readiness(tender_id: str, ctx: Ctx = Depends(authenticate)):
     return {"ready": not problems, "problems": problems}
 
 
-@router.get("/tenders/{tender_id}/export")
-def export(tender_id: str, ctx: Ctx = Depends(authenticate)):
+@router.get(
+    "/tenders/{tender_id}/export", response_class=Response,
+    responses={200: {
+        "content": {"application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
+            "schema": {"type": "string", "format": "binary"}
+        }},
+        "headers": {name: {"schema": {"type": "string"}} for name in (
+            "X-Export-SHA256", "Idempotency-Replayed", "X-Audit-Assurance-Schema", "X-Audit-Artifact-Snapshot",
+            "X-Audit-Artifact-Sequence", "X-Audit-Assessment-Sequence", "X-Audit-Assessment-Status",
+            "X-Audit-Checkpoint-State",
+        )},
+    }},
+)
+def export(
+    tender_id: str,
+    ctx: Ctx = Depends(authenticate),
+    idempotency_key: uuid.UUID | None = Header(default=None, alias="Idempotency-Key"),
+):
     ctx.require("bid_manager")
     tid = uid(tender_id)
     with db(ctx) as conn:
         tender = conn.execute("SELECT title FROM tenders WHERE id = %s", (tid,)).fetchone()
         if not tender:
             raise HTTPException(404, "tender not found")
-        problems = _readiness(conn, tid)
-        if problems:  # the export gate (blueprint section 17)
-            raise HTTPException(
-                409,
-                {
-                    "message": "export is blocked until every item is resolved",
-                    "problems": [
-                        {"question_id": str(p["question_id"]) if p["question_id"] else None, "problem": p["problem"]}
-                        for p in problems
-                    ],
-                },
+        with business_operation(conn, ctx, "tender.exported", {"tender_id": str(tid)}, idempotency_key) as op:
+            # Consistent ordering: operation, tender, then questions in UUID order.
+            # FOR UPDATE also excludes FK-backed new question inserts during export.
+            tender = conn.execute("SELECT title FROM tenders WHERE id = %s FOR UPDATE", (tid,)).fetchone()
+            if not tender:
+                raise HTTPException(404, "tender not found")
+            conn.execute("SELECT id FROM questions WHERE tender_id = %s ORDER BY id FOR UPDATE", (tid,)).fetchall()
+            problems = _readiness(conn, tid)
+            if problems:  # the export gate (blueprint section 17)
+                raise HTTPException(
+                    409,
+                    {
+                        "message": "export is blocked until every item is resolved",
+                        "problems": [
+                            {"question_id": str(p["question_id"]) if p["question_id"] else None, "problem": p["problem"]}
+                            for p in problems
+                        ],
+                    },
+                )
+            assessment = _export_assessment(ctx)
+            if op.replayed:
+                manifest = conn.execute(
+                    "SELECT file_sha256 FROM export_manifests WHERE id = %s AND tender_id = %s",
+                    (op.reference["id"], tid),
+                ).fetchone()
+                if not manifest or manifest["file_sha256"] != op.reference["sha256"]:
+                    raise HTTPException(409, "committed export manifest is unavailable")
+                try:
+                    data = get_store().get(
+                        op.reference["storage_key"], org_id=ctx.org_id, expected_sha256=manifest["file_sha256"]
+                    )
+                except (StorageError, OSError, ValueError) as exc:
+                    raise HTTPException(503, "the committed export cannot be verified") from exc
+                metadata = conn.execute(
+                    "SELECT payload_schema,payload_bytes FROM audit_v2.events "
+                    "WHERE org_id=%s AND operation_id=%s AND action='tender.exported' AND target=%s LIMIT 2",
+                    (ctx.org_id, op.operation_id, str(tid)),
+                ).fetchall()
+                if len(metadata) != 1:
+                    raise HTTPException(409, "the committed export audit reference is not unique")
+                try:
+                    recorded = artifact_snapshot(
+                        json.loads(bytes(metadata[0]["payload_bytes"])), metadata[0]["payload_schema"],
+                        op.reference, assessment,
+                    )
+                    if recorded is not None:
+                        sequence = int(recorded.v2.sequence)
+                        if sequence == 0:
+                            expected_head = assessment.v2.genesis_hash
+                        else:
+                            position = conn.execute(
+                                "SELECT hash FROM audit_v2.events WHERE org_id=%s AND epoch_id=%s AND tenant_sequence=%s",
+                                (ctx.org_id, uuid.UUID(recorded.v2.epoch_id), sequence),
+                            ).fetchone()
+                            expected_head = bytes(position["hash"]).hex() if position else None
+                        if expected_head != recorded.v2.head_hash:
+                            raise AuditExportBlocked("export_snapshot_hash_mismatch")
+                except (ValueError, TypeError, KeyError, OverflowError) as exc:
+                    raise HTTPException(409, "the committed export audit snapshot cannot be verified") from exc
+                return Response(
+                    content=data,
+                    media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    headers={
+                        "Content-Disposition": 'attachment; filename="submission.docx"',
+                        "X-Export-SHA256": manifest["file_sha256"],
+                        "Idempotency-Replayed": "true",
+                        **assurance_headers(recorded, assessment),
+                    },
+                )
+            org = conn.execute("SELECT name FROM organisations").fetchone()["name"]
+            evidence = _evidence_map(conn)
+            answers, hashes = [], {}
+            for q in conn.execute(
+                "SELECT id, prompt FROM questions WHERE tender_id = %s ORDER BY created_at", (tid,)
+            ).fetchall():
+                d = conn.execute(
+                    "SELECT * FROM drafts WHERE question_id = %s ORDER BY version DESC LIMIT 1", (q["id"],)
+                ).fetchone()
+                ap = conn.execute(
+                    "SELECT approver_id, approved_at, revision_id FROM approvals WHERE draft_id = %s", (d["id"],)
+                ).fetchone()
+                who = conn.execute("SELECT email FROM users WHERE id = %s", (ap["approver_id"],)).fetchone()
+                rev = conn.execute("SELECT hash FROM revisions WHERE id = %s", (ap["revision_id"],)).fetchone()
+                ack = conn.execute(
+                    "SELECT count(*) AS n FROM draft_claims WHERE draft_id = %s AND status = 'acknowledged'", (d["id"],)
+                ).fetchone()["n"]
+                cited = [
+                    evidence[i]["title"]
+                    for i in dict.fromkeys(drafting.EV_TAG.findall(d["content"]["text"].lower()))
+                    if i in evidence
+                ]
+                answers.append(
+                    {
+                        "prompt": q["prompt"],
+                        "text": d["content"]["text"],
+                        "evidence_titles": cited,
+                        "model_id": d["content"]["model_id"],
+                        "ai_ratio": drafting.ai_retained_ratio(d["content"]["spans"]),
+                        "approver": who["email"] if who else "unknown",
+                        "approved_at": ap["approved_at"].strftime("%Y-%m-%d %H:%M"),
+                        "acknowledged": ack,
+                        "revision_hash": rev["hash"],
+                    }
+                )
+                hashes[str(q["id"])] = rev["hash"]
+            data = build_docx(tender["title"], org, answers, assessment.model_dump(mode="json"))
+            digest = hashlib.sha256(data).hexdigest()
+            export_id = op.new_id("export")
+            reference = {"kind": "export", "id": str(export_id), "target_id": str(tid)}
+            if op.mode == 2:
+                try:
+                    pointer = get_store().put(ctx.org_id, export_id, data)
+                except (StorageError, OSError, ValueError) as exc:
+                    raise HTTPException(503, "the immutable export could not be stored") from exc
+                reference.update(sha256=digest, storage_key=pointer)
+            conn.execute(
+                "INSERT INTO export_manifests (id, org_id, tender_id, file_sha256, revision_hashes, created_by)"
+                " VALUES (%s,%s,%s,%s,%s,%s)",
+                (export_id, ctx.org_id, tid, digest, json.dumps(hashes), ctx.user_id),
             )
-        org = conn.execute("SELECT name FROM organisations").fetchone()["name"]
-        evidence = _evidence_map(conn)
-        answers, hashes = [], {}
-        for q in conn.execute(
-            "SELECT id, prompt FROM questions WHERE tender_id = %s ORDER BY created_at", (tid,)
-        ).fetchall():
-            d = conn.execute(
-                "SELECT * FROM drafts WHERE question_id = %s ORDER BY version DESC LIMIT 1", (q["id"],)
-            ).fetchone()
-            ap = conn.execute(
-                "SELECT approver_id, approved_at, revision_id FROM approvals WHERE draft_id = %s", (d["id"],)
-            ).fetchone()
-            who = conn.execute("SELECT email FROM users WHERE id = %s", (ap["approver_id"],)).fetchone()
-            rev = conn.execute("SELECT hash FROM revisions WHERE id = %s", (ap["revision_id"],)).fetchone()
-            ack = conn.execute(
-                "SELECT count(*) AS n FROM draft_claims WHERE draft_id = %s AND status = 'acknowledged'", (d["id"],)
-            ).fetchone()["n"]
-            cited = [
-                evidence[i]["title"]
-                for i in dict.fromkeys(drafting.EV_TAG.findall(d["content"]["text"].lower()))
-                if i in evidence
-            ]
-            answers.append(
-                {
-                    "prompt": q["prompt"],
-                    "text": d["content"]["text"],
-                    "evidence_titles": cited,
-                    "model_id": d["content"]["model_id"],
-                    "ai_ratio": drafting.ai_retained_ratio(d["content"]["spans"]),
-                    "approver": who["email"] if who else "unknown",
-                    "approved_at": ap["approved_at"].strftime("%Y-%m-%d %H:%M"),
-                    "acknowledged": ack,
-                    "revision_hash": rev["hash"],
-                }
+            op.finish(
+                reference, target=tid,
+                payload={"resource": reference, "audit_snapshot": assessment.model_dump(mode="json")},
+                payload_schema=EXPORT_SCHEMA,
             )
-            hashes[str(q["id"])] = rev["hash"]
-        data = build_docx(tender["title"], org, answers)
-        digest = hashlib.sha256(data).hexdigest()
-        conn.execute(
-            "INSERT INTO export_manifests (org_id, tender_id, file_sha256, revision_hashes, created_by)"
-            " VALUES (%s,%s,%s,%s,%s)",
-            (ctx.org_id, tid, digest, json.dumps(hashes), ctx.user_id),
-        )
-        audit.record(conn, ctx.org_id, ctx.user_id, "tender.exported", str(tid))
     return Response(
         content=data,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        headers={"Content-Disposition": 'attachment; filename="submission.docx"', "X-Export-SHA256": digest},
+        headers={
+            "Content-Disposition": 'attachment; filename="submission.docx"', "X-Export-SHA256": digest,
+            **assurance_headers(assessment, assessment),
+        },
     )
 
 
+def _audit_read(ctx: Ctx):
+    try:
+        with tenant_snapshot_connection(ctx.org_id) as conn:
+            return read_audit_snapshot(conn, ctx.org_id)
+    except (psycopg.Error, ValueError, TypeError, OverflowError) as exc:
+        raise HTTPException(503, "the audit snapshot cannot be verified") from exc
+
+
+def _export_assessment(ctx: Ctx):
+    assessment = _audit_read(ctx).assurance
+    try:
+        ensure_export_allowed(assessment)
+    except AuditExportBlocked as exc:
+        raise HTTPException(409, {"message": "export is blocked by audit integrity", "status": str(exc)}) from exc
+    return assessment
+
+
 # ---------- audit ----------
-@router.get("/audit")
+@router.get("/audit", response_model=AuditLogResponse)
 def audit_log(ctx: Ctx = Depends(authenticate)):
     ctx.require("admin")
-    with db(ctx) as conn:
-        ok, bad, count = audit.verify(conn, ctx.org_id)
-        events = conn.execute(
-            "SELECT id, action, target, at FROM audit_events WHERE org_id = %s ORDER BY id DESC LIMIT 30", (ctx.org_id,)
-        ).fetchall()
-    return {"chain_ok": ok, "first_bad_event": bad, "events_total": count, "recent": events}
+    return _audit_read(ctx)
 
 
 # ---------- billing ----------
@@ -817,48 +1162,5 @@ _APPEND_ONLY_TRIGGERS = [
 
 @admin_router.delete("/tenant/{org_id}", status_code=200)
 def admin_delete_tenant(org_id: str, ctx: Ctx = Depends(require_admin)):
-    """Hard-delete all data for an organisation (admin only).
-
-    Uses the admin connection so that RLS and the append-only triggers can be
-    temporarily bypassed.  This operation is irreversible.
-    """
-    import psycopg as _psycopg  # local import: avoid circular at module level
-
-    oid = uid(org_id)
-
-    # Prevent an admin from deleting the organisation their own account belongs to.
-    if oid == ctx.org_id:
-        raise HTTPException(400, "cannot delete your own organisation")
-
-    if not settings.database_admin_url:
-        raise HTTPException(503, "admin DB connection is not configured")
-
-    with _psycopg.connect(settings.database_admin_url, autocommit=True) as conn:
-        # Verify the org exists first
-        if not conn.execute("SELECT 1 FROM organisations WHERE id = %s", (oid,)).fetchone():
-            raise HTTPException(404, "organisation not found")
-
-        # Collect user IDs before memberships are deleted
-        user_ids = [r[0] for r in conn.execute("SELECT user_id FROM memberships WHERE org_id = %s", (oid,))]
-
-        # Disable append-only triggers so historical rows can be removed.
-        # With autocommit=True each statement executes immediately; the finally
-        # block below unconditionally re-enables the triggers whether the
-        # deletions succeed or fail.
-        for tbl, trg in _APPEND_ONLY_TRIGGERS:
-            conn.execute(f"ALTER TABLE {tbl} DISABLE TRIGGER {trg}")
-
-        try:
-            for tbl in _TENANT_DELETE_TABLES:
-                conn.execute(f"DELETE FROM {tbl} WHERE org_id = %s", (oid,))
-
-            if user_ids:
-                conn.execute("DELETE FROM users WHERE id = ANY(%s)", (user_ids,))
-
-            conn.execute("DELETE FROM organisations WHERE id = %s", (oid,))
-        finally:
-            # Always re-enable append-only triggers, even if deletion fails mid-way.
-            for tbl, trg in _APPEND_ONLY_TRIGGERS:
-                conn.execute(f"ALTER TABLE {tbl} ENABLE TRIGGER {trg}")
-
-    return {"deleted": org_id, "ok": True}
+    """Tenant roles never grant platform-wide deletion authority."""
+    raise HTTPException(403, "tenant deletion requires a separately reviewed platform operation")

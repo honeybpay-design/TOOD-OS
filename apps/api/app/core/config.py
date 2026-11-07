@@ -1,11 +1,13 @@
 import pathlib
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# In the repo: apps/api/app/core/config.py → parents[4] = repo root
-# In Docker container: /app/app/core/config.py → parents[3] = /app (no repo root .env)
+from app.core.paths import application_root
+
+# Checkouts use their shared repository root; a deployed API uses its own package root.
 _here = pathlib.Path(__file__).resolve()
-ROOT = _here.parents[4] if len(_here.parents) > 4 else _here.parents[3]
+ROOT = pathlib.Path(application_root(_here))
 
 
 class Settings(BaseSettings):
@@ -21,7 +23,14 @@ class Settings(BaseSettings):
     ai_provider: str = "template"  # no language model is connected in the local pack
     gcp_project: str = "tood-os"
     gcp_region: str = "europe-west2"
+    ai_model_id: str = ""  # no remote model is selected or admitted by default
+    ai_admission_file: str = ""
+    ai_admission_public_key: str = ""  # public verification key, no default trust
+    ai_admission_key_id: str = ""
     storage_dir: str = str(ROOT / "data" / "uploads")
+    storage_backend: Literal["local", "gcs"] = "local"
+    storage_gcs_bucket: str = ""
+    storage_gcs_project_number: str = ""
     max_upload_mb: int = 20
     allow_signup: bool = True  # development sign-up. Turn off in any shared environment
     stripe_secret_key: str = ""

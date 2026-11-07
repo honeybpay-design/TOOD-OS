@@ -279,6 +279,251 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/billing/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Billing Checkout
+         * @description Create a Stripe Checkout session for the authenticated org.
+         */
+        post: operations["billing_checkout_v1_billing_checkout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/billing/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Billing Webhook
+         * @description Stripe webhook endpoint — no auth, verifies Stripe signature.
+         */
+        post: operations["billing_webhook_v1_billing_webhook_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/billing/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Billing Status
+         * @description Return current plan, subscription status, and plan limits.
+         */
+        get: operations["billing_status_v1_billing_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin Metrics */
+        get: operations["admin_metrics_admin_metrics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/tenants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin Tenants */
+        get: operations["admin_tenants_admin_tenants_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin Health */
+        get: operations["admin_health_admin_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin Report */
+        get: operations["admin_report_admin_report_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/tenant/{org_id}/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Admin Force Plan */
+        post: operations["admin_force_plan_admin_tenant__org_id__plan_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/tenant/{org_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Admin Delete Tenant
+         * @description Tenant roles never grant platform-wide deletion authority.
+         */
+        delete: operations["admin_delete_tenant_admin_tenant__org_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Google Login
+         * @description Initiate Google OAuth: return the auth URL for the frontend to redirect to.
+         */
+        get: operations["google_login_v1_auth_google_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/google/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Google Callback
+         * @description Handle Google redirect. Upsert user and issue a session token.
+         */
+        get: operations["google_callback_v1_auth_google_callback_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Session
+         * @description Validate a session token. Returns user/org/role if valid and not expired.
+         */
+        get: operations["get_session_v1_auth_session_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Logout
+         * @description Invalidate a session token.
+         */
+        post: operations["logout_v1_auth_logout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/healthz": {
         parameters: {
             query?: never;
@@ -288,6 +533,23 @@ export interface paths {
         };
         /** Healthz */
         get: operations["healthz_healthz_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Health */
+        get: operations["health_health_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -317,10 +579,98 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AuditAssurance */
+        AuditAssurance: {
+            /**
+             * Schema Version
+             * @default 2
+             * @constant
+             */
+            schema_version: 2;
+            /** Org Id */
+            org_id: string;
+            /**
+             * Active Version
+             * @enum {integer}
+             */
+            active_version: 1 | 2;
+            /**
+             * Snapshot At
+             * Format: date-time
+             */
+            snapshot_at: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "legacy_only" | "v2_unavailable" | "v2_integrity_failed" | "legacy_manifest_changed" | "legacy_broken" | "legacy_unverified" | "checkpoint_invalid" | "v2_internal_only_uncheckpointed" | "checkpointed_prefix_only" | "checkpointed_internal_integrity";
+            legacy: components["schemas"]["LegacyAuditState"];
+            v2: components["schemas"]["V2AuditState"];
+            checkpoint: components["schemas"]["AuditCheckpointState"];
+            /** Limitations */
+            limitations: string[];
+        };
+        /** AuditCheckpointState */
+        AuditCheckpointState: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "unconfigured" | "verified" | "invalid";
+            /** Verified Through Sequence */
+            verified_through_sequence?: string | null;
+            /** Uncheckpointed Events */
+            uncheckpointed_events?: string | null;
+            /** Receipt Digest */
+            receipt_digest?: string | null;
+            /** Issued At */
+            issued_at?: string | null;
+            /** Reason */
+            reason: string;
+        };
+        /** AuditLogResponse */
+        AuditLogResponse: {
+            /**
+             * Schema Version
+             * @default 2
+             * @constant
+             */
+            schema_version: 2;
+            /**
+             * Chain Ok
+             * @deprecated
+             * @description Deprecated compatibility field: legacy v1 internal hashes only.
+             */
+            chain_ok: boolean;
+            /**
+             * Chain Ok Scope
+             * @default legacy_v1_internal_only
+             * @constant
+             */
+            chain_ok_scope: "legacy_v1_internal_only";
+            /** First Bad Event */
+            first_bad_event: number | null;
+            /** Events Total */
+            events_total: number;
+            /** Recent */
+            recent: components["schemas"]["LegacyAuditEvent"][];
+            assurance: components["schemas"]["AuditAssurance"];
+            /** Recent V2 */
+            recent_v2: components["schemas"]["V2AuditEvent"][];
+        };
         /** Body_upload_document_v1_tenders__tender_id__documents_post */
         Body_upload_document_v1_tenders__tender_id__documents_post: {
             /** File */
             file: string;
+        };
+        /** CheckoutIn */
+        CheckoutIn: {
+            /** Plan */
+            plan: string;
+            /** Success Url */
+            success_url: string;
+            /** Cancel Url */
+            cancel_url: string;
         };
         /** DraftEdit */
         DraftEdit: {
@@ -346,6 +696,79 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** LegacyAuditEvent */
+        LegacyAuditEvent: {
+            /** Id */
+            id: number;
+            /** Action */
+            action: string;
+            /** Target */
+            target: string | null;
+            /** At */
+            at: string;
+        };
+        /** LegacyAuditState */
+        LegacyAuditState: {
+            /** Event Count */
+            event_count: string;
+            /** Min Id */
+            min_id: string | null;
+            /** Max Id */
+            max_id: string | null;
+            /** Current Internal Valid */
+            current_internal_valid: boolean;
+            /** First Bad Id */
+            first_bad_id: string | null;
+            /**
+             * History State
+             * @enum {string}
+             */
+            history_state: "internally_valid" | "broken" | "unverified";
+            /** Declared Status */
+            declared_status: ("verified" | "broken" | "unverified") | null;
+            /** Declared First Bad Id */
+            declared_first_bad_id: string | null;
+            /** Incident Ref */
+            incident_ref: string | null;
+            /**
+             * Manifest Version
+             * @default 1
+             * @constant
+             */
+            manifest_version: 1;
+            /** Observed Manifest Sha256 */
+            observed_manifest_sha256: string;
+            /** Committed Manifest Sha256 */
+            committed_manifest_sha256: string | null;
+            /** Manifest Matches */
+            manifest_matches: boolean | null;
+            /** Declaration Consistent */
+            declaration_consistent: boolean | null;
+            /**
+             * Hash Envelope Scope
+             * @default v1-org-actor-action-target-prev
+             * @constant
+             */
+            hash_envelope_scope: "v1-org-actor-action-target-prev";
+            /**
+             * Historically Unbound Fields
+             * @default [
+             *       "id",
+             *       "at",
+             *       "ip"
+             *     ]
+             */
+            historically_unbound_fields: [
+                "id",
+                "at",
+                "ip"
+            ];
+        };
+        /** PlanChangeIn */
+        PlanChangeIn: {
+            /** Plan */
+            plan: string;
+        };
         /** SignupIn */
         SignupIn: {
             /** Org Name */
@@ -357,6 +780,55 @@ export interface components {
         TenderIn: {
             /** Title */
             title: string;
+        };
+        /** V2AuditEvent */
+        V2AuditEvent: {
+            /** Event Id */
+            event_id: string;
+            /** Sequence */
+            sequence: string;
+            /** Action */
+            action: string;
+            /** Target */
+            target: string | null;
+            /**
+             * Recorded At
+             * Format: date-time
+             */
+            recorded_at: string;
+            /** Event Hash */
+            event_hash: string;
+            /** Payload Schema */
+            payload_schema: string;
+        };
+        /** V2AuditState */
+        V2AuditState: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "not_active" | "prepared_not_active" | "valid" | "invalid" | "unavailable";
+            /** Ledger Id */
+            ledger_id?: string | null;
+            /** Epoch Id */
+            epoch_id?: string | null;
+            /** Format Version */
+            format_version?: number | null;
+            /** Sequence */
+            sequence?: string | null;
+            /**
+             * Event Count
+             * @default 0
+             */
+            event_count: string;
+            /** Head Hash */
+            head_hash?: string | null;
+            /** Genesis Hash */
+            genesis_hash?: string | null;
+            /** First Bad Sequence */
+            first_bad_sequence?: string | null;
+            /** Reason */
+            reason: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -418,6 +890,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-session-token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -449,6 +922,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-session-token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -479,7 +953,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
+                "x-session-token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -514,7 +990,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
+                "x-session-token"?: string | null;
             };
             path: {
                 tender_id: string;
@@ -552,6 +1030,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-session-token"?: string | null;
             };
             path: {
                 tender_id: string;
@@ -585,6 +1064,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-session-token"?: string | null;
             };
             path: {
                 tender_id: string;
@@ -618,6 +1098,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-session-token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -648,7 +1129,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
+                "x-session-token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -683,7 +1166,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
+                "x-session-token"?: string | null;
             };
             path: {
                 evidence_id: string;
@@ -716,7 +1201,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
+                "x-session-token"?: string | null;
             };
             path: {
                 question_id: string;
@@ -750,6 +1237,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-session-token"?: string | null;
             };
             path: {
                 draft_id: string;
@@ -782,7 +1270,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
+                "x-session-token"?: string | null;
             };
             path: {
                 draft_id: string;
@@ -819,7 +1309,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
+                "x-session-token"?: string | null;
             };
             path: {
                 claim_id: string;
@@ -852,7 +1344,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
+                "x-session-token"?: string | null;
             };
             path: {
                 draft_id: string;
@@ -886,6 +1380,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-session-token"?: string | null;
             };
             path: {
                 draft_id: string;
@@ -919,6 +1414,7 @@ export interface operations {
             query?: never;
             header?: {
                 authorization?: string | null;
+                "x-session-token"?: string | null;
             };
             path: {
                 tender_id: string;
@@ -951,10 +1447,340 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
+                "Idempotency-Key"?: string | null;
                 authorization?: string | null;
+                "x-session-token"?: string | null;
             };
             path: {
                 tender_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "X-Export-SHA256"?: string;
+                    "Idempotency-Replayed"?: string;
+                    "X-Audit-Assurance-Schema"?: string;
+                    "X-Audit-Artifact-Snapshot"?: string;
+                    "X-Audit-Artifact-Sequence"?: string;
+                    "X-Audit-Assessment-Sequence"?: string;
+                    "X-Audit-Assessment-Status"?: string;
+                    "X-Audit-Checkpoint-State"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": string;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    audit_log_v1_audit_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-session-token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditLogResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    billing_checkout_v1_billing_checkout_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-session-token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckoutIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    billing_webhook_v1_billing_webhook_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    billing_status_v1_billing_status_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-session-token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_metrics_admin_metrics_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-session-token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_tenants_admin_tenants_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-session-token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_health_admin_health_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-session-token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_report_admin_report_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-session-token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_force_plan_admin_tenant__org_id__plan_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-session-token"?: string | null;
+            };
+            path: {
+                org_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanChangeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    admin_delete_tenant_admin_tenant__org_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+                "x-session-token"?: string | null;
+            };
+            path: {
+                org_id: string;
             };
             cookie?: never;
         };
@@ -980,7 +1806,104 @@ export interface operations {
             };
         };
     };
-    audit_log_v1_audit_get: {
+    google_login_v1_auth_google_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-oauth-verifier"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    google_callback_v1_auth_google_callback_get: {
+        parameters: {
+            query?: {
+                code?: string | null;
+                state?: string | null;
+                error?: string | null;
+            };
+            header?: {
+                "x-oauth-verifier"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_session_v1_auth_session_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    logout_v1_auth_logout_post: {
         parameters: {
             query?: never;
             header?: {
@@ -1012,6 +1935,28 @@ export interface operations {
         };
     };
     healthz_healthz_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    health_health_get: {
         parameters: {
             query?: never;
             header?: never;

@@ -38,6 +38,10 @@ export async function proxyToApi(
       ? { authorization: `Bearer ${token}` }
       : { "x-session-token": token };
 
+  // Preserve the API's tenant-scoped retry contract; validation stays upstream.
+  const operationKey = request.headers.get("idempotency-key");
+  if (operationKey !== null) headers["idempotency-key"] = operationKey;
+
   const init: RequestInit = { method: request.method, headers };
 
   if (request.method !== "GET" && request.method !== "HEAD") {

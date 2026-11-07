@@ -4,7 +4,7 @@ The extractor proposes; code verifies. A language-model extractor can replace `e
 behind the same output shape, and every candidate still passes `verify_verbatim`.
 """
 
-import difflib
+import hashlib
 import re
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -47,15 +47,50 @@ SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+(?=[A-Z0-9\"'(])")
 LONDON = ZoneInfo("Europe/London")
 
 
-def verify_verbatim(text: str, source_text: str, threshold: float = 0.9) -> bool:
-    """The requirement wording must be found in its source block (blueprint V2)."""
+VERBATIM_VERSION = "verbatim-source-units-v2"
+
+
+def source_units(source_text: str) -> list[tuple[int, int]]:
+    """Trusted sentence boundaries as Unicode code-point offsets into source.
+
+    Segmentation depends only on stored parsed source, never candidate wording
+    or candidate-supplied offsets. Only surrounding layout whitespace is outside
+    a unit; no content is lowercased, normalized, fuzzy-matched or discarded.
+    """
+    ranges = []
+    start = 0
+    for separator in SENTENCE_SPLIT.finditer(source_text):
+        ranges.append((start, separator.start()))
+        start = separator.end()
+    ranges.append((start, len(source_text)))
+    units = []
+    for start, end in ranges:
+        while start < end and source_text[start].isspace():
+            start += 1
+        while end > start and source_text[end - 1].isspace():
+            end -= 1
+        if start < end:
+            units.append((start, end))
+    return units
+
+
+def verify_verbatim(
+    text: str, source_text: str, threshold: float = 0.9, *, expected_block_hash: str | None = None
+) -> bool:
+    """Require one exact complete trusted unit; threshold never relaxes equality.
+
+    Keep the legacy threshold argument for caller compatibility only. Optional
+    source-hash binding is mandatory at the ingestion boundary. Ambiguous repeat
+    units fail closed rather than silently choosing an occurrence.
+    """
     if not text or not source_text:
         return False
-    if text in source_text:
-        return True
-    matcher = difflib.SequenceMatcher(None, text.lower(), source_text.lower(), autojunk=False)
-    match = matcher.find_longest_match(0, len(text), 0, len(source_text))
-    return match.size / max(len(text), 1) >= threshold
+    if (
+        expected_block_hash is not None
+        and hashlib.sha256(source_text.encode("utf-8")).hexdigest() != expected_block_hash
+    ):
+        return False
+    return sum(text == source_text[start:end] for start, end in source_units(source_text)) == 1
 
 
 def parse_deadline(sentence: str) -> datetime | None:
@@ -99,8 +134,8 @@ def extract_candidates(blocks: list[dict]) -> list[dict]:
     """blocks: parsed blocks with their database ids. Returns requirement candidates (not yet verified)."""
     out = []
     for block in blocks:
-        for sentence in SENTENCE_SPLIT.split(block["text"]):
-            sentence = sentence.strip()
+        for start, end in source_units(block["text"]):
+            sentence = block["text"][start:end]
             if len(sentence) < 15:
                 continue
             has_obligation = OBLIGATION.search(sentence)
@@ -119,6 +154,9 @@ def extract_candidates(blocks: list[dict]) -> list[dict]:
             out.append(
                 {
                     "block_id": block["id"],
+                    "unit_start": start,
+                    "unit_end": end,
+                    "verifier_version": VERBATIM_VERSION,
                     "block_text": block["text"],
                     "prompt": block["text"],
                     "text_verbatim": sentence,

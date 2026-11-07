@@ -1,8 +1,7 @@
 import psycopg
 import pytest
-from conftest import APP_URL
-
 from app.core.tenant import tenant_connection
+from conftest import APP_URL
 
 
 def test_tenant_sees_only_own_rows(two_orgs):
